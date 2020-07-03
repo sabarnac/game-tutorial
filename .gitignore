@@ -1,9 +1,5 @@
-build/*
-bin/*
-distrib/build_*/*
-**.bak
-**.orig
-Thumbs.db
+/.idea
+/.vscode
+/bin
+/build
 .DS_Store
-.idea
-.vscode
