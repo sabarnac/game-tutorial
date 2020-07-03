@@ -1,0 +1,9 @@
+build/*
+bin/*
+distrib/build_*/*
+**.bak
+**.orig
+Thumbs.db
+.DS_Store
+.idea
+.vscode
