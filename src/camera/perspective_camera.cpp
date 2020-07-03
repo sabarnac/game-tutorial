@@ -98,22 +98,22 @@ public:
 
     // Move forward
     glm::vec3 positionChange = glm::vec3(0.0);
-    if (controlManager.isKeyPressed(GLFW_KEY_UP))
+    if (controlManager.isKeyPressed(GLFW_KEY_W))
     {
       positionChange = newDirection * deltaTime * keyboardSpeed;
     }
     // Move backward
-    if (controlManager.isKeyPressed(GLFW_KEY_DOWN))
+    if (controlManager.isKeyPressed(GLFW_KEY_S))
     {
       positionChange = -1.0f * newDirection * deltaTime * keyboardSpeed;
     }
     // Strafe right
-    if (controlManager.isKeyPressed(GLFW_KEY_RIGHT))
+    if (controlManager.isKeyPressed(GLFW_KEY_D))
     {
       positionChange = right * deltaTime * keyboardSpeed;
     }
     // Strafe left
-    if (controlManager.isKeyPressed(GLFW_KEY_LEFT))
+    if (controlManager.isKeyPressed(GLFW_KEY_A))
     {
       positionChange = -1.0f * right * deltaTime * keyboardSpeed;
     }

@@ -7,6 +7,7 @@
 
 #include "include/window.cpp"
 #include "include/control.cpp"
+#include "include/vertex_attribute_array.cpp"
 #include "models/cube_model.cpp"
 #include "camera/perspective_camera.cpp"
 
@@ -64,46 +65,16 @@ int main(void)
 		glUniform1i(textureId, 0);
 
 		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getObjectDetails()->getVertexBufferId());
-		glVertexAttribPointer(
-				0,				// attribute
-				3,				// size
-				GL_FLOAT, // type
-				GL_FALSE, // normalized?
-				0,				// stride
-				(void *)0 // array buffer offset
-		);
+		VertexAttributeArray vertexArray("VertexArray", cubeModel->getObjectDetails()->getVertexBufferId(), 3);
+		VertexAttributeArray uvArray("UvArray", cubeModel->getObjectDetails()->getUvBufferId(), 2);
+		VertexAttributeArray normalArray("NormalArray", cubeModel->getObjectDetails()->getNormalBufferId(), 3);
 
-		// 2nd attribute buffer : UVs
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getObjectDetails()->getUvBufferId());
-		glVertexAttribPointer(
-				1,				// attribute
-				2,				// size
-				GL_FLOAT, // type
-				GL_FALSE, // normalized?
-				0,				// stride
-				(void *)0 // array buffer offset
-		);
-
-		// 3rd attribute buffer : normals
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getObjectDetails()->getNormalBufferId());
-		glVertexAttribPointer(
-				2,				// attribute
-				3,				// size
-				GL_FLOAT, // type
-				GL_FALSE, // normalized?
-				0,				// stride
-				(void *)0 // array buffer offset
-		);
+		vertexArray.enableAttribute();
+		uvArray.enableAttribute();
+		normalArray.enableAttribute();
 
 		// Draw the triangle !
 		glDrawArrays(GL_TRIANGLES, 0, cubeModel->getObjectDetails()->getBufferSize());
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
 
 		// Swap buffers
 		windowManager.swapBuffers();
