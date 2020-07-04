@@ -2,6 +2,7 @@
 #define MODELS_CUBE_MODEL_CPP
 
 #include <string>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

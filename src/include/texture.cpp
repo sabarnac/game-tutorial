@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include <GL/glew.h>
 
