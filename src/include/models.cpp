@@ -2,7 +2,11 @@
 #define INCLUDE_MODELS_CPP
 
 #include <string>
+#include <map>
+#include <vector>
 #include <memory>
+#include <algorithm>
+#include <iterator>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,148 +15,90 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include "objloader.cpp"
+#include "object.cpp"
 #include "texture.cpp"
 #include "shader.cpp"
+#include "collider.cpp"
+#include "render.cpp"
+#include "../models/model_base.cpp"
 
-class ModelBase
+class ModelManager
 {
-
 private:
-  ObjectManager &objectManager;
-  TextureManager &textureManager;
-  ShaderManager &shaderManager;
+  static ModelManager instance;
 
-  std::string modelName;
+  RenderManager &renderManager;
 
-  glm::vec3 position;
-  glm::vec3 rotation;
-  glm::vec3 scale;
-  glm::mat4 modelMatrix;
+  std::map<std::string, std::shared_ptr<ModelBase>> registeredModels;
 
-  std::shared_ptr<ObjectDetails> objectDetails;
-  std::shared_ptr<TextureDetails> textureDetails;
-  std::shared_ptr<ShaderDetails> shaderDetails;
-
-  glm::mat4 updateModelMatrix(glm::vec3 &position, glm::vec3 &rotation, glm::vec3 &scale)
-  {
-    std::cout << "[ModelBase] "
-              << "Updating model matrix." << std::endl
-              << "[ModelBase] "
-              << "\tPosition: " << glm::to_string(position)
-              << "[ModelBase] "
-              << "\tRotation: " << glm::to_string(rotation)
-              << "[ModelBase] "
-              << "\tScale: " << glm::to_string(scale) << std::endl;
-    return glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale) * glm::mat4();
-  }
-
-protected:
-  ModelBase(
-      std::string modelName,
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      std::string modelObjectFilePath,
-      std::string modelTextureFilePath,
-      TextureType modelTextureType,
-      std::string modelVertexShaderFilePath,
-      std::string modelFragmentShaderFilePath)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelName(modelName),
-        position(position),
-        rotation(rotation),
-        scale(scale),
-        modelMatrix(updateModelMatrix(position, rotation, scale))
-  {
-    std::cout << "[ModelBase] "
-              << "Constructing ModelBase." << std::endl;
-    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    textureDetails = textureManager.createTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
-    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
-    std::cout << "[ModelBase] "
-              << "Constructed ModelBase." << std::endl;
-  }
-
-  ~ModelBase()
-  {
-    std::cout << "[ModelBase] "
-              << "Destroying ModelBase." << std::endl;
-    objectManager.destroyObject(objectDetails);
-    textureManager.destroyTexture(textureDetails);
-    shaderManager.destroyShaderProgram(shaderDetails);
-    std::cout << "[ModelBase] "
-              << "Destroyed ModelBase." << std::endl;
-  }
+  ModelManager()
+      : renderManager(RenderManager::getInstance()),
+        registeredModels({}) {}
 
 public:
-  std::string getModelName()
+  ModelManager(ModelManager &) = delete;
+
+  void registerModel(std::shared_ptr<ModelBase> model)
   {
-    return modelName;
+    registeredModels.insert(std::pair<std::string, std::shared_ptr<ModelBase>>(model->getModelId(), model));
+    renderManager.registerModel(model);
+    model->init();
   }
 
-  glm::vec3 &getModelPosition()
+  void deregisterModel(std::shared_ptr<ModelBase> model)
   {
-    return position;
+    registeredModels.erase(model->getModelId());
+    renderManager.deregisterModel(model);
+    model->deinit();
   }
 
-  glm::vec3 &getModelRotation()
+  void deregisterModel(std::string modelId)
   {
-    return rotation;
+    auto model = registeredModels[modelId];
+    registeredModels.erase(modelId);
+    renderManager.deregisterModel(modelId);
+    model->deinit();
   }
 
-  glm::vec3 &getModelScale()
+  std::shared_ptr<ModelBase> getModel(std::string modelId)
   {
-    return scale;
+    return registeredModels[modelId];
   }
 
-  glm::mat4 &getModelMatrix()
+  std::vector<std::shared_ptr<ModelBase>> getAllModels()
   {
-    return modelMatrix;
+    std::vector<std::shared_ptr<ModelBase>> models({});
+    for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+    {
+      models.push_back(model->second);
+    }
+    return models;
   }
 
-  void setModelPosition(glm::vec3 newPosition)
+  void updateAllModels()
   {
-    std::cout << "[ModelBase] "
-              << "Set position: " << glm::to_string(newPosition) << std::endl;
-    position = newPosition;
-    modelMatrix = updateModelMatrix(newPosition, rotation, scale);
+    std::vector<std::string> registeredModelIds({});
+    for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+    {
+      registeredModelIds.push_back(model->first);
+    }
+
+    for (auto modelId = registeredModelIds.begin(); modelId != registeredModelIds.end(); modelId++)
+    {
+      auto result = registeredModels.find(*(modelId));
+      if (result != registeredModels.end())
+      {
+        result->second->update();
+      }
+    }
   }
 
-  void setModelRotation(glm::vec3 newRotation)
+  static ModelManager &getInstance()
   {
-    std::cout << "[ModelBase] "
-              << "Set rotation: " << glm::to_string(newRotation) << std::endl;
-    rotation = newRotation;
-    modelMatrix = updateModelMatrix(position, newRotation, scale);
+    return instance;
   }
-
-  void setModelScale(glm::vec3 newScale)
-  {
-    std::cout << "[ModelBase] "
-              << "Set scale: " << glm::to_string(newScale) << std::endl;
-    scale = newScale;
-    modelMatrix = updateModelMatrix(position, rotation, newScale);
-  }
-
-  std::shared_ptr<ObjectDetails> &getObjectDetails()
-  {
-    return objectDetails;
-  }
-
-  std::shared_ptr<TextureDetails> &getTextureDetails()
-  {
-    return textureDetails;
-  }
-
-  std::shared_ptr<ShaderDetails> &getShaderDetails()
-  {
-    return shaderDetails;
-  }
-
-  virtual void update() = 0;
 };
+
+ModelManager ModelManager::instance;
 
 #endif

@@ -39,15 +39,11 @@ public:
 
   void setCursorPosition(CursorPosition newPosition)
   {
-    std::cout << "[ControlManager] "
-              << "Updating cursor position (" << newPosition.getX() * width << " | " << newPosition.getY() * height << ")" << std::endl;
     glfwSetCursorPos(windowManager.getWindow(), newPosition.getX() * width, newPosition.getY() * height);
   }
 
   bool isKeyPressed(int key)
   {
-    std::cout << "[ControlManager] "
-              << "Checking if key is pressed: " << key << std::endl;
     return glfwGetKey(windowManager.getWindow(), key) == GLFW_PRESS;
   }
 };

@@ -31,13 +31,7 @@ public:
 			: textureId(textureId),
 				textureName(textureName),
 				textureFilePath(textureFilePath),
-				textureType(textureType)
-	{
-		std::cout << "[TextureDetails] "
-							<< "Constructing TextureDetails." << std::endl;
-		std::cout << "[TextureDetails] "
-							<< "Constructed TextureDetails." << std::endl;
-	}
+				textureType(textureType) {}
 
 	GLuint getTextureId()
 	{
@@ -65,25 +59,17 @@ private:
 
 	GLuint createTexture(std::string textureName, unsigned char *textureData, unsigned int width, unsigned int height)
 	{
-		std::cout << "[TextureManager] "
-							<< "Creating texture reference for texture: " << textureName << std::endl;
-
-		// Create an OpenGL texture.
 		GLuint textureId;
 		glGenTextures(1, &textureId);
 
-		// Bind the texture to the current OpenGL context so that we can start modifying it and writing texture data to it.
 		glBindTexture(GL_TEXTURE_2D, textureId);
 
-		// Provide OpenGL with the texture data to copy to the current texture context.
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
 
-		// Define some parameters regarding the texture (behaviour when reading outside the texture, magnification and minification behaviour)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		// The last option tells that for minified versions to use mip-map textures, so need to generate those as well.
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		return textureId;
@@ -91,65 +77,39 @@ private:
 
 	GLuint loadBmpTexture(std::string textureName, std::string textureFilePath)
 	{
-		std::cout << "[TextureManager] "
-							<< "Loading texture: " << textureName << " (" << textureFilePath << ")" << std::endl;
-
-		// Information that we need to read from the BMP file.
 		unsigned char header[54];
 		unsigned int dataPos;
 		unsigned int imageSize;
 		unsigned int width, height;
 
-		std::cout << "[TextureManager] "
-							<< "Reading texture file for texture: " << textureName << std::endl
-							<< "[TextureManager] "
-							<< "\tFile: " << textureFilePath << std::endl;
-
-		// Open the texture BMP file.
 		auto file = fopen(textureFilePath.c_str(), "rb");
 		if (!file)
 		{
-			std::cout << "[TextureManager] "
-								<< "Could not open BMP file for texture: " << textureName << std::endl
-								<< "[TextureManager] "
-								<< "\tFile: " << textureFilePath << std::endl;
 			exit(1);
 		}
 
-		// Read the header, i.e. the 54 first bytes. If less than 54 bytes are read, throw an error.
 		auto readBytes = fread(header, 1, 54, file);
 		if (readBytes != 54)
 		{
-			std::cout << "[TextureManager] "
-								<< "Invalid BMP file: " << textureFilePath << std::endl;
 			fclose(file);
 			exit(1);
 		}
-		// A BMP files always begins with "BM". If it doesn't, throw an error
 		if (header[0] != 'B' || header[1] != 'M')
 		{
-			std::cout << "[TextureManager] "
-								<< "Invalid BMP file: " << textureFilePath << std::endl;
 			fclose(file);
 			exit(1);
 		}
-		// Make sure this is a 24bpp file. If it isn't, throw an error
 		if (*(int *)&(header[0x1E]) != 0)
 		{
-			std::cout << "[TextureManager] "
-								<< "Invalid BMP file: " << textureFilePath << std::endl;
 			fclose(file);
 			exit(1);
 		}
 		if (*(int *)&(header[0x1C]) != 24)
 		{
-			std::cout << "[TextureManager] "
-								<< "Invalid BMP file: " << textureFilePath << std::endl;
 			fclose(file);
 			exit(1);
 		}
 
-		// Read the information about the image.
 		dataPos = *(int *)&(header[0x0A]);
 		imageSize = *(int *)&(header[0x22]);
 		width = *(int *)&(header[0x12]);
@@ -180,8 +140,6 @@ private:
 		auto textureId = createTexture(textureName, textureData, width, height);
 		delete[] textureData;
 
-		std::cout << "[TextureManager] "
-							<< "Created texture." << std::endl;
 		return textureId;
 	}
 
@@ -194,14 +152,9 @@ public:
 
 	std::shared_ptr<TextureDetails> &createTexture(std::string textureName, std::string textureFilePath, TextureType textureType)
 	{
-		std::cout << "[TextureManager] "
-							<< "Creating texture: " << textureName << "(" << textureFilePath << ")" << std::endl;
-
 		auto existingTexture = namedTextures.find(textureName);
 		if (existingTexture != namedTextures.end())
 		{
-			std::cout << "[TextureManager] "
-								<< "Already created. Returning existing texture." << std::endl;
 			namedTextureReferences[textureName]++;
 			return existingTexture->second;
 		}
@@ -219,9 +172,6 @@ public:
 		namedTextures.insert(std::pair<std::string, std::shared_ptr<TextureDetails>>(textureName, newTexture));
 		namedTextureReferences[textureName] = 1;
 
-		std::cout << "[TextureManager] "
-							<< "Created texture." << std::endl;
-
 		return namedTextures[textureName];
 	}
 
@@ -232,21 +182,12 @@ public:
 
 	void destroyTexture(std::shared_ptr<TextureDetails> &textureDetails)
 	{
-		std::cout << "[TextureManager] "
-							<< "Dereferencing texture: " << textureDetails->getTextureName() << std::endl;
-
 		namedTextureReferences[textureDetails->getTextureName()]--;
 		if (namedTextureReferences[textureDetails->getTextureName()] <= 0)
 		{
-			std::cout << "[TextureManager] "
-								<< "Destroying texture: " << textureDetails->getTextureName() << std::endl;
-
 			namedTextureReferences.erase(textureDetails->getTextureName());
 			namedTextures.erase(textureDetails->getTextureName());
 			glDeleteTextures(1, &textureDetails->textureId);
-
-			std::cout << "[TextureManager] "
-								<< "Destroyed texture." << std::endl;
 		}
 	}
 

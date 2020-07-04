@@ -7,102 +7,87 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include "../include/models.cpp"
+#include "render.cpp"
+#include "../camera/camera_base.cpp"
 
-class CameraBase
+class CameraManager
 {
-
 private:
-  std::string cameraName;
+  static CameraManager instance;
 
-  glm::vec3 position;
-  glm::vec3 direction;
-  glm::vec3 up;
+  RenderManager &renderManager;
 
-  glm::mat4 viewMatrix;
-  glm::mat4 projectionMatrix;
+  std::map<std::string, std::shared_ptr<CameraBase>> registeredCameras;
+
+  CameraManager()
+      : renderManager(RenderManager::getInstance()),
+        registeredCameras({}) {}
 
 public:
-  CameraBase(std::string name, glm::vec3 position, glm::vec3 direction, glm::vec3 up, glm::mat4 projectionMatrix)
-      : cameraName(name),
-        position(position),
-        direction(direction),
-        up(up),
-        projectionMatrix(projectionMatrix)
+  CameraManager(CameraManager &) = delete;
+
+  void registerCamera(std::shared_ptr<CameraBase> camera)
   {
-    std::cout << "[CameraBase] "
-              << "Constructing CameraBase." << std::endl;
-    std::cout << "[CameraBase] "
-              << "Constructed CameraBase." << std::endl;
+    registeredCameras.insert(std::pair<std::string, std::shared_ptr<CameraBase>>(camera->getCameraId(), camera));
+    renderManager.registerCamera(camera);
+    renderManager.registerActiveCamera(camera);
+    camera->init();
   }
 
-  std::string getCameraName()
+  void deregisterCamera(std::shared_ptr<CameraBase> camera)
   {
-    return cameraName;
+    registeredCameras.erase(camera->getCameraId());
+    renderManager.deregisterCamera(camera);
+    camera->deinit();
   }
 
-  glm::vec3 &getPosition()
+  void deregisterCamera(std::string cameraId)
   {
-    return position;
+    auto camera = registeredCameras[cameraId];
+    registeredCameras.erase(cameraId);
+    renderManager.deregisterCamera(cameraId);
+    camera->deinit();
   }
 
-  glm::vec3 &getDirection()
+  std::shared_ptr<CameraBase> getModel(std::string cameraId)
   {
-    return direction;
+    return registeredCameras[cameraId];
   }
 
-  glm::vec3 &getUp()
+  std::vector<std::shared_ptr<CameraBase>> getAllCameras()
   {
-    return up;
+    std::vector<std::shared_ptr<CameraBase>> cameras({});
+    for (auto camera = registeredCameras.begin(); camera != registeredCameras.end(); camera++)
+    {
+      cameras.push_back(camera->second);
+    }
+    return cameras;
   }
 
-  void setPosition(glm::vec3 newPosition)
+  void updateAllCameras()
   {
-    std::cout << "[CameraBase] "
-              << "Set position: " << glm::to_string(newPosition) << std::endl;
-    position = newPosition;
+    std::vector<std::string> registeredCameraIds({});
+    for (auto camera = registeredCameras.begin(); camera != registeredCameras.end(); camera++)
+    {
+      registeredCameraIds.push_back(camera->first);
+    }
+
+    for (auto cameraId = registeredCameraIds.begin(); cameraId != registeredCameraIds.end(); cameraId++)
+    {
+      auto result = registeredCameras.find(*(cameraId));
+      if (result != registeredCameras.end())
+      {
+        result->second->update();
+      }
+    }
   }
 
-  void setDirection(glm::vec3 newDirection)
+  static CameraManager &getInstance()
   {
-    std::cout << "[CameraBase] "
-              << "Set direction: " << glm::to_string(newDirection) << std::endl;
-    direction = newDirection;
+    return instance;
   }
-
-  void setUp(glm::vec3 newUp)
-  {
-    std::cout << "[CameraBase] "
-              << "Set up: " << glm::to_string(newUp) << std::endl;
-    up = newUp;
-  }
-
-  glm::mat4 &getViewMatrix()
-  {
-    return viewMatrix;
-  }
-
-  glm::mat4 &getProjectionMatrix()
-  {
-    return projectionMatrix;
-  }
-
-  void update()
-  {
-    std::cout << "[CameraBase] "
-              << "Updating view matrix." << std::endl
-              << "[CameraBase] "
-              << "\tPosition: " << glm::to_string(position) << std::endl
-              << "[CameraBase] "
-              << "\tDirection: " << glm::to_string(direction) << std::endl
-              << "[CameraBase] "
-              << "\tUp: " << glm::to_string(up) << std::endl;
-    viewMatrix = glm::lookAt(position, position + direction, up);
-
-    projectionMatrix = updateProjectionMatrix();
-  }
-
-  virtual glm::mat4 updateProjectionMatrix() = 0;
 };
+
+CameraManager CameraManager::instance;
 
 #endif
