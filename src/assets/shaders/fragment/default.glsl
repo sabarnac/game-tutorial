@@ -37,7 +37,7 @@ uniform int cubeLightsCount;
 uniform float ambientFactor;
 
 float simpleLightAcneBias = 0.0001;
-float cubeLightAcneBias = 0.0;
+float cubeLightAcneBias = 0.001;
 
 vec2 getSimpleLightShadowMapTexelSize(int lightIndex)
 {
