@@ -12,8 +12,10 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "../include/models.cpp"
+#include "../include/light.cpp"
 
 #include "model_base.cpp"
+#include "../light/point_light.cpp"
 
 class ShotModel : public ModelBase
 {
@@ -21,6 +23,9 @@ private:
   double lastTime;
 
   ModelManager &modelManager;
+  LightManager &lightManager;
+
+  std::shared_ptr<PointLight> shotLight;
 
 public:
   ShotModel(std::string modelId)
@@ -29,10 +34,11 @@ public:
             "Shot",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
             "assets/objects/sphere.obj",
-            "assets/textures/cube.bmp", TextureType::BMP,
-            "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
+            "assets/textures/shot.bmp", TextureType::BMP,
+            "assets/shaders/vertex/shot.glsl", "assets/shaders/fragment/shot.glsl",
             ColliderShapeType::SPHERE),
         modelManager(ModelManager::getInstance()),
+        lightManager(LightManager::getInstance()),
         lastTime(glfwGetTime()) {}
 
   static std::shared_ptr<ShotModel> create(std::string modelId)
@@ -42,14 +48,22 @@ public:
 
   void init() override
   {
-    setModelPosition(glm::vec3(0.0, 0.0, 29.0));
     setModelScale(glm::vec3(0.5));
+
+    shotLight = PointLight::create(getModelId() + "::ShotLight");
+    shotLight->setLightPosition(getModelPosition());
+    lightManager.registerLight(shotLight);
+  }
+
+  void deinit() override
+  {
+    lightManager.deregisterLight(shotLight);
   }
 
   void update() override
   {
     auto currentPosition = getModelPosition();
-    if (currentPosition.z < -30.0)
+    if (currentPosition.z < -50.0)
     {
       modelManager.deregisterModel(this->getModelId());
       return;
@@ -58,7 +72,8 @@ public:
     auto currentTime = glfwGetTime();
     auto deltaTime = currentTime - lastTime;
 
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 25.0 * deltaTime));
+    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 100.0 * deltaTime));
+    shotLight->setLightPosition(getModelPosition());
 
     auto models = modelManager.getAllModels();
     for (auto model = models.begin(); model != models.end(); model++)

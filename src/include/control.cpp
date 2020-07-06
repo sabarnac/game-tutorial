@@ -7,8 +7,8 @@
 
 #include <GLFW/glfw3.h>
 #include <GL/glew.h>
-#include <glm/gtx/string_cast.hpp>
 
+#include "constants.cpp"
 #include "window.cpp"
 
 class ControlManager
@@ -48,8 +48,8 @@ public:
   }
 };
 
-int ControlManager::width = 1024;
-int ControlManager::height = 768;
+int ControlManager::width = WINDOW_WIDTH;
+int ControlManager::height = WINDOW_HEIGHT;
 ControlManager ControlManager::instance;
 
 #endif

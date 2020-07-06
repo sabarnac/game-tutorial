@@ -6,7 +6,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 #include "camera_base.cpp"
 #include "../include/control.cpp"
@@ -28,21 +27,16 @@ private:
   double farPlane;
 
   bool acceptInput;
+  double lastAcceptInputChange;
 
-  void updateCamera()
+  void updateCamera(glm::vec3 newDirection)
   {
-    glm::vec3 newDirection(
-        cos(verticalAngle) * sin(horizontalAngle),
-        sin(verticalAngle),
-        cos(verticalAngle) * cos(horizontalAngle));
-    setCameraDirection(newDirection);
-
-    glm::vec3 right = glm::vec3(
+    auto right = glm::vec3(
         sin(horizontalAngle - glm::pi<double>() / 2.0),
         0,
         cos(horizontalAngle - glm::pi<double>() / 2.0));
 
-    glm::vec3 up = glm::cross(right, newDirection);
+    auto up = glm::cross(right, newDirection);
 
     setCameraDirection(newDirection);
     setCameraUp(up);
@@ -67,38 +61,38 @@ public:
         aspectRatio(4.0 / 3.0),
         nearPlane(0.1),
         farPlane(100.0),
-        acceptInput(false)
+        acceptInput(false),
+        lastAcceptInputChange(glfwGetTime() - 10.0)
   {
     update();
   }
 
-  void init() override
-  {
-    setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
-    horizontalAngle = glm::pi<double>();
-    verticalAngle = -(glm::pi<double>() / 4.1);
-  }
-
   void update() override
   {
-    if (controlManager.isKeyPressed(GLFW_KEY_M))
+    auto currentTime = glfwGetTime();
+    auto deltaTime = float(currentTime - lastTime);
+
+    if (controlManager.isKeyPressed(GLFW_KEY_M) && (currentTime - lastAcceptInputChange) > 0.5)
     {
       acceptInput = !acceptInput;
       if (!acceptInput)
       {
-        init();
+        setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
+        setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.1));
       }
+      lastAcceptInputChange = currentTime;
     }
 
     if (!acceptInput)
     {
-      updateCamera();
+      auto newDirection = glm::vec3(
+          cos(verticalAngle) * sin(horizontalAngle),
+          sin(verticalAngle),
+          cos(verticalAngle) * cos(horizontalAngle));
+      updateCamera(newDirection);
       controlManager.setCursorPosition(CursorPosition(0.5, 0.5));
       return;
     }
-
-    double currentTime = glfwGetTime();
-    float deltaTime = float(currentTime - lastTime);
 
     auto currentCursorPosition = controlManager.getCursorPosition();
     controlManager.setCursorPosition(CursorPosition(0.5, 0.5));
@@ -106,19 +100,25 @@ public:
     horizontalAngle += mouseSpeed * (0.5 - currentCursorPosition->getX());
     verticalAngle += mouseSpeed * (0.5 - currentCursorPosition->getY());
 
-    glm::vec3 right = glm::vec3(
+    auto newDirection = glm::vec3(
+        cos(verticalAngle) * sin(horizontalAngle),
+        sin(verticalAngle),
+        cos(verticalAngle) * cos(horizontalAngle));
+
+    auto right = glm::vec3(
         sin(horizontalAngle - glm::pi<double>() / 2.0),
         0,
         cos(horizontalAngle - glm::pi<double>() / 2.0));
 
-    glm::vec3 newPosition = getPosition();
+    auto newPosition = getCameraPosition();
+
     if (controlManager.isKeyPressed(GLFW_KEY_UP))
     {
-      newPosition += getDirection() * deltaTime * keyboardSpeed;
+      newPosition += newDirection * deltaTime * keyboardSpeed;
     }
     if (controlManager.isKeyPressed(GLFW_KEY_DOWN))
     {
-      newPosition -= getDirection() * deltaTime * keyboardSpeed;
+      newPosition -= newDirection * deltaTime * keyboardSpeed;
     }
     if (controlManager.isKeyPressed(GLFW_KEY_RIGHT))
     {
@@ -128,12 +128,32 @@ public:
     {
       newPosition -= right * deltaTime * keyboardSpeed;
     }
-
     setCameraPosition(newPosition);
 
-    updateCamera();
+    updateCamera(newDirection);
 
     lastTime = currentTime;
+  }
+
+  double getHorizontalAngle()
+  {
+    return horizontalAngle;
+  }
+
+  double getVerticalAngle()
+  {
+    return verticalAngle;
+  }
+
+  void setCameraAngles(double newHorizontalAngle, double newVerticalAngle)
+  {
+    horizontalAngle = newHorizontalAngle;
+    verticalAngle = newVerticalAngle;
+    auto newDirection = glm::vec3(
+        cos(verticalAngle) * sin(horizontalAngle),
+        sin(verticalAngle),
+        cos(verticalAngle) * cos(horizontalAngle));
+    updateCamera(newDirection);
   }
 
   static std::shared_ptr<PerspectiveCamera> create(std::string cameraId)

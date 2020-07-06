@@ -6,7 +6,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 class CameraBase
 {
@@ -44,7 +43,7 @@ public:
     return cameraName;
   }
 
-  glm::vec3 &getPosition()
+  glm::vec3 &getCameraPosition()
   {
     return position;
   }
@@ -84,9 +83,9 @@ public:
     return projectionMatrix;
   }
 
-  virtual void init(){};
+  virtual void init() {}
 
-  virtual void deinit(){};
+  virtual void deinit() {}
 
   virtual void update()
   {

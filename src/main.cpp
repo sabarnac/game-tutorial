@@ -5,11 +5,14 @@
 #include "include/window.cpp"
 #include "include/control.cpp"
 #include "include/camera.cpp"
+#include "include/light.cpp"
 #include "include/render.cpp"
 #include "include/debug_render.cpp"
+#include "light/cone_light.cpp"
+#include "light/point_light.cpp"
+#include "camera/perspective_camera.cpp"
 #include "models/enemy_model.cpp"
 #include "models/player_model.cpp"
-#include "camera/perspective_camera.cpp"
 
 using namespace glm;
 
@@ -18,6 +21,7 @@ int main(void)
 	auto &windowManager = WindowManager::getInstance();
 	auto &controlManager = ControlManager::getInstance();
 	auto &modelManager = ModelManager::getInstance();
+	auto &lightManager = LightManager::getInstance();
 	auto &cameraManager = CameraManager::getInstance();
 	auto &renderManager = RenderManager::getInstance();
 	auto &debugRenderManager = DebugRenderManager::getInstance();
@@ -34,6 +38,8 @@ int main(void)
 	// Create and compile our GLSL program from the shaders
 	auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
 	cameraManager.registerCamera(perspectiveCamera);
+	perspectiveCamera->setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
+	perspectiveCamera->setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.1));
 
 	for (auto i = -2; i <= 2; i++)
 	{
@@ -47,18 +53,35 @@ int main(void)
 			}
 		}
 	}
+
 	auto playerModel = PlayerModel::create("MainPlayer");
 	modelManager.registerModel(playerModel);
 
+	auto deadConeLight = ConeLight::create("DeadConeLight");
+	lightManager.registerDeadSimpleLight(deadConeLight);
+	auto deadPointLight = PointLight::create("DeadPointLight");
+	lightManager.registerDeadCubeLight(deadPointLight);
+
+	auto debugEnabled = false;
+	auto lastDebugEnabledChange = glfwGetTime() - 10;
 	do
 	{
-		windowManager.clearScreen(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		auto currentTime = glfwGetTime();
+
+		if (controlManager.isKeyPressed(GLFW_KEY_B) && (currentTime - lastDebugEnabledChange) > 0.5)
+		{
+			debugEnabled = !debugEnabled;
+			lastDebugEnabledChange = currentTime;
+		}
 
 		modelManager.updateAllModels();
 		cameraManager.updateAllCameras();
 
-		renderManager.renderModels();
-		debugRenderManager.renderModels();
+		renderManager.render();
+		if (debugEnabled)
+		{
+			debugRenderManager.render();
+		}
 
 		windowManager.swapBuffers();
 		windowManager.pollEvents();

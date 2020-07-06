@@ -391,43 +391,20 @@ private:
   static bool haveBoxSphereCollided(std::shared_ptr<BoxColliderShape> box, std::shared_ptr<SphereColliderShape> sphere)
   {
     auto boxTransformationMatrix = glm::translate(box->getPosition()) * glm::toMat4(glm::quat(box->getRotation())) * glm::scale(box->getScale()) * glm::mat4();
-
-    auto corners = box->getCorners();
-    auto sphereScaledRadius = sphere->getRadius() * sphere->getScale().x;
-    for (auto corner = corners.begin(); corner != corners.end(); corner++)
-    {
-      auto transformedCorner = glm::vec3(boxTransformationMatrix * glm::vec4(*corner, 1.0));
-      auto cornerSphereCenterDistance = glm::distance(transformedCorner, sphere->getPosition());
-      if (cornerSphereCenterDistance < sphereScaledRadius)
-      {
-        return true;
-      }
-    }
-
     auto boxInverseTransformationMatrix = glm::inverse(boxTransformationMatrix);
-    auto sphereEndPointsInBoxSpace = std::vector<glm::vec3>({});
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(sphereScaledRadius, 0.0, 0.0));
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(0.0, sphereScaledRadius, 0.0));
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(0.0, 0.0, sphereScaledRadius));
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(-sphereScaledRadius, 0.0, 0.0));
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(0.0, -sphereScaledRadius, 0.0));
-    sphereEndPointsInBoxSpace.push_back(glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0)) + glm::vec3(0.0, 0.0, -sphereScaledRadius));
-
     AxisAlignedBoundingBox boxAABB(box->getCorners());
     auto boxAABBMinCorners = boxAABB.getMinCorner();
     auto boxAABBMaxCorners = boxAABB.getMaxCorner();
-    for (auto spherePointInBoxSpace = sphereEndPointsInBoxSpace.begin(); spherePointInBoxSpace != sphereEndPointsInBoxSpace.end(); spherePointInBoxSpace++)
-    {
-      auto isBox1CornerInBox2 = (spherePointInBoxSpace->x >= boxAABBMinCorners.x && spherePointInBoxSpace->x <= boxAABBMaxCorners.x) &&
-                                (spherePointInBoxSpace->y >= boxAABBMinCorners.y && spherePointInBoxSpace->y <= boxAABBMaxCorners.y) &&
-                                (spherePointInBoxSpace->z >= boxAABBMinCorners.z && spherePointInBoxSpace->z <= boxAABBMaxCorners.z);
-      if (isBox1CornerInBox2)
-      {
-        return true;
-      }
-    }
 
-    return false;
+    auto sphereScaledRadius = sphere->getRadius() * sphere->getScale().x;
+    auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
+    auto boxPointClosesToSphere = glm::vec3(
+        glm::max(boxAABB.getMinCorner().x, glm::min(spherePositionInBoxSpace.x, boxAABB.getMaxCorner().x)),
+        glm::max(boxAABB.getMinCorner().y, glm::min(spherePositionInBoxSpace.y, boxAABB.getMaxCorner().y)),
+        glm::max(boxAABB.getMinCorner().z, glm::min(spherePositionInBoxSpace.z, boxAABB.getMaxCorner().z)));
+    auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
+
+    return distanceBetweenClosestBoxPointAndSphereCenter <= sphereScaledRadius;
   }
 
   static bool haveBoxBoxCollided(std::shared_ptr<BoxColliderShape> box1, std::shared_ptr<BoxColliderShape> box2)

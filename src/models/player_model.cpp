@@ -12,10 +12,12 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "../include/control.cpp"
+#include "../include/light.cpp"
 #include "../include/models.cpp"
 
 #include "model_base.cpp"
 #include "shot_model.cpp"
+#include "../light/cone_light.cpp"
 
 class PlayerModel : public ModelBase
 {
@@ -26,7 +28,11 @@ private:
   double lastShot;
   short shotId;
 
+  std::shared_ptr<ConeLight> eyeLight1;
+  std::shared_ptr<ConeLight> eyeLight2;
+
   ModelManager &modelManager;
+  LightManager &lightManager;
   ControlManager &controlManager;
 
 public:
@@ -36,10 +42,11 @@ public:
             "Player",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
             "assets/objects/monkey.obj",
-            "assets/textures/cube.bmp", TextureType::BMP,
+            "assets/textures/player.bmp", TextureType::BMP,
             "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
             ColliderShapeType::SPHERE),
         modelManager(ModelManager::getInstance()),
+        lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
         lastTime(glfwGetTime()),
         lastShot(glfwGetTime() - 10.0),
@@ -52,16 +59,29 @@ public:
 
   void init() override
   {
+    auto position = getModelPosition();
+
     setModelPosition(glm::vec3(0.0, 0.0, 30.0));
     setModelRotation(glm::vec3(glm::pi<double>() / 2, glm::pi<double>(), 0));
+
+    eyeLight1 = ConeLight::create(getModelId() + "::EyeLight1");
+    eyeLight1->setLightPosition(glm::vec3(position.x - 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight1->setLightAngles(glm::pi<double>(), 0.0);
+    eyeLight1->setLightIntensity(800.0);
+
+    eyeLight2 = ConeLight::create(getModelId() + "::EyeLight2");
+    eyeLight2->setLightPosition(glm::vec3(position.x + 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight2->setLightAngles(glm::pi<double>(), 0.0);
+    eyeLight2->setLightIntensity(800.0);
+
+    lightManager.registerLight(eyeLight1);
+    lightManager.registerLight(eyeLight2);
   }
 
   void update() override
   {
     auto currentTime = glfwGetTime();
     auto deltaTime = currentTime - lastTime;
-
-    setModelRotation(getModelRotation() + glm::vec3(0, 0, 5 * deltaTime));
 
     auto newPosition = getModelPosition();
     if (controlManager.isKeyPressed(GLFW_KEY_W))
@@ -83,13 +103,14 @@ public:
 
     newPosition = glm::vec3(glm::clamp<double>(newPosition.x, -11.0, 11.0), glm::clamp<double>(newPosition.y, -6.0, 6.0), newPosition.z);
     setModelPosition(newPosition);
+    eyeLight1->setLightPosition(glm::vec3(newPosition.x - 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
+    eyeLight2->setLightPosition(glm::vec3(newPosition.x + 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
 
-    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.5)
+    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.25)
     {
       auto newShot = ShotModel::create("Shot" + std::to_string(shotId));
+      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y, newPosition.z - 1.0));
       modelManager.registerModel(newShot);
-      auto shotPosition = newShot->getModelPosition();
-      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y, shotPosition.z));
 
       shotId++;
       lastShot = currentTime;

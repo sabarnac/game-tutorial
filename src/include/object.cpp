@@ -108,6 +108,7 @@ private:
 		auto file = fopen(objectFilePath.c_str(), "r");
 		if (file == NULL)
 		{
+			std::cout << "Failed at object 1" << std::endl;
 			exit(1);
 		}
 
@@ -146,6 +147,7 @@ private:
 				if (matches != 9)
 				{
 					fclose(file);
+					std::cout << "Failed at object 2" << std::endl;
 					exit(1);
 				}
 

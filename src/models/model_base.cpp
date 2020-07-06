@@ -13,7 +13,6 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 #include "../include/object.cpp"
 #include "../include/texture.cpp"
@@ -185,11 +184,11 @@ public:
     return colliderDetails;
   }
 
-  virtual void init(){};
+  virtual void init() {}
 
-  virtual void deinit(){};
+  virtual void deinit() {}
 
-  virtual void update(){};
+  virtual void update() {}
 };
 
 #endif

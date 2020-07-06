@@ -1,195 +1,246 @@
 #ifndef LIGHT_LIGHT_BASE_CPP
 #define LIGHT_LIGHT_BASE_CPP
 
-#include <string>
-#include <map>
+#include <iostream>
 #include <vector>
-#include <memory>
-#include <algorithm>
-#include <iterator>
+#include <string>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/string_cast.hpp>
 
-#include "../include/object.cpp"
-#include "../include/texture.cpp"
 #include "../include/shader.cpp"
-#include "../include/collider.cpp"
+#include "../include/shadowbuffer.cpp"
 
-class ModelBase
+class LightBase
 {
 
 private:
-  ObjectManager &objectManager;
-  TextureManager &textureManager;
   ShaderManager &shaderManager;
+  ShadowBufferManager &shadowBufferManager;
 
-  std::string modelId;
-  std::string modelName;
+  std::string lightId;
+  std::string lightName;
+
+  glm::vec3 lightColor;
+  double lightIntensity;
 
   glm::vec3 position;
-  glm::vec3 rotation;
-  glm::vec3 scale;
+  double nearPlane;
+  double farPlane;
 
-  glm::mat4 modelMatrix;
-  std::shared_ptr<ObjectDetails> objectDetails;
-  std::shared_ptr<TextureDetails> textureDetails;
+  std::vector<glm::mat4> viewMatrices;
+  std::vector<glm::mat4> projectionMatrices;
   std::shared_ptr<ShaderDetails> shaderDetails;
-  std::shared_ptr<ColliderDetails> colliderDetails;
-
-  glm::mat4 createModelMatrix()
-  {
-    return glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale) * glm::mat4();
-  }
+  std::shared_ptr<ShadowBufferDetails> shadowBufferDetails;
 
 protected:
-  ModelBase(
-      std::string modelId,
-      std::string modelName,
-      glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
-      std::string modelObjectFilePath,
-      std::string modelTextureFilePath, TextureType modelTextureType,
-      std::string modelVertexShaderFilePath, std::string modelFragmentShaderFilePath,
-      std::shared_ptr<ColliderShape> colliderShape)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
+  LightBase(
+      std::string lightId,
+      std::string lightName,
+      glm::vec3 lightColor, double lightIntensity,
+      std::string vertexShaderFilePath, std::string fragmentShaderFilePath,
+      glm::vec3 position,
+      double nearPlane, double farPlane,
+      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
+      ShadowBufferType shadowBufferType)
+      : shaderManager(ShaderManager::getInstance()),
+        shadowBufferManager(ShadowBufferManager::getInstance()),
+        lightId(lightId),
+        lightName(lightName),
+        lightColor(lightColor),
+        lightIntensity(lightIntensity),
         position(position),
-        rotation(rotation),
-        scale(scale),
-        modelMatrix(createModelMatrix())
+        nearPlane(nearPlane),
+        farPlane(farPlane),
+        viewMatrices(viewMatrices),
+        projectionMatrices(projectionMatrices)
   {
-    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    textureDetails = textureManager.createTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
-    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
-    colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", colliderShape);
+    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType);
   }
 
-  ModelBase(
-      std::string modelId,
-      std::string modelName,
-      glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
-      std::string modelObjectFilePath,
-      std::string modelTextureFilePath, TextureType modelTextureType,
-      std::string modelVertexShaderFilePath, std::string modelFragmentShaderFilePath,
-      ColliderShapeType colliderShapeType)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
+  LightBase(
+      std::string lightId,
+      std::string lightName,
+      glm::vec3 lightColor, double lightIntensity,
+      std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath,
+      glm::vec3 position,
+      double nearPlane, double farPlane,
+      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
+      ShadowBufferType shadowBufferType)
+      : shaderManager(ShaderManager::getInstance()),
+        shadowBufferManager(ShadowBufferManager::getInstance()),
+        lightId(lightId),
+        lightName(lightName),
+        lightColor(lightColor),
+        lightIntensity(lightIntensity),
         position(position),
-        rotation(rotation),
-        scale(scale),
-        modelMatrix(createModelMatrix())
+        nearPlane(nearPlane),
+        farPlane(farPlane),
+        viewMatrices(viewMatrices),
+        projectionMatrices(projectionMatrices)
   {
-    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    textureDetails = textureManager.createTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
-    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
-
-    std::shared_ptr<ColliderShape> newColliderShape;
-    auto modelVertices = objectDetails->getVertices();
-    switch (colliderShapeType)
-    {
-    case BOX:
-      newColliderShape = std::make_shared<BoxColliderShape>(position, rotation, scale, modelVertices);
-      break;
-    default:
-      newColliderShape = std::make_shared<SphereColliderShape>(position, rotation, scale, modelVertices);
-    }
-    colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", newColliderShape);
+    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType);
   }
 
-  virtual ~ModelBase()
+  LightBase(
+      std::string lightId,
+      std::string lightName,
+      glm::vec3 lightColor, double lightIntensity,
+      std::string vertexShaderFilePath, std::string fragmentShaderFilePath,
+      glm::vec3 position,
+      double nearPlane, double farPlane,
+      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
+      ShadowBufferType shadowBufferType, float outsideMapDepth[3])
+      : shaderManager(ShaderManager::getInstance()),
+        shadowBufferManager(ShadowBufferManager::getInstance()),
+        lightId(lightId),
+        lightName(lightName),
+        lightColor(lightColor),
+        lightIntensity(lightIntensity),
+        position(position),
+        nearPlane(nearPlane),
+        farPlane(farPlane),
+        viewMatrices(viewMatrices),
+        projectionMatrices(projectionMatrices)
   {
-    objectManager.destroyObject(objectDetails);
-    textureManager.destroyTexture(textureDetails);
-    shaderManager.destroyShaderProgram(shaderDetails);
+    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType, outsideMapDepth);
   }
+
+  LightBase(
+      std::string lightId,
+      std::string lightName,
+      glm::vec3 lightColor, double lightIntensity,
+      std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath,
+      glm::vec3 position,
+      double nearPlane, double farPlane,
+      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
+      ShadowBufferType shadowBufferType, float outsideMapDepth[3])
+      : shaderManager(ShaderManager::getInstance()),
+        shadowBufferManager(ShadowBufferManager::getInstance()),
+        lightId(lightId),
+        lightName(lightName),
+        lightColor(lightColor),
+        lightIntensity(lightIntensity),
+        position(position),
+        nearPlane(nearPlane),
+        farPlane(farPlane),
+        viewMatrices(viewMatrices),
+        projectionMatrices(projectionMatrices)
+  {
+    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType, outsideMapDepth);
+  }
+
+  virtual ~LightBase() {}
 
 public:
-  std::string getModelName()
+  std::string getLightId()
   {
-    return modelName;
+    return lightId;
   }
 
-  std::string getModelId()
+  std::string getLightName()
   {
-    return modelId;
+    return lightName;
   }
 
-  glm::vec3 &getModelPosition()
+  glm::vec3 getLightPosition()
   {
     return position;
   }
 
-  glm::vec3 &getModelRotation()
+  glm::vec3 &getLightColor()
   {
-    return rotation;
+    return lightColor;
   }
 
-  glm::vec3 &getModelScale()
+  double getLightIntensity()
   {
-    return scale;
+    return lightIntensity;
   }
 
-  glm::mat4 &getModelMatrix()
+  double getLightNearPlane()
   {
-    return modelMatrix;
+    return nearPlane;
   }
 
-  void setModelPosition(glm::vec3 newPosition)
+  double getLightFarPlane()
+  {
+    return farPlane;
+  }
+
+  std::vector<glm::mat4> &getViewMatrices()
+  {
+    return viewMatrices;
+  }
+
+  std::vector<glm::mat4> &getProjectionMatrices()
+  {
+    return projectionMatrices;
+  }
+
+  virtual void setLightPosition(glm::vec3 newPosition)
   {
     position = newPosition;
-    colliderDetails->getColliderShape()->updateTransformations(newPosition, rotation, scale);
-    modelMatrix = createModelMatrix();
   }
 
-  void setModelRotation(glm::vec3 newRotation)
+  virtual void setLightColor(glm::vec3 newLightColor)
   {
-    rotation = newRotation;
-    colliderDetails->getColliderShape()->updateTransformations(position, newRotation, scale);
-    modelMatrix = createModelMatrix();
+    lightColor = newLightColor;
   }
 
-  void setModelScale(glm::vec3 newScale)
+  virtual void setLightIntensity(double newLightIntensity)
   {
-    scale = newScale;
-    colliderDetails->getColliderShape()->updateTransformations(position, rotation, newScale);
-    modelMatrix = createModelMatrix();
+    lightIntensity = newLightIntensity;
   }
 
-  std::shared_ptr<ObjectDetails> &getObjectDetails()
+  virtual void setLightNearPlane(double newNearPlane)
   {
-    return objectDetails;
+    nearPlane = newNearPlane;
   }
 
-  std::shared_ptr<TextureDetails> &getTextureDetails()
+  virtual void setLightFarPlane(double newFarPlane)
   {
-    return textureDetails;
+    farPlane = newFarPlane;
   }
 
-  std::shared_ptr<ShaderDetails> &getShaderDetails()
+  virtual void setViewMatrices(std::vector<glm::mat4> newViewMatrices)
+  {
+    viewMatrices = newViewMatrices;
+  }
+
+  virtual void setProjectionMatrices(std::vector<glm::mat4> newProjectionMatrices)
+  {
+    projectionMatrices = newProjectionMatrices;
+  }
+
+  double getNearPlane()
+  {
+    return nearPlane;
+  }
+
+  double getFarPlane()
+  {
+    return farPlane;
+  }
+
+  std::shared_ptr<ShaderDetails> getShaderDetails()
   {
     return shaderDetails;
   }
 
-  std::shared_ptr<ColliderDetails> &getColliderDetails()
+  std::shared_ptr<ShadowBufferDetails> getShadowBufferDetails()
   {
-    return colliderDetails;
+    return shadowBufferDetails;
   }
 
-  virtual void init(){};
+  virtual void init() {}
 
-  virtual void deinit(){};
+  virtual void deinit() {}
 
-  virtual void update(){};
+  virtual void update() {}
 };
 
 #endif

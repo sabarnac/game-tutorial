@@ -6,6 +6,9 @@
 
 #include <GLFW/glfw3.h>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+
+#include "constants.cpp"
 
 class CursorPosition
 {
@@ -40,6 +43,7 @@ private:
   {
     if (!glfwInit())
     {
+      std::cout << "Failed at window 1" << std::endl;
       exit(1);
     }
 
@@ -52,16 +56,25 @@ private:
     window = glfwCreateWindow(width, height, "OpenGL Tutorial", nullptr, nullptr);
     if (window == NULL)
     {
+      std::cout << "Failed at window 2" << std::endl;
       exit(1);
     }
 
     glfwMakeContextCurrent(window);
 
+    glfwGetFramebufferSize(window, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
+
+    FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH * 2;
+    FRAMEBUFFER_HEIGHT = VIEWPORT_HEIGHT * 2;
+
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK)
     {
+      std::cout << "Failed at window 3" << std::endl;
       exit(1);
     }
+
+    glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -72,6 +85,8 @@ private:
     glDepthFunc(GL_LESS);
 
     glEnable(GL_CULL_FACE);
+
+    glfwSwapInterval(0);
   }
 
 public:
@@ -82,6 +97,21 @@ public:
   GLFWwindow *getWindow()
   {
     return window;
+  }
+
+  void switchToWindowViewport()
+  {
+    glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+  }
+
+  void switchToFrameBufferViewport()
+  {
+    glViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_WIDTH);
+  }
+
+  void setClearColor(glm::vec4 color)
+  {
+    glClearColor(color.r, color.g, color.b, color.a);
   }
 
   void clearScreen(GLbitfield mask)
@@ -110,8 +140,8 @@ public:
   }
 };
 
-int WindowManager::width = 1024;
-int WindowManager::height = 768;
+int WindowManager::width = WINDOW_WIDTH;
+int WindowManager::height = WINDOW_HEIGHT;
 WindowManager WindowManager::instance;
 
 #endif

@@ -61,9 +61,7 @@ private:
 	{
 		GLuint textureId;
 		glGenTextures(1, &textureId);
-
 		glBindTexture(GL_TEXTURE_2D, textureId);
-
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -72,6 +70,7 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return textureId;
 	}
 
@@ -85,6 +84,7 @@ private:
 		auto file = fopen(textureFilePath.c_str(), "rb");
 		if (!file)
 		{
+			std::cout << "Failed at texture 1" << std::endl;
 			exit(1);
 		}
 
@@ -92,21 +92,25 @@ private:
 		if (readBytes != 54)
 		{
 			fclose(file);
+			std::cout << "Failed at texture 2" << std::endl;
 			exit(1);
 		}
 		if (header[0] != 'B' || header[1] != 'M')
 		{
 			fclose(file);
+			std::cout << "Failed at texture 3" << std::endl;
 			exit(1);
 		}
 		if (*(int *)&(header[0x1E]) != 0)
 		{
 			fclose(file);
+			std::cout << "Failed at texture 4" << std::endl;
 			exit(1);
 		}
 		if (*(int *)&(header[0x1C]) != 24)
 		{
 			fclose(file);
+			std::cout << "Failed at texture 5" << std::endl;
 			exit(1);
 		}
 
