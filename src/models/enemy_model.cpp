@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <random>
+#include <ctime>
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -63,7 +64,7 @@ public:
   }
 };
 
-std::mt19937 EnemyModel::mtGenerator = std::mt19937(glfwGetTime());
+std::mt19937 EnemyModel::mtGenerator = std::mt19937(std::clock());
 std::uniform_real_distribution<double> EnemyModel::mtInitialRotationDistribution = std::uniform_real_distribution<double>(0.0, 359.0);
 std::uniform_real_distribution<double> EnemyModel::mtRotationSpeedDistribution = std::uniform_real_distribution<double>(0.0, 5.0);
 

@@ -6,6 +6,7 @@ layout(location = 2) in vec3 vertexNormal;
 
 out vec2 fragmentUv;
 out vec4 vertexPosition_worldSpace;
+out vec4 vertexPosition_viewSpace;
 out vec3 vertexNormal_viewSpace;
 
 out vec4 simpleLightDepthCoord[8];
@@ -50,7 +51,7 @@ uniform int cubeLightsCount;
 void main()
 {
 	vertexPosition_worldSpace = modelDetails.modelMatrix * vec4(vertexPosition, 1.0);
-	vec4 vertexPosition_viewSpace = modelDetails.viewMatrix * vertexPosition_worldSpace;
+	vertexPosition_viewSpace = modelDetails.viewMatrix * vertexPosition_worldSpace;
 
 	gl_Position = modelDetails.projectionMatrix * vertexPosition_viewSpace;
 

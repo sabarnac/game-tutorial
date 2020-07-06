@@ -461,6 +461,6 @@ public:
 };
 
 RenderManager RenderManager::instance;
-double RenderManager::ambientFactor = 0.15;
+double RenderManager::ambientFactor = 0.25;
 
 #endif

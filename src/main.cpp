@@ -39,15 +39,15 @@ int main(void)
 	auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
 	cameraManager.registerCamera(perspectiveCamera);
 	perspectiveCamera->setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
-	perspectiveCamera->setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.1));
+	perspectiveCamera->setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.3));
 
 	for (auto i = -2; i <= 2; i++)
 	{
 		for (auto j = -1; j <= 1; j++)
 		{
-			for (auto k = -2; k <= 0; k++)
+			for (auto k = -3; k <= 0; k++)
 			{
-				auto enemyModel = EnemyModel::create("Enemy" + std::to_string((15 * (i + 2)) + (3 * (j + 1)) + (k + 2)));
+				auto enemyModel = EnemyModel::create("Enemy" + std::to_string((12 * (i + 2)) + (4 * (j + 1)) + (k + 2)));
 				modelManager.registerModel(enemyModel);
 				enemyModel->setModelPosition(glm::vec3(i * 5, j * 5, k * 5));
 			}
@@ -67,7 +67,6 @@ int main(void)
 	do
 	{
 		auto currentTime = glfwGetTime();
-
 		if (controlManager.isKeyPressed(GLFW_KEY_B) && (currentTime - lastDebugEnabledChange) > 0.5)
 		{
 			debugEnabled = !debugEnabled;

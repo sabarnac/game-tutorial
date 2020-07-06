@@ -67,12 +67,12 @@ public:
     eyeLight1 = ConeLight::create(getModelId() + "::EyeLight1");
     eyeLight1->setLightPosition(glm::vec3(position.x - 0.35, position.y + 0.25, position.z - 1.0));
     eyeLight1->setLightAngles(glm::pi<double>(), 0.0);
-    eyeLight1->setLightIntensity(800.0);
+    eyeLight1->setLightIntensity(350.0);
 
     eyeLight2 = ConeLight::create(getModelId() + "::EyeLight2");
     eyeLight2->setLightPosition(glm::vec3(position.x + 0.35, position.y + 0.25, position.z - 1.0));
     eyeLight2->setLightAngles(glm::pi<double>(), 0.0);
-    eyeLight2->setLightIntensity(800.0);
+    eyeLight2->setLightIntensity(350.0);
 
     lightManager.registerLight(eyeLight1);
     lightManager.registerLight(eyeLight2);

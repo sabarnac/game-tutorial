@@ -2,6 +2,7 @@
 
 in vec2 fragmentUv;
 in vec4 vertexPosition_worldSpace;
+in vec4 vertexPosition_viewSpace;
 in vec3 vertexNormal_viewSpace;
 
 in vec4 simpleLightDepthCoord[8];
@@ -38,6 +39,9 @@ uniform float ambientFactor;
 
 float simpleLightAcneBias = 0.0001;
 float cubeLightAcneBias = 0.001;
+
+float specularReflectivity = 1.25;
+float specularLobeFactor = 3.5;
 
 vec2 getSimpleLightShadowMapTexelSize(int lightIndex)
 {
@@ -196,6 +200,35 @@ vec3 getCubeLightDiffuseLighting(int lightIndex)
   return (lightColorIntensity * diffuseStrength) / (distanceFromLight * distanceFromLight);
 }
 
+
+vec3 getSimpleLightSpecularLighting(int lightIndex)
+{
+  vec3 lightColorIntensity = simpleLightDetails_fragment[lightIndex].lightColor * simpleLightDetails_fragment[lightIndex].lightIntensity;
+  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(simpleLightDetails_fragment[lightIndex].lightPosition, 1.0));
+
+	vec3 viewDirection_viewSpace = normalize(vertexPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
+	highp vec3 lightReflection_viewSpace = reflect(simpleLightDirection_viewSpace[lightIndex], vertexNormal_viewSpace);
+
+  float specularStrength = clamp(dot(viewDirection_viewSpace, lightReflection_viewSpace), 0.0, 1.0);
+  vec3 specularLight = (lightColorIntensity * pow(specularStrength, specularLobeFactor)) / (distanceFromLight * distanceFromLight);
+
+	return specularReflectivity * specularLight;
+}
+
+vec3 getCubeLightSpecularLighting(int lightIndex)
+{
+	vec3 lightColorIntensity = cubeLightDetails_fragment[lightIndex].lightColor * cubeLightDetails_fragment[lightIndex].lightIntensity;
+  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(cubeLightDetails_fragment[lightIndex].lightPosition, 1.0));
+
+	vec3 viewDirection_viewSpace = normalize(vertexPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
+	highp vec3 lightReflection_viewSpace = reflect(cubeLightDirection_viewSpace[lightIndex], vertexNormal_viewSpace);
+
+  float specularStrength = clamp(dot(viewDirection_viewSpace, lightReflection_viewSpace), 0.0, 1.0);
+  vec3 specularLight = (lightColorIntensity * pow(specularStrength, specularLobeFactor)) / (distanceFromLight * distanceFromLight);
+
+	return specularReflectivity * specularLight;
+}
+
 void main()
 {
 	vec3 surfaceColor = texture(diffuseTexture, fragmentUv).rgb;
@@ -206,11 +239,13 @@ void main()
 		vec3 depthMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
 		float visibility = getSimpleLightAverageVisibility(depthMapCoords.xy, depthMapCoords.z, i);
 		color += visibility * surfaceColor * getSimpleLightDiffuseLighting(i);
+		color += visibility * getSimpleLightSpecularLighting(i);
 	}
 	for (int i = 0; i < cubeLightsCount; i++)
 	{
 		vec3 depthMapCoords = vertexPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
 		float visibility = getCubeLightAverageVisibility(vec3(0.0, 0.0, 0.0), 2.0, i);
 		color += visibility * surfaceColor * getCubeLightDiffuseLighting(i);
+		color += visibility * getCubeLightSpecularLighting(i);
 	}
 }

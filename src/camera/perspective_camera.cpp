@@ -81,6 +81,10 @@ public:
         setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.1));
       }
       lastAcceptInputChange = currentTime;
+      controlManager.isKeyPressed(GLFW_KEY_UP);
+      controlManager.isKeyPressed(GLFW_KEY_DOWN);
+      controlManager.isKeyPressed(GLFW_KEY_RIGHT);
+      controlManager.isKeyPressed(GLFW_KEY_LEFT);
     }
 
     if (!acceptInput)
