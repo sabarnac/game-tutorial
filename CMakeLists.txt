@@ -57,7 +57,7 @@ add_definitions(
 )
 
 
-# Tutorial 6
+# Actual project
 add_executable(main
 	src/main.cpp
 )

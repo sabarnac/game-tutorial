@@ -1,20 +1,48 @@
 #version 330 core
 
+// The reason for suffixing structures and uniform variables with
+//   the shader component name, is so that they don't collide with
+//   definitions in other shaders.
+// GPU shader compilers optimize and remove any unused variables,
+//   and if there are different unused variables in the same structure
+//   definition in different shader components, with both being used
+//   through the same variable, then the shader first deletes the unused
+//   variables in the initial shader component compilation step, then
+//   fails to link the two shader components together because their
+//   structures are now different.
+// Note that for primitive uniform variables this cannot be an issue,
+//   because there is no structure to change. Either the entire
+//   variable is kept as is, or completely removed.
+
 #define MAX_SIMPLE_LIGHTS 2
 #define MAX_CUBE_LIGHTS 8
 
+// The UV coordinates of the diffuse color of the fragment in the standard object texture.
+// This is interpolated by the GPU for the fragment when passed from the vertex shader.
 in vec2 fragmentUv;
-in vec4 vertexPosition_worldSpace;
-in vec4 vertexPosition_viewSpace;
-in vec3 vertexNormal_viewSpace;
+// The coordinates of the fragment in the standard object model in world-space.
+// This is interpolated by the GPU for the fragment when passed from the vertex shader.
+in vec4 fragmentPosition_worldSpace;
+// The coordinates of the fragment in the standard object model in view-space.
+// This is interpolated by the GPU for the fragment when passed from the vertex shader.
+in vec4 fragmentPosition_viewSpace;
+// The normal vector of the fragment in the standard object model in view-space.
+// This is interpolated by the GPU for the fragment when passed from the vertex shader.
+in vec3 fragmentNormal_viewSpace;
 
-in vec4 simpleLightDepthCoord[MAX_SIMPLE_LIGHTS];
+// The shadow map coordinates of the current fragment w.r.t all the active simple lights.
+in vec4 simpleLightShadowMapCoord[MAX_SIMPLE_LIGHTS];
+// The direction of the light going towards the current fragment from of all the active
+//   simple light sources.
 in vec3 simpleLightDirection_viewSpace[MAX_SIMPLE_LIGHTS];
+// The direction of the light going towards the current fragment from of all the active
+//   cube light sources.
 in vec3 cubeLightDirection_viewSpace[MAX_CUBE_LIGHTS];
 
+// The final color of the fragment.
 out vec3 color;
 
-
+// The structure defining the details regarding the active lights.
 struct LightDetails_Fragment
 {
 	vec3 lightPosition;
@@ -25,33 +53,89 @@ struct LightDetails_Fragment
 	float farPlane;
 };
 
+// The standard object texture sampler.
 uniform sampler2D diffuseTexture;
 
+// The texture samplers of the shadow maps of simple lights (2D texture lights).
 uniform sampler2D simpleLightTextures[MAX_SIMPLE_LIGHTS];
+// The texture samplers of the shadow maps of cube lights (cubemap texture lights).
 uniform samplerCube cubeLightTextures[MAX_CUBE_LIGHTS];
 
-uniform LightDetails_Fragment simpleLightDetails_fragment[MAX_SIMPLE_LIGHTS];
-uniform LightDetails_Fragment cubeLightDetails_fragment[MAX_CUBE_LIGHTS];
-
+// The number of active simple lights (2D texture lights).
 uniform int simpleLightsCount;
+// The number of active cube lights (cubemap texture lights).
 uniform int cubeLightsCount;
 
+// The details of the active simple lights (2D texture lights).
+uniform LightDetails_Fragment simpleLightDetails_fragment[MAX_SIMPLE_LIGHTS];
+// The details of the active cube lights (cubemap texture lights).
+uniform LightDetails_Fragment cubeLightDetails_fragment[MAX_CUBE_LIGHTS];
+
+// The ambient light factor to use.
+// This defines how much of the surface color is visible from ambient lighting.
 uniform float ambientFactor;
 
+// An integer mask defining what features should be disabled (lighting, shadows, etc.)
 uniform int disableFeatureMask;
 
+// The bias values to use to combat acne bias with the various light source types.
 float simpleLightAcneBias = 0.0001;
 float cubeLightAcneBias = 0.05;
 
+// The specular values to use that define specular reflectivity and the lobe size.
+// This could also be passed using a specular map, which would also allow to define
+//   these values at a per-fragment level.
 float specularReflectivity = 1.25;
 float specularLobeFactor = 3.5;
 
+// The mask flags for disabling shadows and lighting.
 int DISABLE_SHADOW = 1;
 int DISABLE_LIGHT = 2;
 
+/**
+ * Function that returns the size of a single texel (texture-pixel) of the given
+ *   simple light shadow map texture.
+ *
+ * @param lightIndex  The index of the simple light shadow map texture to use.
+ *
+ * @return The texel size of the texture.
+ */
+vec2 getSimpleLightShadowMapTexelValue(int lightIndex)
+{
+	// Define the variable where we'll store the full texture size.
+	vec2 textureSize;
+	// Depending on which light index is provided, grab from the appropriate light
+	//   texture.
+	if (lightIndex == 0)
+	{
+		textureSize = textureSize(simpleLightTextures[0]);
+	}
+	else
+	{
+		textureSize = textureSize(simpleLightTextures[1]);
+	}
+	// Calculate the size of a single texel by taking the inverse of the texture size,
+	//   and return it.
+	return 1.0 / textureSize;
+}
+
+/**
+ * Function that returns the closest depth value recorded in the given simple
+ *   light shadow map texture at the given UV coordinates.
+ *
+ * @param lightIndex  The index of the simple light shadow map texture to use.
+ * @param coords      The UV coordinates from where to get the closest depth value.
+ *
+ * @return The closest depth value at the given UV coordinates.
+ */
 float getSimpleLightShadowMapCoordValue(vec2 coords, int lightIndex)
 {
+	// Define the variable where we'll store the closest depth.
 	float closestDepth;
+	// Depending on which light index is provided, grab from the appropriate light
+	//   texture.
+	// We grab the value from the red channel because that is where the depth value
+	//   is recorded.
 	if (lightIndex == 0)
 	{
 		closestDepth = texture(simpleLightTextures[0], coords).r;
@@ -60,12 +144,27 @@ float getSimpleLightShadowMapCoordValue(vec2 coords, int lightIndex)
 	{
 		closestDepth = texture(simpleLightTextures[1], coords).r;
 	}
+	// Return the captured closest depth value from the shadow map.
 	return closestDepth;
 }
 
+/**
+ * Function that returns the closest depth value recorded in the given cube
+ *   light shadow map at the given UV coordinates.
+ *
+ * @param lightIndex  The index of the cube light shadow map texture to use.
+ * @param coords      The UV coordinates from where to get the closest depth value.
+ *
+ * @return The closest depth value at the given UV coordinates.
+ */
 float getCubeLightShadowMapCoordValue(vec3 coords, int lightIndex)
 {
+	// Define the variable where we'll store the closest depth.
 	float closestDepth;
+	// Depending on which light index is provided, grab from the appropriate light
+	//   texture.
+	// We grab the value from the red channel because that is where the depth value
+	//   is recorded.
 	if (lightIndex == 0)
 	{
 		closestDepth = texture(cubeLightTextures[0], coords).r;
@@ -98,108 +197,251 @@ float getCubeLightShadowMapCoordValue(vec3 coords, int lightIndex)
 	{
 		closestDepth = texture(cubeLightTextures[7], coords).r;
 	}
+	// Since for cube lights (point lights), we divided the actual depth against
+	//   the max distance the light could reach till (the far plane), multiply
+	//   by the same value again to the actual value back and return it.
 	return closestDepth * cubeLightDetails_fragment[lightIndex].farPlane;
 }
 
-float getSimpleLightAverageVisibility(vec2 depthMapCoords, float currentDepth, int lightIndex)
+/**
+ * Function that returns the average visibility of the fragment from the given
+ *   simple light source.
+ *
+ * @param shadowMapCoords  The shadow map coordinates of the current fragment.
+ * @param currentDepth     The depth of the current fragment w.r.t. the light source.
+ * @param lightIndex       The index of the simple light shadow map texture to use.
+ *
+ * @return The average visibility of the fragment.
+ */
+float getSimpleLightAverageVisibility(vec2 shadowMapCoords, float currentDepth, int lightIndex)
 {
+	// Define the variable where we'll store the average visibility.
   float visibility = 0.0;
-	float closestDepth = getSimpleLightShadowMapCoordValue(depthMapCoords, lightIndex);
-	visibility += currentDepth - simpleLightAcneBias > closestDepth ? 0.0 : 1.0;
-  return visibility;
+	// Get the texel size of the shadow map texture.
+	vec2 texelSize = getSimpleLightShadowMapTexelValue(lightIndex);
+	// We'll sample the closest depth values from the given coordinate and the
+	//   immediately surrounding coordinates as well to get a better average
+	//   visibility value.
+	for (int x = -2; x <= 2; x++)
+	{
+		for (int y = -2; y <= 2; y++)
+		{
+			// Grab the depth of the fragment that was closest to the light source at the given coordinates.
+			float closestDepth = getSimpleLightShadowMapCoordValue(shadowMapCoords + (vec2(x, y) * texelSize), lightIndex);
+			// If the depth of the current fragment w.r.t. the light source is farther away then the depth of the closest
+			//   recorded fragment (accounting for some bias), that means the current fragment is not visible to the light
+			//   source, so add visibility as 0. Otherwise, add visibility of the current fragment as 1.
+			visibility += currentDepth - simpleLightAcneBias > closestDepth ? 0.0 : 1.0;
+		}
+	}
+	// Return the average visibility across the number of shadow map samples taken (5 * 5 = 25).
+  return visibility / 25.0;
 }
 
-float getCubeLightAverageVisibility(vec3 depthMapCoords, float currentDepth, int lightIndex)
+/**
+ * Function that returns the average visibility of the fragment from the given
+ *   cube light source.
+ *
+ * @param shadowMapCoords  The shadow map coordinates of the current fragment.
+ * @param currentDepth     The depth of the current fragment w.r.t. the light source.
+ * @param lightIndex       The index of the cube light shadow map texture to use.
+ *
+ * @return The average visibility of the fragment.
+ */
+float getCubeLightAverageVisibility(vec3 shadowMapCoords, float currentDepth, int lightIndex)
 {
+	// Define the variable where we'll store the average visibility.
   float visibility = 0.0;
-	float closestDepth = getCubeLightShadowMapCoordValue(depthMapCoords, lightIndex);
-	visibility += currentDepth - cubeLightAcneBias > closestDepth ? 0.0 : 1.0;
-  return visibility;
+	// We'll sample the closest depth values from the given coordinate and the
+	//   immediately surrounding coordinates as well to get a better average
+	//   visibility value.
+	for (int x = -1; x <= 1; x++)
+	{
+		for (int y = -1; y <= 1; y++)
+		{
+			for (int z = -1; z <= 1; z++)
+			{
+				// Grab the depth of the fragment that was closest to the light source at the given coordinates.
+				float closestDepth = getCubeLightShadowMapCoordValue(shadowMapCoords + (vec3(x, y, z) * 0.0001), lightIndex);
+				// If the depth of the current fragment w.r.t. the light source is farther away then the depth of the closest
+				//   recorded fragment (accounting for some bias), that means the current fragment is not visible to the light
+				//   source, so add visibility as 0. Otherwise, add visibility of the current fragment as 1.
+				visibility += currentDepth - cubeLightAcneBias > closestDepth ? 0.0 : 1.0;
+			}
+		}
+	}
+	// Return the average visibility across the number of shadow map samples taken (3 * 3 * 3 = 27).
+  return visibility / 27.0;
 }
 
 
+/**
+ * Function that calculates the diffuse lighting value from the given simple light source.
+ *
+ * @param lightIndex  The index of the simple light source to calculate against.
+ *
+ * @return The diffuse lighting value from the given simple light source.
+ */
 vec3 getSimpleLightDiffuseLighting(int lightIndex)
 {
+	// Get the color value from the light after being increased based on the intensity of the light.
   vec3 lightColorIntensity = simpleLightDetails_fragment[lightIndex].lightColor * simpleLightDetails_fragment[lightIndex].lightIntensity;
-  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(simpleLightDetails_fragment[lightIndex].lightPosition, 1.0));
+	// Calculate the distance of the fragment from the light source.
+  float distanceFromLight = distance(fragmentPosition_worldSpace, vec4(simpleLightDetails_fragment[lightIndex].lightPosition, 1.0));
 
-  float diffuseStrength = clamp(dot(vertexNormal_viewSpace, simpleLightDirection_viewSpace[lightIndex]), 0.0, 1.0);
+	// Calculate the strength of the diffuse lighting based on the angle of the light against the normal vector of the
+	//   fragment of the surface.
+  float diffuseStrength = clamp(dot(fragmentNormal_viewSpace, simpleLightDirection_viewSpace[lightIndex]), 0.0, 1.0);
+	// Calculate the final diffuse lighting value using the light's color and intensity, the diffuse strength, and the
+	//   distance of the light source from the fragment.
   return (lightColorIntensity * diffuseStrength) / (distanceFromLight * distanceFromLight);
 }
 
+/**
+ * Function that calculates the diffuse lighting value from the given cube light source.
+ *
+ * @param lightIndex  The index of the cube light source to calculate against.
+ *
+ * @return The diffuse lighting value from the given cube light source.
+ */
 vec3 getCubeLightDiffuseLighting(int lightIndex)
 {
+	// Get the color value from the light after being increased based on the intensity of the light.
 	vec3 lightColorIntensity = cubeLightDetails_fragment[lightIndex].lightColor * cubeLightDetails_fragment[lightIndex].lightIntensity;
-  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(cubeLightDetails_fragment[lightIndex].lightPosition, 1.0));
+	// Calculate the distance of the fragment from the light source.
+  float distanceFromLight = distance(fragmentPosition_worldSpace, vec4(cubeLightDetails_fragment[lightIndex].lightPosition, 1.0));
 
-  float diffuseStrength = clamp(dot(vertexNormal_viewSpace, cubeLightDirection_viewSpace[lightIndex]), 0.0, 1.0);
+	// Calculate the strength of the diffuse lighting based on the angle of the light against the normal vector of the
+	//   fragment of the surface.
+  float diffuseStrength = clamp(dot(fragmentNormal_viewSpace, cubeLightDirection_viewSpace[lightIndex]), 0.0, 1.0);
+	// Calculate the final diffuse lighting value using the light's color and intensity, the diffuse strength, and the
+	//   distance of the light source from the fragment.
   return (lightColorIntensity * diffuseStrength) / (distanceFromLight * distanceFromLight);
 }
 
 
+/**
+ * Function that calculates the specular lighting value from the given simple light source.
+ *
+ * @param lightIndex  The index of the simple light source to calculate against.
+ *
+ * @return The specular lighting value from the given simple light source.
+ */
 vec3 getSimpleLightSpecularLighting(int lightIndex)
 {
+	// Get the color value from the light after being increased based on the intensity of the light.
   vec3 lightColorIntensity = simpleLightDetails_fragment[lightIndex].lightColor * simpleLightDetails_fragment[lightIndex].lightIntensity;
-  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(simpleLightDetails_fragment[lightIndex].lightPosition, 1.0));
+	// Calculate the distance of the fragment from the light source.
+  float distanceFromLight = distance(fragmentPosition_worldSpace, vec4(simpleLightDetails_fragment[lightIndex].lightPosition, 1.0));
 
-	vec3 viewDirection_viewSpace = normalize(vertexPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
-	highp vec3 lightReflection_viewSpace = reflect(simpleLightDirection_viewSpace[lightIndex], vertexNormal_viewSpace);
+	// Calculate the direction of the view from the fragment position.
+	vec3 viewDirection_viewSpace = normalize(fragmentPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
+	// Calculate the direction of the light after it has reflected from the fragment.
+	highp vec3 lightReflection_viewSpace = reflect(simpleLightDirection_viewSpace[lightIndex], fragmentNormal_viewSpace);
 
+	// Calculate the strength of the specular lighting based on the angle of the reflected light against the direction of the camera
+	//   from the fragment position.
   float specularStrength = clamp(dot(viewDirection_viewSpace, lightReflection_viewSpace), 0.0, 1.0);
+	// Calculate the amount of specular light being reflected by the fragment as a factor of the light's color and intensity, the
+	//   specular strength of the light, the specular lobe factor of the surface, and the distance of the light from the fragment.
   vec3 specularLight = (lightColorIntensity * pow(specularStrength, specularLobeFactor)) / (distanceFromLight * distanceFromLight);
 
+	// Return the final specular lighting value as the calculated specular light value factored against the reflectivity of the surface
+	//   of the fragment.
 	return specularReflectivity * specularLight;
 }
 
+/**
+ * Function that calculates the specular lighting value from the given cube light source.
+ *
+ * @param lightIndex  The index of the cube light source to calculate against.
+ *
+ * @return The specular lighting value from the given cube light source.
+ */
 vec3 getCubeLightSpecularLighting(int lightIndex)
 {
+	// Get the color value from the light after being increased based on the intensity of the light.
 	vec3 lightColorIntensity = cubeLightDetails_fragment[lightIndex].lightColor * cubeLightDetails_fragment[lightIndex].lightIntensity;
-  float distanceFromLight = distance(vertexPosition_worldSpace, vec4(cubeLightDetails_fragment[lightIndex].lightPosition, 1.0));
+	// Calculate the distance of the fragment from the light source.
+  float distanceFromLight = distance(fragmentPosition_worldSpace, vec4(cubeLightDetails_fragment[lightIndex].lightPosition, 1.0));
 
-	vec3 viewDirection_viewSpace = normalize(vertexPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
-	highp vec3 lightReflection_viewSpace = reflect(cubeLightDirection_viewSpace[lightIndex], vertexNormal_viewSpace);
+	// Calculate the direction of the view from the fragment position.
+	vec3 viewDirection_viewSpace = normalize(fragmentPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
+	// Calculate the direction of the light after it has reflected from the fragment.
+	highp vec3 lightReflection_viewSpace = reflect(cubeLightDirection_viewSpace[lightIndex], fragmentNormal_viewSpace);
 
+	// Calculate the strength of the specular lighting based on the angle of the reflected light against the direction of the camera
+	//   from the fragment position.
   float specularStrength = clamp(dot(viewDirection_viewSpace, lightReflection_viewSpace), 0.0, 1.0);
+	// Calculate the amount of specular light being reflected by the fragment as a factor of the light's color and intensity, the
+	//   specular strength of the light, the specular lobe factor of the surface, and the distance of the light from the fragment.
   vec3 specularLight = (lightColorIntensity * pow(specularStrength, specularLobeFactor)) / (distanceFromLight * distanceFromLight);
 
+	// Return the final specular lighting value as the calculated specular light value factored against the reflectivity of the surface
+	//   of the fragment.
 	return specularReflectivity * specularLight;
 }
 
 void main()
 {
+	// Grab the diffuse color defined in the shot tecture using the given UV coordinates.
 	vec3 surfaceColor = texture(diffuseTexture, fragmentUv).rgb;
+	// Set the initial color value as the ambient lighting color value of the surface.
+	// If lighting is disabled, the ambient factor is set to 1, since lighting should be ignored as a factor.
 	color = surfaceColor * clamp(ambientFactor + clamp(disableFeatureMask - 1, 0, 1), 0.0, 1.0);
 
+	// Perform lighting calculations as long as lighting has not been disabled.
 	if (disableFeatureMask < DISABLE_LIGHT)
 	{
+		// Iterate through all the active simple lights.
 		for (int i = 0; i < simpleLightsCount; i++)
 		{
+			// Define variable for storing the visibility of the fragment to the current active simple light source.
 			float visibility;
+			// Perform shadow visibility calculations as long as shadows have not been disabled.
 			if (disableFeatureMask < DISABLE_SHADOW)
 			{
-				vec3 depthMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
-				visibility = getSimpleLightAverageVisibility(depthMapCoords.xy, depthMapCoords.z, i);
+				// Calculate the shadow map coordinates of the fragment w.r.t. the current active simple light source (while applying perspective-division).
+				vec3 shadowMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
+				// Calculate the visibilty of the fragment to the current active simple light source.
+				visibility = getSimpleLightAverageVisibility(shadowMapCoords.xy, shadowMapCoords.z, i);
 			}
 			else
 			{
+				// Since shadows have been disabled, the fragment will be fully visible to the light source.
 				visibility = 1.0;
 			}
+			// Calculate and add the simple light diffuse lighting value to the final color output, factored against the color of the surface
+			//   and the visibility of the fragment to the light source.
 			color += visibility * surfaceColor * getSimpleLightDiffuseLighting(i);
+			// Calculate and add the simple light specular lighting value to the final color output, factored against the visibility of the
+			//   fragment to the light source.
 			color += visibility * getSimpleLightSpecularLighting(i);
 		}
+
+		// Iterate through all the active cube lights.
 		for (int i = 0; i < cubeLightsCount; i++)
 		{
+			// Define variable for storing the visibility of the fragment to the current active cube light source.
 			float visibility;
+			// Perform shadow visibility calculations as long as shadows have not been disabled.
 			if (disableFeatureMask < DISABLE_SHADOW)
 			{
-				vec3 depthMapCoords = vertexPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
-				visibility = getCubeLightAverageVisibility(depthMapCoords.xyz, length(depthMapCoords), i);
+				// Calculate the shadow map coordinates of the fragment w.r.t. the current active cube light source.
+				vec3 shadowMapCoords = fragmentPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
+				// Calculate the visibilty of the fragment to the current active cube light source.
+				visibility = getCubeLightAverageVisibility(shadowMapCoords.xyz, length(shadowMapCoords), i);
 			}
 			else
 			{
+				// Since shadows have been disabled, the fragment will be fully visible to the light source.
 				visibility = 1.0;
 			}
+			// Calculate and add the cube light diffuse lighting value to the final color output, factored against the color of the surface
+			//   and the visibility of the fragment to the light source.
 			color += visibility * surfaceColor * getCubeLightDiffuseLighting(i);
+			// Calculate and add the cube light specular lighting value to the final color output, factored against the visibility of the
+			//   fragment to the light source.
 			color += visibility * getCubeLightSpecularLighting(i);
 		}
 	}

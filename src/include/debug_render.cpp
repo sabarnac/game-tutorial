@@ -142,12 +142,12 @@ public:
 
       auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
       auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
-      auto fragmentColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "fragmentColor");
+      auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
       auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light->second->getLightPosition()) * glm::mat4();
       glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
       glUniform1f(radiusId, 0.5);
-      glUniform4f(fragmentColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
+      glUniform4f(lineColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
 
       DebugVertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
       vertexArray.enableAttribute();
@@ -177,12 +177,12 @@ public:
 
         auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
         auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
-        auto fragmentColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "fragmentColor");
+        auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
         auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform1f(radiusId, std::dynamic_pointer_cast<SphereColliderShape>(model->second->getColliderDetails()->getColliderShape())->getRadius());
-        glUniform4f(fragmentColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
+        glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
         DebugVertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
         vertexArray.enableAttribute();
@@ -198,11 +198,11 @@ public:
         }
 
         auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
-        auto fragmentColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "fragmentColor");
+        auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
         auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
-        glUniform4f(fragmentColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
+        glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
         auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getBaseBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
@@ -223,11 +223,11 @@ public:
         }
 
         auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
-        auto fragmentColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "fragmentColor");
+        auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
         auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
-        glUniform4f(fragmentColorId, debugColor2.r, debugColor2.g, debugColor2.b, debugColor2.a);
+        glUniform4f(lineColorId, debugColor2.r, debugColor2.g, debugColor2.b, debugColor2.a);
 
         DebugVertexAttributeArray vertexArray("VertexArray", model->second->getObjectDetails()->getVertexBufferId(), 3);
         vertexArray.enableAttribute();
@@ -244,11 +244,11 @@ public:
 
         auto viewMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "viewMatrix");
         auto projectionMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "projectionMatrix");
-        auto fragmentColorId = glGetUniformLocation(debugAabbShader->getShaderId(), "fragmentColor");
+        auto lineColorId = glGetUniformLocation(debugAabbShader->getShaderId(), "lineColor");
 
         glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &viewMatrix[0][0]);
         glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
-        glUniform4f(fragmentColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
+        glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
         auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getTransformedBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
