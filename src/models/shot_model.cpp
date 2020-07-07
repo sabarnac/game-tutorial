@@ -117,7 +117,7 @@ public:
       lastShotLightChange = currentTime;
     }
 
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 5.0 * deltaTime));
+    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 100.0 * deltaTime));
     updateShotLight();
 
     auto models = modelManager.getAllModels();

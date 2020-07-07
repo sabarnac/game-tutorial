@@ -39,7 +39,7 @@ uniform float ambientFactor;
 uniform int disableFeatureMask;
 
 float simpleLightAcneBias = 0.0001;
-float cubeLightAcneBias = 0.001;
+float cubeLightAcneBias = 0.03;
 
 float specularReflectivity = 1.25;
 float specularLobeFactor = 3.5;
@@ -191,7 +191,7 @@ void main()
 			if (disableFeatureMask < DISABLE_SHADOW)
 			{
 				vec3 depthMapCoords = vertexPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
-				visibility = getCubeLightAverageVisibility(vec3(0.0, 0.0, 0.0), 2.0, i);
+				visibility = getCubeLightAverageVisibility(depthMapCoords.xyz, length(depthMapCoords), i);
 			}
 			else
 			{

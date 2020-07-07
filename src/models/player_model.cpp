@@ -30,7 +30,8 @@ private:
 
   static bool isEyeLightPresent;
   static double lastEyeLightChange;
-  std::shared_ptr<ConeLight> eyeLight;
+  std::shared_ptr<ConeLight> eyeLight1;
+  std::shared_ptr<ConeLight> eyeLight2;
 
   ModelManager &modelManager;
   LightManager &lightManager;
@@ -38,17 +39,25 @@ private:
 
   void createEyeLight(glm::vec3 position)
   {
-    eyeLight = ConeLight::create(getModelId() + "::EyeLight");
-    eyeLight->setLightPosition(glm::vec3(position.x, position.y + 0.25, position.z - 1.0));
-    eyeLight->setLightAngles(glm::pi<double>(), 0.0);
-    eyeLight->setLightIntensity(350.0);
-    lightManager.registerLight(eyeLight);
+    eyeLight1 = ConeLight::create(getModelId() + "::EyeLight1");
+    eyeLight1->setLightPosition(glm::vec3(position.x - 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight1->setLightAngles(glm::pi<double>(), 0.0);
+    eyeLight1->setLightIntensity(350.0);
+    lightManager.registerLight(eyeLight1);
+
+    eyeLight2 = ConeLight::create(getModelId() + "::EyeLight2");
+    eyeLight2->setLightPosition(glm::vec3(position.x + 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight2->setLightAngles(glm::pi<double>(), 0.0);
+    eyeLight2->setLightIntensity(350.0);
+    lightManager.registerLight(eyeLight2);
+
     isEyeLightPresent = true;
   }
 
   void destroyEyeLight()
   {
-    lightManager.deregisterLight(eyeLight);
+    lightManager.deregisterLight(eyeLight1);
+    lightManager.deregisterLight(eyeLight2);
     isEyeLightPresent = false;
   }
 
@@ -56,7 +65,8 @@ private:
   {
     if (isEyeLightPresent)
     {
-      eyeLight->setLightPosition(glm::vec3(newPosition.x, newPosition.y + 0.25, newPosition.z - 1.0));
+      eyeLight1->setLightPosition(glm::vec3(newPosition.x - 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
+      eyeLight2->setLightPosition(glm::vec3(newPosition.x + 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
     }
   }
 

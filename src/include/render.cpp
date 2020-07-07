@@ -224,7 +224,7 @@ public:
         shaderId = light->second->getShaderDetails()->getShaderId();
         glUseProgram(shaderId);
       }
-      
+
       auto viewMatrices = light->second->getViewMatrices();
       auto projectionMatrices = light->second->getProjectionMatrices();
 
@@ -413,14 +413,14 @@ public:
               auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
               glActiveTexture(GL_TEXTURE0 + (i + 1 + maxSimpleLights));
               glBindTexture(GL_TEXTURE_CUBE_MAP, lightDetails.textureId);
-              glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 1 + maxSimpleLights);
+              glUniform1i(lightTextureId, i + 1 + maxSimpleLights);
             }
             for (auto i = categorizedLights[ShadowBufferType::CUBE].size(); i < maxCubeLights; i++)
             {
               auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
               glActiveTexture(GL_TEXTURE0 + (i + 1 + maxSimpleLights));
               glBindTexture(GL_TEXTURE_CUBE_MAP, deadCubeLight->getShadowBufferDetails()->getShadowBufferTextureId());
-              glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 1 + maxSimpleLights);
+              glUniform1i(lightTextureId, i + 1 + maxSimpleLights);
             }
           }
         }
