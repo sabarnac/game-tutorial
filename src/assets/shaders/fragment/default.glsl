@@ -39,7 +39,7 @@ uniform float ambientFactor;
 uniform int disableFeatureMask;
 
 float simpleLightAcneBias = 0.0001;
-float cubeLightAcneBias = 0.03;
+float cubeLightAcneBias = 0.05;
 
 float specularReflectivity = 1.25;
 float specularLobeFactor = 3.5;
