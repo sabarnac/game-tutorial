@@ -26,7 +26,7 @@ private:
 	GLuint vertexBufferId;
 	GLuint uvBufferId;
 	GLuint normalBufferId;
-	uint bufferSize;
+	unsigned int bufferSize;
 
 public:
 	ObjectDetails(
@@ -36,7 +36,7 @@ public:
 			GLuint vertexBufferId,
 			GLuint uvBufferId,
 			GLuint normalBufferId,
-			uint bufferCount)
+			unsigned int bufferCount)
 			: objectName(objectName),
 				objectFilePath(objectFilePath),
 				vertices(vertices),
@@ -70,7 +70,7 @@ public:
 		return normalBufferId;
 	}
 
-	uint getBufferSize()
+	unsigned int getBufferSize()
 	{
 		return bufferSize;
 	}
@@ -95,7 +95,7 @@ private:
 		return bufferId;
 	}
 
-	uint loadObjObject(std::string objectName, std::string objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *vertexBufferId, GLuint *uvBufferId, GLuint *normalBufferId)
+	unsigned int loadObjObject(std::string objectName, std::string objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *vertexBufferId, GLuint *uvBufferId, GLuint *normalBufferId)
 	{
 		std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 		std::vector<glm::vec3> tempVertices;
@@ -214,7 +214,7 @@ public:
 		GLuint uvBufferId;
 		GLuint normalBufferId;
 
-		uint bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
+		unsigned int bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
 
 		auto newObject = std::make_shared<ObjectDetails>(objectName, objectFilePath, vertices, vertexBufferId, uvBufferId, normalBufferId, bufferSize);
 

@@ -34,7 +34,7 @@ private:
   GLuint attributeId;
   std::string attributeName;
   GLuint bufferId;
-  uint bufferElementSize;
+  unsigned int bufferElementSize;
 
   GLuint createAttributeId()
   {
@@ -53,7 +53,7 @@ private:
 public:
   VertexAttributeArray(VertexAttributeArray &) = delete;
 
-  VertexAttributeArray(std::string attributeName, GLuint bufferId, uint bufferElementSize)
+  VertexAttributeArray(std::string attributeName, GLuint bufferId, unsigned int bufferElementSize)
       : attributeName(attributeName),
         bufferId(bufferId),
         bufferElementSize(bufferElementSize)
