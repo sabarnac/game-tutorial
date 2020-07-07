@@ -18,8 +18,10 @@ out vec3 color;
 struct LightDetails_Fragment
 {
 	vec3 lightPosition;
+	mat4 lightVpMatrix;
 	vec3 lightColor;
 	float lightIntensity;
+	float nearPlane;
 	float farPlane;
 };
 

@@ -28,6 +28,10 @@ struct LightDetails_Vertex
 {
 	vec3 lightPosition;
 	mat4 lightVpMatrix;
+	vec3 lightColor;
+	float lightIntensity;
+	float nearPlane;
+	float farPlane;
 };
 
 uniform ModelDetails modelDetails;
