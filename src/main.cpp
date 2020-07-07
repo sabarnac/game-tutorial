@@ -45,9 +45,9 @@ int main(void)
 	{
 		for (auto j = -1; j <= 1; j++)
 		{
-			for (auto k = -3; k <= 0; k++)
+			for (auto k = -2; k <= 0; k++)
 			{
-				auto enemyModel = EnemyModel::create("Enemy" + std::to_string((12 * (i + 2)) + (4 * (j + 1)) + (k + 2)));
+				auto enemyModel = EnemyModel::create("Enemy" + std::to_string((9 * (i + 2)) + (3 * (j + 1)) + (k + 2)));
 				modelManager.registerModel(enemyModel);
 				enemyModel->setModelPosition(glm::vec3(i * 5, j * 5, k * 5));
 			}

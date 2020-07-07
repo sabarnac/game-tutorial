@@ -13,6 +13,7 @@
 
 #include "../include/models.cpp"
 #include "../include/light.cpp"
+#include "../include/control.cpp"
 
 #include "model_base.cpp"
 #include "../light/point_light.cpp"
@@ -24,8 +25,33 @@ private:
 
   ModelManager &modelManager;
   LightManager &lightManager;
+  ControlManager &controlManager;
 
+  static bool isShotLightPresent;
+  static double lastShotLightChange;
   std::shared_ptr<PointLight> shotLight;
+
+  void createShotLight()
+  {
+    shotLight = PointLight::create(getModelId() + "::ShotLight");
+    shotLight->setLightPosition(getModelPosition());
+    lightManager.registerLight(shotLight);
+    isShotLightPresent = true;
+  }
+
+  void destroyShotLight()
+  {
+    lightManager.deregisterLight(shotLight);
+    isShotLightPresent = false;
+  }
+
+  void updateShotLight()
+  {
+    if (isShotLightPresent)
+    {
+      shotLight->setLightPosition(getModelPosition());
+    }
+  }
 
 public:
   ShotModel(std::string modelId)
@@ -39,6 +65,7 @@ public:
             ColliderShapeType::SPHERE),
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
+        controlManager(ControlManager::getInstance()),
         lastTime(glfwGetTime()) {}
 
   static std::shared_ptr<ShotModel> create(std::string modelId)
@@ -49,19 +76,26 @@ public:
   void init() override
   {
     setModelScale(glm::vec3(0.5));
-
-    shotLight = PointLight::create(getModelId() + "::ShotLight");
-    shotLight->setLightPosition(getModelPosition());
-    lightManager.registerLight(shotLight);
+    if (isShotLightPresent)
+    {
+      createShotLight();
+    }
   }
 
   void deinit() override
   {
-    lightManager.deregisterLight(shotLight);
+    if (isShotLightPresent)
+    {
+      destroyShotLight();
+      isShotLightPresent = true;
+    }
   }
 
   void update() override
   {
+    auto currentTime = glfwGetTime();
+    auto deltaTime = currentTime - lastTime;
+
     auto currentPosition = getModelPosition();
     if (currentPosition.z < -50.0)
     {
@@ -69,11 +103,22 @@ public:
       return;
     }
 
-    auto currentTime = glfwGetTime();
-    auto deltaTime = currentTime - lastTime;
+    if (controlManager.isKeyPressed(GLFW_KEY_H) && (currentTime - lastShotLightChange) > 0.5)
+    {
+      isShotLightPresent = !isShotLightPresent;
+      if (isShotLightPresent)
+      {
+        createShotLight();
+      }
+      else
+      {
+        destroyShotLight();
+      }
+      lastShotLightChange = currentTime;
+    }
 
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 100.0 * deltaTime));
-    shotLight->setLightPosition(getModelPosition());
+    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 5.0 * deltaTime));
+    updateShotLight();
 
     auto models = modelManager.getAllModels();
     for (auto model = models.begin(); model != models.end(); model++)
@@ -92,5 +137,7 @@ public:
     lastTime = currentTime;
   }
 };
+bool ShotModel::isShotLightPresent = true;
+double ShotModel::lastShotLightChange = -1;
 
 #endif

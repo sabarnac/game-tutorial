@@ -1,13 +1,16 @@
 #version 330 core
 
+#define MAX_SIMPLE_LIGHTS 2
+#define MAX_CUBE_LIGHTS 8
+
 in vec2 fragmentUv;
 in vec4 vertexPosition_worldSpace;
 in vec4 vertexPosition_viewSpace;
 in vec3 vertexNormal_viewSpace;
 
-in vec4 simpleLightDepthCoord[8];
-in vec3 simpleLightDirection_viewSpace[8];
-in vec3 cubeLightDirection_viewSpace[8];
+in vec4 simpleLightDepthCoord[MAX_SIMPLE_LIGHTS];
+in vec3 simpleLightDirection_viewSpace[MAX_SIMPLE_LIGHTS];
+in vec3 cubeLightDirection_viewSpace[MAX_CUBE_LIGHTS];
 
 out vec3 color;
 
@@ -15,27 +18,25 @@ out vec3 color;
 struct LightDetails_Fragment
 {
 	vec3 lightPosition;
-	mat4 lightVpMatrix;
 	vec3 lightColor;
 	float lightIntensity;
-	int mapWidth;
-	int mapHeight;
-	float nearPlane;
 	float farPlane;
 };
 
 uniform sampler2D diffuseTexture;
 
-uniform sampler2D simpleLightTextures[7];
-uniform samplerCube cubeLightTextures[8];
+uniform sampler2D simpleLightTextures[MAX_SIMPLE_LIGHTS];
+uniform samplerCube cubeLightTextures[MAX_CUBE_LIGHTS];
 
-uniform LightDetails_Fragment simpleLightDetails_fragment[7];
-uniform LightDetails_Fragment cubeLightDetails_fragment[8];
+uniform LightDetails_Fragment simpleLightDetails_fragment[MAX_SIMPLE_LIGHTS];
+uniform LightDetails_Fragment cubeLightDetails_fragment[MAX_CUBE_LIGHTS];
 
 uniform int simpleLightsCount;
 uniform int cubeLightsCount;
 
 uniform float ambientFactor;
+
+uniform int disableFeatureMask;
 
 float simpleLightAcneBias = 0.0001;
 float cubeLightAcneBias = 0.001;
@@ -43,39 +44,8 @@ float cubeLightAcneBias = 0.001;
 float specularReflectivity = 1.25;
 float specularLobeFactor = 3.5;
 
-vec2 getSimpleLightShadowMapTexelSize(int lightIndex)
-{
-	vec2 texelSize;
-	if (lightIndex == 0)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[0], 0);
-	}
-	else if (lightIndex == 1)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[1], 0);
-	}
-	else if (lightIndex == 2)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[2], 0);
-	}
-	else if (lightIndex == 3)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[3], 0);
-	}
-	else if (lightIndex == 4)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[4], 0);
-	}
-	else if (lightIndex == 5)
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[5], 0);
-	}
-	else
-	{
-		texelSize = 1.0 / textureSize(simpleLightTextures[6], 0);
-	}
-	return texelSize;
-}
+int DISABLE_SHADOW = 1;
+int DISABLE_LIGHT = 2;
 
 float getSimpleLightShadowMapCoordValue(vec2 coords, int lightIndex)
 {
@@ -84,29 +54,9 @@ float getSimpleLightShadowMapCoordValue(vec2 coords, int lightIndex)
 	{
 		closestDepth = texture(simpleLightTextures[0], coords).r;
 	}
-	else if (lightIndex == 1)
-	{
-		closestDepth = texture(simpleLightTextures[1], coords).r;
-	}
-	else if (lightIndex == 2)
-	{
-		closestDepth = texture(simpleLightTextures[2], coords).r;
-	}
-	else if (lightIndex == 3)
-	{
-		closestDepth = texture(simpleLightTextures[3], coords).r;
-	}
-	else if (lightIndex == 4)
-	{
-		closestDepth = texture(simpleLightTextures[4], coords).r;
-	}
-	else if (lightIndex == 5)
-	{
-		closestDepth = texture(simpleLightTextures[5], coords).r;
-	}
 	else
 	{
-		closestDepth = texture(simpleLightTextures[6], coords).r;
+		closestDepth = texture(simpleLightTextures[1], coords).r;
 	}
 	return closestDepth;
 }
@@ -151,34 +101,18 @@ float getCubeLightShadowMapCoordValue(vec3 coords, int lightIndex)
 
 float getSimpleLightAverageVisibility(vec2 depthMapCoords, float currentDepth, int lightIndex)
 {
-	vec2 texelSize = getSimpleLightShadowMapTexelSize(lightIndex);
   float visibility = 0.0;
-  for (int x = -1; x <= 1; x++)
-	{
-    for (int y = -1; y <= 1; y++)
-		{
-      float closestDepth = getSimpleLightShadowMapCoordValue(depthMapCoords + (vec2(x, y) * texelSize), lightIndex);
-      visibility += currentDepth - simpleLightAcneBias > closestDepth ? 0.0 : 1.0;
-    }
-  }
-  return visibility / 9.0;
+	float closestDepth = getSimpleLightShadowMapCoordValue(depthMapCoords, lightIndex);
+	visibility += currentDepth - simpleLightAcneBias > closestDepth ? 0.0 : 1.0;
+  return visibility;
 }
 
 float getCubeLightAverageVisibility(vec3 depthMapCoords, float currentDepth, int lightIndex)
 {
   float visibility = 0.0;
-  for (int x = -1; x <= 1; x++)
-	{
-    for (int y = -1; y <= 1; y++)
-		{
-	    for (int z = -1; z <= 1; z++)
-			{
-    	  float closestDepth = getCubeLightShadowMapCoordValue(depthMapCoords + vec3(x * 0.01, y * 0.01, z * 0.01), lightIndex);
-      	visibility += currentDepth - cubeLightAcneBias > closestDepth ? 0.0 : 1.0;
-			}
-    }
-  }
-  return visibility / 27.0;
+	float closestDepth = getCubeLightShadowMapCoordValue(depthMapCoords, lightIndex);
+	visibility += currentDepth - cubeLightAcneBias > closestDepth ? 0.0 : 1.0;
+  return visibility;
 }
 
 
@@ -232,20 +166,39 @@ vec3 getCubeLightSpecularLighting(int lightIndex)
 void main()
 {
 	vec3 surfaceColor = texture(diffuseTexture, fragmentUv).rgb;
-	color = surfaceColor * ambientFactor;
+	color = surfaceColor * clamp(ambientFactor + clamp(disableFeatureMask - 1, 0, 1), 0.0, 1.0);
 
-	for (int i = 0; i < simpleLightsCount; i++)
+	if (disableFeatureMask < DISABLE_LIGHT)
 	{
-		vec3 depthMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
-		float visibility = getSimpleLightAverageVisibility(depthMapCoords.xy, depthMapCoords.z, i);
-		color += visibility * surfaceColor * getSimpleLightDiffuseLighting(i);
-		color += visibility * getSimpleLightSpecularLighting(i);
-	}
-	for (int i = 0; i < cubeLightsCount; i++)
-	{
-		vec3 depthMapCoords = vertexPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
-		float visibility = getCubeLightAverageVisibility(vec3(0.0, 0.0, 0.0), 2.0, i);
-		color += visibility * surfaceColor * getCubeLightDiffuseLighting(i);
-		color += visibility * getCubeLightSpecularLighting(i);
+		for (int i = 0; i < simpleLightsCount; i++)
+		{
+			float visibility;
+			if (disableFeatureMask < DISABLE_SHADOW)
+			{
+				vec3 depthMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
+				visibility = getSimpleLightAverageVisibility(depthMapCoords.xy, depthMapCoords.z, i);
+			}
+			else
+			{
+				visibility = 1.0;
+			}
+			color += visibility * surfaceColor * getSimpleLightDiffuseLighting(i);
+			color += visibility * getSimpleLightSpecularLighting(i);
+		}
+		for (int i = 0; i < cubeLightsCount; i++)
+		{
+			float visibility;
+			if (disableFeatureMask < DISABLE_SHADOW)
+			{
+				vec3 depthMapCoords = vertexPosition_worldSpace.xyz - cubeLightDetails_fragment[i].lightPosition;
+				visibility = getCubeLightAverageVisibility(vec3(0.0, 0.0, 0.0), 2.0, i);
+			}
+			else
+			{
+				visibility = 1.0;
+			}
+			color += visibility * surfaceColor * getCubeLightDiffuseLighting(i);
+			color += visibility * getCubeLightSpecularLighting(i);
+		}
 	}
 }

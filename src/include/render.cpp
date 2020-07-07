@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 
 #include "window.cpp"
+#include "control.cpp"
 #include "constants.cpp"
 #include "../light/light_base.cpp"
 #include "../camera/camera_base.cpp"
@@ -86,7 +87,14 @@ private:
   static double ambientFactor;
   static RenderManager instance;
 
+  static int maxSimpleLights;
+  static int maxCubeLights;
+
+  static int DISABLE_SHADOW;
+  static int DISABLE_LIGHT;
+
   WindowManager &windowManager;
+  ControlManager &controlManager;
 
   std::string activeCameraId;
   std::shared_ptr<LightBase> deadSimpleLight;
@@ -98,13 +106,19 @@ private:
   double startTime;
   double lastTime;
 
+  int disableFeatureMask;
+  double lastDisableFeatureMaskChange;
+
   RenderManager()
       : windowManager(WindowManager::getInstance()),
+        controlManager(ControlManager::getInstance()),
         registeredLights({}),
         registeredModels({}),
         registeredCameras({}),
         startTime(glfwGetTime()),
-        lastTime(glfwGetTime()) {}
+        lastTime(glfwGetTime()),
+        disableFeatureMask(0),
+        lastDisableFeatureMaskChange(glfwGetTime() - 10) {}
 
 public:
   RenderManager(RenderManager &) = delete;
@@ -183,6 +197,7 @@ public:
     auto shaderId = -1;
     for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
     {
+      auto shadowType = light->second->getShadowBufferDetails()->getShadowBufferType();
       LightDetails lightDetails = {
           light->second->getLightPosition(),
           light->second->getProjectionMatrices()[0] * light->second->getViewMatrices()[0] * glm::mat4(),
@@ -193,7 +208,12 @@ public:
           light->second->getNearPlane(),
           light->second->getFarPlane(),
           light->second->getShadowBufferDetails()->getShadowBufferTextureId()};
-      categorizedLights[light->second->getShadowBufferDetails()->getShadowBufferType()].push_back(lightDetails);
+      categorizedLights[shadowType].push_back(lightDetails);
+
+      if (disableFeatureMask >= DISABLE_SHADOW)
+      {
+        continue;
+      }
 
       glBindFramebuffer(GL_FRAMEBUFFER, light->second->getShadowBufferDetails()->getShadowBufferId());
 
@@ -204,53 +224,68 @@ public:
         shaderId = light->second->getShaderDetails()->getShaderId();
         glUseProgram(shaderId);
       }
-
+      
       auto viewMatrices = light->second->getViewMatrices();
       auto projectionMatrices = light->second->getProjectionMatrices();
-      for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+
+      auto vpMatrixCountVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_vertex.vpMatrixCount");
+      glUniform1i(vpMatrixCountVertexId, viewMatrices.size());
+      if (shadowType == ShadowBufferType::CUBE)
       {
-        auto vpMatrixCountVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_vertex.vpMatrixCount");
-        glUniform1i(vpMatrixCountVertexId, viewMatrices.size());
         auto vpMatrixCountGeometryId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_geometry.vpMatrixCount");
         glUniform1i(vpMatrixCountGeometryId, viewMatrices.size());
         auto vpMatrixCountFragmentId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_fragment.vpMatrixCount");
         glUniform1i(vpMatrixCountFragmentId, viewMatrices.size());
+      }
 
-        auto lightPositionVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_vertex.lightPosition");
-        glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+      auto lightPositionVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_vertex.lightPosition");
+      glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+      if (shadowType == ShadowBufferType::CUBE)
+      {
         auto lightPositionGeometryId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_geometry.lightPosition");
         glUniform3f(lightPositionGeometryId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
         auto lightPositionFragmentId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "lightDetails_fragment.lightPosition");
         glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+      }
 
-        auto nearPlaneVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_vertex.nearPlane");
-        glUniform1f(nearPlaneVertexId, lightDetails.nearPlane);
-        auto nearPlaneGeometryId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_geometry.nearPlane");
-        glUniform1f(nearPlaneGeometryId, lightDetails.nearPlane);
+      auto nearPlaneVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_vertex.nearPlane");
+      glUniform1f(nearPlaneVertexId, lightDetails.nearPlane);
+      if (shadowType == ShadowBufferType::CUBE)
+      {
         auto nearPlaneFragmentId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_fragment.nearPlane");
         glUniform1f(nearPlaneFragmentId, lightDetails.nearPlane);
+      }
 
-        auto farPlaneVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_vertex.farPlane");
-        glUniform1f(farPlaneVertexId, lightDetails.farPlane);
-        auto farPlaneGeometryId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_geometry.farPlane");
-        glUniform1f(farPlaneGeometryId, lightDetails.farPlane);
+      auto farPlaneVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_vertex.farPlane");
+      glUniform1f(farPlaneVertexId, lightDetails.farPlane);
+      if (shadowType == ShadowBufferType::CUBE)
+      {
         auto farPlaneFragmentId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "projectionDetails_fragment.farPlane");
         glUniform1f(farPlaneFragmentId, lightDetails.farPlane);
+      }
 
-        auto modelMatrixId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "modelMatrix");
-        auto modelMatrix = model->second->getModelMatrix();
-        glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &modelMatrix[0][0]);
-
-        for (auto i = 0; i < viewMatrices.size(); i++)
+      for (auto i = 0; i < viewMatrices.size(); i++)
+      {
+        auto vpMatrix = projectionMatrices[i] * viewMatrices[i];
+        if (shadowType == ShadowBufferType::SIMPLE)
         {
-          auto vpMatrix = projectionMatrices[i] * viewMatrices[i];
           auto vpMatrixVertexId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), ("lightDetails_vertex.vpMatrices[" + std::to_string(i) + "]").c_str());
           glUniformMatrix4fv(vpMatrixVertexId, 1, GL_FALSE, &vpMatrix[0][0]);
+        }
+        if (shadowType == ShadowBufferType::CUBE)
+        {
           auto vpMatrixGeometryId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), ("lightDetails_geometry.vpMatrices[" + std::to_string(i) + "]").c_str());
           glUniformMatrix4fv(vpMatrixGeometryId, 1, GL_FALSE, &vpMatrix[0][0]);
           auto vpMatrixFragmentId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), ("lightDetails_fragment.vpMatrices[" + std::to_string(i) + "]").c_str());
           glUniformMatrix4fv(vpMatrixFragmentId, 1, GL_FALSE, &vpMatrix[0][0]);
         }
+      }
+
+      for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+      {
+        auto modelMatrixId = glGetUniformLocation(light->second->getShaderDetails()->getShaderId(), "modelMatrix");
+        auto modelMatrix = model->second->getModelMatrix();
+        glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &modelMatrix[0][0]);
 
         VertexAttributeArray vertexArray("VertexArray", model->second->getObjectDetails()->getVertexBufferId(), 3);
 
@@ -275,163 +310,120 @@ public:
     auto totalTime = currentTime - startTime;
 
     auto shaderId = -1;
+    auto modelName = std::string("");
     auto activeCamera = registeredCameras[activeCameraId];
     auto viewMatrix = activeCamera->getViewMatrix();
     auto projectionMatrix = activeCamera->getProjectionMatrix();
     for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
     {
+      auto startTime = glfwGetTime();
       if (shaderId != model->second->getShaderDetails()->getShaderId())
       {
-        shaderId = model->second->getShaderDetails()->getShaderId();
-        glUseProgram(shaderId);
+        glUseProgram(model->second->getShaderDetails()->getShaderId());
       }
 
       auto modelMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.modelMatrix");
-      auto viewMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.viewMatrix");
-      auto projectionMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.projectionMatrix");
-      auto mvpMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.mvpMatrix");
-
-      auto totalTimeId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "timeDetails.totalTime");
-      auto deltaTimeId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "timeDetails.deltaTime");
-
-      auto ambientFactorId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "ambientFactor");
-
-      auto simpleLightsCountId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "simpleLightsCount");
-      auto cubeLightsCountId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "cubeLightsCount");
-
-      auto diffuseTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "diffuseTexture");
-
       auto modelMatrix = model->second->getModelMatrix();
       glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &modelMatrix[0][0]);
-      glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &viewMatrix[0][0]);
-      glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
-      auto mvpMatrix = projectionMatrix * viewMatrix * modelMatrix * glm::mat4();
-      glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
 
-      glUniform1f(totalTimeId, totalTime);
-      glUniform1f(deltaTimeId, deltaTime);
-
-      glUniform1f(ambientFactorId, ambientFactor);
-
-      glUniform1i(simpleLightsCountId, categorizedLights[ShadowBufferType::SIMPLE].size());
-      glUniform1i(cubeLightsCountId, categorizedLights[ShadowBufferType::CUBE].size());
-
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, model->second->getTextureDetails()->getTextureId());
-      glUniform1i(diffuseTextureId, 0);
-
-      for (auto i = 0; i < categorizedLights[ShadowBufferType::SIMPLE].size(); i++)
+      if (modelName != model->second->getModelName())
       {
-        auto lightDetails = categorizedLights[ShadowBufferType::SIMPLE][i];
-
-        auto lightPositionVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightPosition").c_str());
-        glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-        auto lightPositionFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightPosition").c_str());
-        glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-
-        auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
-        glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
-        auto lightVpMatrixFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
-        glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
-
-        auto lightColorVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
-        glUniform3f(lightColorVertexId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-        auto lightColorFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
-        glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-
-        auto lightIntensityVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightIntensity").c_str());
-        glUniform1f(lightIntensityVertexId, lightDetails.lightIntensity);
-        auto lightIntensityFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
-        glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
-
-        auto lightMapWidthVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].mapWidth").c_str());
-        glUniform1i(lightMapWidthVertexId, lightDetails.mapWidth);
-        auto lightMapWidthFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].mapWidth").c_str());
-        glUniform1i(lightMapWidthFragmentId, lightDetails.mapWidth);
-
-        auto lightMapHeightVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].mapHeight").c_str());
-        glUniform1i(lightMapHeightVertexId, lightDetails.mapHeight);
-        auto lightMapHeightFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].mapHeight").c_str());
-        glUniform1i(lightMapHeightFragmentId, lightDetails.mapHeight);
-
-        auto lightNearPlaneVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].nearPlane").c_str());
-        glUniform1f(lightNearPlaneVertexId, lightDetails.nearPlane);
-        auto lightNearPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].nearPlane").c_str());
-        glUniform1f(lightNearPlaneFragmentId, lightDetails.nearPlane);
-
-        auto lightFarPlaneVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].farPlane").c_str());
-        glUniform1f(lightFarPlaneVertexId, lightDetails.farPlane);
-        auto lightFarPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].farPlane").c_str());
-        glUniform1f(lightFarPlaneFragmentId, lightDetails.farPlane);
-
-        auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightTextures[" + std::to_string(i) + "]").c_str());
-        glActiveTexture(GL_TEXTURE0 + (i + 1));
-        glBindTexture(GL_TEXTURE_2D, lightDetails.textureId);
-        glUniform1i(lightTextureId, i + 1);
-      }
-      for (auto i = categorizedLights[ShadowBufferType::SIMPLE].size(); i < 7; i++)
-      {
-        auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightTextures[" + std::to_string(i) + "]").c_str());
-        glActiveTexture(GL_TEXTURE0 + (i + 1));
-        glBindTexture(GL_TEXTURE_2D, deadSimpleLight->getShadowBufferDetails()->getShadowBufferTextureId());
-        glUniform1i(lightTextureId, i + 1);
+        auto diffuseTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "diffuseTexture");
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, model->second->getTextureDetails()->getTextureId());
+        glUniform1i(diffuseTextureId, 0);
       }
 
-      for (auto i = 0; i < categorizedLights[ShadowBufferType::CUBE].size(); i++)
+      if (shaderId != model->second->getShaderDetails()->getShaderId())
       {
-        auto lightDetails = categorizedLights[ShadowBufferType::CUBE][i];
+        auto viewMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.viewMatrix");
+        auto projectionMatrixId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "modelDetails.projectionMatrix");
+        glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &viewMatrix[0][0]);
+        glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
 
-        auto lightPositionVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightPosition").c_str());
-        glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-        auto lightPositionFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightPosition").c_str());
-        glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+        if (modelName != "Shot")
+        {
+          auto disableFeatureMaskId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "disableFeatureMask");
+          auto ambientFactorId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "ambientFactor");
+          auto simpleLightsCountId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "simpleLightsCount");
+          auto cubeLightsCountId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "cubeLightsCount");
 
-        auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
-        glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
-        auto lightVpMatrixFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
-        glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
+          glUniform1f(ambientFactorId, ambientFactor);
+          glUniform1i(disableFeatureMaskId, disableFeatureMask);
+          glUniform1i(simpleLightsCountId, categorizedLights[ShadowBufferType::SIMPLE].size());
+          glUniform1i(cubeLightsCountId, categorizedLights[ShadowBufferType::CUBE].size());
 
-        auto lightColorVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
-        glUniform3f(lightColorVertexId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-        auto lightColorFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
-        glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
+          if (disableFeatureMask < DISABLE_LIGHT)
+          {
+            for (auto i = 0; i < categorizedLights[ShadowBufferType::SIMPLE].size(); i++)
+            {
+              auto lightDetails = categorizedLights[ShadowBufferType::SIMPLE][i];
 
-        auto lightIntensityVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightIntensity").c_str());
-        glUniform1f(lightIntensityVertexId, lightDetails.lightIntensity);
-        auto lightIntensityFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
-        glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
+              auto lightPositionVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightPosition").c_str());
+              glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+              auto lightPositionFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightPosition").c_str());
+              glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
 
-        auto lightMapWidthVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].mapWidth").c_str());
-        glUniform1i(lightMapWidthVertexId, lightDetails.mapWidth);
-        auto lightMapWidthFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].mapWidth").c_str());
-        glUniform1i(lightMapWidthFragmentId, lightDetails.mapWidth);
+              auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
+              glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
 
-        auto lightMapHeightVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].mapHeight").c_str());
-        glUniform1i(lightMapHeightVertexId, lightDetails.mapHeight);
-        auto lightMapHeightFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].mapHeight").c_str());
-        glUniform1i(lightMapHeightFragmentId, lightDetails.mapHeight);
+              auto lightColorFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
+              glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
 
-        auto lightNearPlaneVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].nearPlane").c_str());
-        glUniform1f(lightNearPlaneVertexId, lightDetails.nearPlane);
-        auto lightNearPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].nearPlane").c_str());
-        glUniform1f(lightNearPlaneFragmentId, lightDetails.nearPlane);
+              auto lightIntensityFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
+              glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
 
-        auto lightFarPlaneVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].farPlane").c_str());
-        glUniform1f(lightFarPlaneVertexId, lightDetails.farPlane);
-        auto lightFarPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].farPlane").c_str());
-        glUniform1f(lightFarPlaneFragmentId, lightDetails.farPlane);
+              auto lightFarPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].farPlane").c_str());
+              glUniform1f(lightFarPlaneFragmentId, lightDetails.farPlane);
 
-        auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
-        glActiveTexture(GL_TEXTURE0 + (i + 8));
-        glBindTexture(GL_TEXTURE_CUBE_MAP, lightDetails.textureId);
-        glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 8);
-      }
-      for (auto i = categorizedLights[ShadowBufferType::CUBE].size(); i < 8; i++)
-      {
-        auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
-        glActiveTexture(GL_TEXTURE0 + (i + 8));
-        glBindTexture(GL_TEXTURE_CUBE_MAP, deadCubeLight->getShadowBufferDetails()->getShadowBufferTextureId());
-        glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 8);
+              auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightTextures[" + std::to_string(i) + "]").c_str());
+              glActiveTexture(GL_TEXTURE0 + (i + 1));
+              glBindTexture(GL_TEXTURE_2D, lightDetails.textureId);
+              glUniform1i(lightTextureId, i + 1);
+            }
+            for (auto i = categorizedLights[ShadowBufferType::SIMPLE].size(); i < maxSimpleLights; i++)
+            {
+              auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightTextures[" + std::to_string(i) + "]").c_str());
+              glActiveTexture(GL_TEXTURE0 + (i + 1));
+              glBindTexture(GL_TEXTURE_2D, deadSimpleLight->getShadowBufferDetails()->getShadowBufferTextureId());
+              glUniform1i(lightTextureId, i + 1);
+            }
+
+            for (auto i = 0; i < categorizedLights[ShadowBufferType::CUBE].size(); i++)
+            {
+              auto lightDetails = categorizedLights[ShadowBufferType::CUBE][i];
+
+              auto lightPositionVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightPosition").c_str());
+              glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+              auto lightPositionFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightPosition").c_str());
+              glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+
+              auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
+              glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
+
+              auto lightColorFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
+              glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
+
+              auto lightIntensityFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
+              glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
+
+              auto lightFarPlaneFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].farPlane").c_str());
+              glUniform1f(lightFarPlaneFragmentId, lightDetails.farPlane);
+
+              auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
+              glActiveTexture(GL_TEXTURE0 + (i + 1 + maxSimpleLights));
+              glBindTexture(GL_TEXTURE_CUBE_MAP, lightDetails.textureId);
+              glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 1 + maxSimpleLights);
+            }
+            for (auto i = categorizedLights[ShadowBufferType::CUBE].size(); i < maxCubeLights; i++)
+            {
+              auto lightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightTextures[" + std::to_string(i) + "]").c_str());
+              glActiveTexture(GL_TEXTURE0 + (i + 1 + maxSimpleLights));
+              glBindTexture(GL_TEXTURE_CUBE_MAP, deadCubeLight->getShadowBufferDetails()->getShadowBufferTextureId());
+              glUniform1i(lightTextureId, categorizedLights[ShadowBufferType::SIMPLE].size() + i + 1 + maxSimpleLights);
+            }
+          }
+        }
       }
 
       VertexAttributeArray vertexArray("VertexArray", model->second->getObjectDetails()->getVertexBufferId(), 3);
@@ -443,6 +435,10 @@ public:
       normalArray.enableAttribute();
 
       glDrawArrays(GL_TRIANGLES, 0, model->second->getObjectDetails()->getBufferSize());
+      auto endTime = glfwGetTime();
+
+      shaderId = model->second->getShaderDetails()->getShaderId();
+      modelName = model->second->getModelName();
     }
 
     lastTime = currentTime;
@@ -450,6 +446,24 @@ public:
 
   void render()
   {
+    auto currentTime = glfwGetTime();
+    if (controlManager.isKeyPressed(GLFW_KEY_L) && (currentTime - lastDisableFeatureMaskChange) > 0.5)
+    {
+      switch (disableFeatureMask)
+      {
+      case 0:
+        disableFeatureMask = DISABLE_SHADOW;
+        break;
+      case 1:
+        disableFeatureMask = DISABLE_LIGHT;
+        break;
+      case 2:
+      default:
+        disableFeatureMask = 0;
+      }
+      lastDisableFeatureMaskChange = currentTime;
+    }
+
     auto categorizedLights = renderLights();
     renderModels(categorizedLights);
   }
@@ -462,5 +476,9 @@ public:
 
 RenderManager RenderManager::instance;
 double RenderManager::ambientFactor = 0.25;
+int RenderManager::maxSimpleLights = 2;
+int RenderManager::maxCubeLights = 8;
+int RenderManager::DISABLE_SHADOW = 1;
+int RenderManager::DISABLE_LIGHT = 2;
 
 #endif

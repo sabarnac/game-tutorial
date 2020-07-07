@@ -1,5 +1,8 @@
 #version 330 core
 
+#define MAX_SIMPLE_LIGHTS 2
+#define MAX_CUBE_LIGHTS 8
+
 layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec2 vertexUv;
 layout(location = 2) in vec3 vertexNormal;
@@ -9,9 +12,9 @@ out vec4 vertexPosition_worldSpace;
 out vec4 vertexPosition_viewSpace;
 out vec3 vertexNormal_viewSpace;
 
-out vec4 simpleLightDepthCoord[8];
-out vec3 simpleLightDirection_viewSpace[8];
-out vec3 cubeLightDirection_viewSpace[8];
+out vec4 simpleLightDepthCoord[MAX_SIMPLE_LIGHTS];
+out vec3 simpleLightDirection_viewSpace[MAX_SIMPLE_LIGHTS];
+out vec3 cubeLightDirection_viewSpace[MAX_CUBE_LIGHTS];
 
 
 struct ModelDetails
@@ -19,31 +22,18 @@ struct ModelDetails
 	mat4 modelMatrix;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
-	mat4 mvpMatrix;
-};
-
-struct TimeDetails
-{
-	float totalTime;
-	float deltaTime;
 };
 
 struct LightDetails_Vertex
 {
 	vec3 lightPosition;
 	mat4 lightVpMatrix;
-	vec3 lightColor;
-	float lightIntensity;
-	int mapWidth;
-	int mapHeight;
-	float nearPlane;
-	float farPlane;
 };
 
 uniform ModelDetails modelDetails;
 
-uniform LightDetails_Vertex simpleLightDetails_vertex[4];
-uniform LightDetails_Vertex cubeLightDetails_vertex[6];
+uniform LightDetails_Vertex simpleLightDetails_vertex[MAX_SIMPLE_LIGHTS];
+uniform LightDetails_Vertex cubeLightDetails_vertex[MAX_CUBE_LIGHTS];
 
 uniform int simpleLightsCount;
 uniform int cubeLightsCount;

@@ -12,7 +12,6 @@ struct ModelDetails
 	mat4 modelMatrix;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
-	mat4 mvpMatrix;
 };
 
 uniform ModelDetails modelDetails;
