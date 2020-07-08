@@ -62,7 +62,7 @@ public:
     light->deinit();
   }
 
-  std::shared_ptr<LightBase> getModel(std::string lightId)
+  std::shared_ptr<LightBase> getLight(std::string lightId)
   {
     return registeredLights[lightId];
   }

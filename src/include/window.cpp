@@ -92,7 +92,10 @@ private:
 public:
   WindowManager(WindowManager &) = delete;
 
-  ~WindowManager() {}
+  ~WindowManager()
+  {
+    glfwDestroyWindow(window);
+  }
 
   GLFWwindow *getWindow()
   {

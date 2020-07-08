@@ -110,7 +110,7 @@ void main()
 		// Calculate the direction of the light from the source to the interpolated fragment in view-space.
 		simpleLightDirection_viewSpace[i] = normalize((lightPosition_viewSpace - vertexPosition_viewSpace).xyz);
 		// Calculate the depth of the interpolated fragment w.r.t to the light source (without accounting for perspective division).
-		simpleLightDepthCoord[i] = simpleLightDetails_vertex[i].lightVpMatrix * modelDetails.modelMatrix * vec4(vertexPosition, 1.0);
+		simpleLightShadowMapCoord[i] = simpleLightDetails_vertex[i].lightVpMatrix * modelDetails.modelMatrix * vec4(vertexPosition, 1.0);
 	}
 
 	// Iterate through all the active cube lights.

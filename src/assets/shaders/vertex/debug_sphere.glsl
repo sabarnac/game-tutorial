@@ -27,7 +27,7 @@ void main()
 	//   vector going from the sphere centre to the vertex. Then scale to the
 	//   actual position the vertex is supposed to be in based on what the radius
 	//   of the sphere is
-	vec3 scaledVertexPosition = normalize(vertexPosition) * radius
+	vec3 scaledVertexPosition = normalize(vertexPosition) * radius;
 	// Transform the scaled model vertex using the model-view-projection matrix,
 	//   and return that as the vertex position.
 	gl_Position = mvpMatrix * vec4(scaledVertexPosition, 1.0);

@@ -3,7 +3,6 @@
 
 #include <map>
 #include <set>
-#include <unistd.h>
 
 #include <GL/glew.h>
 

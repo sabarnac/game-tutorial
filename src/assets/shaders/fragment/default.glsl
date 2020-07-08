@@ -402,7 +402,7 @@ void main()
 			if (disableFeatureMask < DISABLE_SHADOW)
 			{
 				// Calculate the shadow map coordinates of the fragment w.r.t. the current active simple light source (while applying perspective-division).
-				vec3 shadowMapCoords = (((simpleLightDepthCoord[i].xyz) / simpleLightDepthCoord[i].w) * 0.5) + 0.5;
+				vec3 shadowMapCoords = (((simpleLightShadowMapCoord[i].xyz) / simpleLightShadowMapCoord[i].w) * 0.5) + 0.5;
 				// Calculate the visibilty of the fragment to the current active simple light source.
 				visibility = getSimpleLightAverageVisibility(shadowMapCoords.xy, shadowMapCoords.z, i);
 			}

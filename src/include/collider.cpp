@@ -21,10 +21,15 @@ bool haveSphereSphereCollided(SphereColliderShape &sphere1, SphereColliderShape 
 bool haveBoxSphereCollided(BoxColliderShape &box, SphereColliderShape &sphere);
 bool haveBoxBoxCollided(BoxColliderShape &box1, BoxColliderShape &box2);
 
+/**
+ * A class for defining an axis-aligned bounding box collider.
+ */
 class AxisAlignedBoundingBox
 {
 private:
+  // The corner of the cube with the smallest coordinates.
   glm::vec3 minCorner;
+  // The corner of the cube with the smallest coordinates.
   glm::vec3 maxCorner;
 
   std::vector<glm::vec3> corners;
