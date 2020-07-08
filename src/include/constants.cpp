@@ -1,6 +1,10 @@
 #ifndef INCLUDE_CONSTANTS_CPP
 #define INCLUDE_CONSTANTS_CPP
 
+/**
+ * A bunch of constants that's required to be known globally.
+ */
+
 int WINDOW_WIDTH = 1024;
 int WINDOW_HEIGHT = 768;
 int VIEWPORT_WIDTH = WINDOW_WIDTH;

@@ -60,6 +60,9 @@ public:
 class ShadowBufferManager
 {
 private:
+  static int frameBufferWidth;
+  static int frameBufferHeight;
+
   static ShadowBufferManager instance;
 
   std::map<std::string, std::shared_ptr<ShadowBufferDetails>> namedShadowBuffers;
@@ -189,6 +192,8 @@ public:
   }
 };
 
+int ShadowBufferManager::frameBufferWidth = FRAMEBUFFER_WIDTH;
+int ShadowBufferManager::frameBufferHeight = FRAMEBUFFER_WIDTH;
 ShadowBufferManager ShadowBufferManager::instance;
 
 #endif
