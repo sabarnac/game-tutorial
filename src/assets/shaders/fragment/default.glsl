@@ -165,6 +165,16 @@ float getCubeLightShadowMapCoordValue(vec3 coords, int lightIndex)
 	return closestDepth * cubeLightDetails_fragment[lightIndex].farPlane;
 }
 
+/**
+ * Function that returns the visibility of the fragment from the given
+ *   simple light source.
+ *
+ * @param shadowMapCoords  The shadow map coordinates of the current fragment.
+ * @param currentDepth     The depth of the current fragment w.r.t. the light source.
+ * @param lightIndex       The index of the simple light shadow map texture to use.
+ *
+ * @return The visibility of the fragment.
+ */
 float getSimpleLightVisibility(vec2 shadowMapCoords, float currentDepth, int lightIndex)
 {
 	// Grab the depth of the fragment that was closest to the light source at the given coordinates.
@@ -198,7 +208,7 @@ float getSimpleLightAverageVisibility(vec2 shadowMapCoords, float currentDepth, 
 	{
 		for (int y = -1; y <= 1; y++)
 		{
-			// Get the visibility of the fragment at the given shadow map coordinates.
+			// Get the visibility of the fragment at the given shadow map coordinates (with variance).
 			visibility += getSimpleLightVisibility(shadowMapCoords + (vec2(x, y) * texelSize), currentDepth, lightIndex);
 		}
 	}
