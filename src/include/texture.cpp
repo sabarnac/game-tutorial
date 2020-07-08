@@ -57,7 +57,7 @@ private:
 	std::map<std::string, std::shared_ptr<TextureDetails>> namedTextures;
 	std::map<std::string, int> namedTextureReferences;
 
-	GLuint createTexture(std::string textureName, unsigned char *textureData, unsigned int width, unsigned int height)
+	GLuint create2dTexture(std::string textureName, unsigned char *textureData, unsigned int width, unsigned int height)
 	{
 		GLuint textureId;
 		glGenTextures(1, &textureId);
@@ -141,7 +141,7 @@ private:
 		fclose(file);
 
 		// Create an OpenGL texture.
-		auto textureId = createTexture(textureName, textureData, width, height);
+		auto textureId = create2dTexture(textureName, textureData, width, height);
 		delete[] textureData;
 
 		return textureId;
@@ -154,7 +154,7 @@ private:
 public:
 	TextureManager(TextureManager &) = delete;
 
-	std::shared_ptr<TextureDetails> &createTexture(std::string textureName, std::string textureFilePath, TextureType textureType)
+	std::shared_ptr<TextureDetails> &create2dTexture(std::string textureName, std::string textureFilePath, TextureType textureType)
 	{
 		auto existingTexture = namedTextures.find(textureName);
 		if (existingTexture != namedTextures.end())

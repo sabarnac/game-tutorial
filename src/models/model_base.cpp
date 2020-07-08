@@ -65,7 +65,7 @@ protected:
         modelMatrix(createModelMatrix())
   {
     objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    textureDetails = textureManager.createTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
+    textureDetails = textureManager.create2dTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
     shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
     colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", colliderShape);
   }
@@ -89,7 +89,7 @@ protected:
         modelMatrix(createModelMatrix())
   {
     objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    textureDetails = textureManager.createTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
+    textureDetails = textureManager.create2dTexture(modelName + "::Texture::BMP", modelTextureFilePath, modelTextureType);
     shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
 
     std::shared_ptr<ColliderShape> newColliderShape;

@@ -33,6 +33,7 @@ private:
 
   void createShotLight()
   {
+    destroyShotLight();
     shotLight = PointLight::create(getModelId() + "::ShotLight");
     shotLight->setLightPosition(getModelPosition());
     lightManager.registerLight(shotLight);
@@ -41,7 +42,11 @@ private:
 
   void destroyShotLight()
   {
-    lightManager.deregisterLight(shotLight);
+    if (shotLight != nullptr)
+    {
+      lightManager.deregisterLight(shotLight);
+      shotLight = nullptr;
+    }
     isShotLightPresent = false;
   }
 
@@ -49,7 +54,15 @@ private:
   {
     if (isShotLightPresent)
     {
+      if (shotLight == nullptr)
+      {
+        createShotLight();
+      }
       shotLight->setLightPosition(getModelPosition());
+    }
+    else if (shotLight != nullptr)
+    {
+      destroyShotLight();
     }
   }
 
@@ -66,7 +79,8 @@ public:
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
-        lastTime(glfwGetTime()) {}
+        lastTime(glfwGetTime()),
+        shotLight(nullptr) {}
 
   static std::shared_ptr<ShotModel> create(std::string modelId)
   {
