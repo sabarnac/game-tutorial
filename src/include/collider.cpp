@@ -378,15 +378,15 @@ private:
    */
   double createRadius(std::vector<glm::vec3> vertices)
   {
-    // Set the farthest vertex distance from the centre of the model as the length of the vertex.
-    // Since the position of the vertex is relative to the centre of the model, just calculating the length of the position
+    // Set the farthest vertex distance from the center of the model as the length of the vertex.
+    // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
     //   vector is enough
     auto farthestVertexDistance = glm::length(vertices[0]);
     // Iterate through each vertex of the model.
     for (auto vertex = vertices.begin(); vertex != vertices.end(); vertex++)
     {
-      // Calculate the distance of the vertex from the centre of the model.
-      // Since the position of the vertex is relative to the centre of the model, just calculating the length of the position
+      // Calculate the distance of the vertex from the center of the model.
+      // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
       //   vector is enough
       auto currentVertexDistance = glm::length(*vertex);
       // Check if the current vector is further away than the last checked farthest vector.
@@ -396,7 +396,7 @@ private:
         farthestVertexDistance = currentVertexDistance;
       }
     }
-    // The largest distance of a vertex from the centre of the model can be used as the radius of the sphere. So return that as
+    // The largest distance of a vertex from the center of the model can be used as the radius of the sphere. So return that as
     //   the result.
     return farthestVertexDistance;
   }
@@ -680,10 +680,10 @@ private:
         glm::max(boxAABB.getMinCorner().x, glm::min(spherePositionInBoxSpace.x, boxAABB.getMaxCorner().x)),
         glm::max(boxAABB.getMinCorner().y, glm::min(spherePositionInBoxSpace.y, boxAABB.getMaxCorner().y)),
         glm::max(boxAABB.getMinCorner().z, glm::min(spherePositionInBoxSpace.z, boxAABB.getMaxCorner().z)));
-    // Calculate the distance between the boxes' closest point and the centre of the sphere.
+    // Calculate the distance between the boxes' closest point and the center of the sphere.
     auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
 
-    // If the distance between the closest point on the box and the centre of the sphere is greater than the radius of the sphere,
+    // If the distance between the closest point on the box and the center of the sphere is greater than the radius of the sphere,
     //   then the two have not collided.
     return distanceBetweenClosestBoxPointAndSphereCenter <= sphereScaledRadius;
   }

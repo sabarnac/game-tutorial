@@ -10,13 +10,17 @@
 
 #include "light_base.cpp"
 
+/**
+ * Class that represents a point light.
+ */
 class PointLight : public LightBase
 {
-
 private:
-  std::string lightId;
-  std::string lightName;
-
+  /**
+   * Create the view matrices for the point light.
+   * 
+   * @return The list of view matrices for the point light.
+   */
   std::vector<glm::mat4> createViewMatrices()
   {
     auto position = getLightPosition();
@@ -28,6 +32,14 @@ private:
                                    glm::lookAt(position, position + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0))});
   }
 
+  /**
+   * Create the projection matrices for the point light.
+   * 
+   * @param nearPlane  The closest distance the light can project from.
+   * @param farPlane   The farthest distance the light can project till.
+   * 
+   * @return The list of projection matrices for the point light.
+   */
   std::vector<glm::mat4> createProjectionMatrices(double nearPlane, double farPlane)
   {
     return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
@@ -54,22 +66,31 @@ public:
 
   void setLightPosition(glm::vec3 newPosition) override
   {
+    // Update the light position.
     LightBase::setLightPosition(newPosition);
+    // Update the view matrices.
     setViewMatrices(createViewMatrices());
   }
 
   void setLightNearPlane(double newNearPlane) override
   {
+    // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
-    setProjectionMatrices(createProjectionMatrices(newNearPlane, getFarPlane()));
+    // Update the projection matrices.
+    setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
   void setLightFarPlane(double newFarPlane) override
   {
+    // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);
-    setProjectionMatrices(createProjectionMatrices(getNearPlane(), newFarPlane));
+    // Update the projection matrices.
+    setProjectionMatrices(createProjectionMatrices(getLightNearPlane(), newFarPlane));
   }
 
+  /**
+   * Creates a new instance of the point light.
+   */
   static std::shared_ptr<PointLight> create(std::string lightId)
   {
     return std::make_shared<PointLight>(lightId);

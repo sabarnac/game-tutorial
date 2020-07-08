@@ -12,6 +12,41 @@
 #include "window.cpp"
 
 /**
+ * Class containing the normalized position of the cursor.
+ */
+class CursorPosition
+{
+private:
+  // The x-coordinate of the cursor.
+  double x;
+  // The y-coordinate of the cursor.
+  double y;
+
+public:
+  CursorPosition(double x, double y) : x(x), y(y) {}
+
+  /**
+   * Returns the x-coordinate of the vector.
+   * 
+   * @return The x-coordinate.
+   */
+  double getX()
+  {
+    return x;
+  }
+
+  /**
+   * Returns the y-coordinate of the vector.
+   * 
+   * @return The y-coordinate.
+   */
+  double getY()
+  {
+    return y;
+  }
+};
+
+/**
  * A class to manage controls and inputs of the window.
  */
 class ControlManager
@@ -33,16 +68,6 @@ private:
 public:
   // Preventing copying the control manager, making sure only one instance can exist.
   ControlManager(ControlManager &) = delete;
-
-  /**
-   * Returns the singleton instance of the control manager.
-   * 
-   * @return The control manager singleton instance.
-   */
-  static ControlManager &getInstance()
-  {
-    return instance;
-  }
 
   /**
    * Returns the position of the cursor on the window.
@@ -83,13 +108,31 @@ public:
     // Query GLFW to see the status of the key and return true if it is being pressed.
     return glfwGetKey(windowManager.getWindow(), key) == GLFW_PRESS;
   }
+
+  /**
+   * Poll for input/control events on the window.
+   */
+  void pollEvents()
+  {
+    glfwPollEvents();
+  }
+
+  /**
+   * Returns the singleton instance of the control manager.
+   * 
+   * @return The control manager singleton instance.
+   */
+  static ControlManager &getInstance()
+  {
+    return instance;
+  }
 };
 
 // Initialize the window width to the WINDOW_WIDTH constant.
 int ControlManager::width = WINDOW_WIDTH;
 // Initialize the window height to the WINDOW_HEIGHT constant.
 int ControlManager::height = WINDOW_HEIGHT;
-// Initialize the camera manager singleton instance static variable.
+// Initialize the control manager singleton instance static variable.
 ControlManager ControlManager::instance;
 
 #endif

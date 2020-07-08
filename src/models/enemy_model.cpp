@@ -39,7 +39,7 @@ public:
             "Enemy",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(mtInitialRotationDistribution(mtGenerator), mtInitialRotationDistribution(mtGenerator), mtInitialRotationDistribution(mtGenerator)), glm::vec3(1.0f, 1.0f, 1.0f),
             "assets/objects/cube.obj",
-            "assets/textures/cube.bmp", TextureType::BMP,
+            "assets/textures/cube.bmp",
             "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
             ColliderShapeType::BOX),
         modelManager(ModelManager::getInstance()),

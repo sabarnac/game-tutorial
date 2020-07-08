@@ -24,7 +24,7 @@ uniform float radius;
 void main()
 {
 	// First normalize the mode vertex position so that we get a unit direction
-	//   vector going from the sphere centre to the vertex. Then scale to the
+	//   vector going from the sphere center to the vertex. Then scale to the
 	//   actual position the vertex is supposed to be in based on what the radius
 	//   of the sphere is
 	vec3 scaledVertexPosition = normalize(vertexPosition) * radius;

@@ -80,7 +80,7 @@ public:
   /**
    * Return the camera registered with the given camera ID.
    * 
-   * @param camera  The ID of the camera to return.
+   * @param cameraId  The ID of the camera to return.
    * 
    * @return The camera registered with the given camera ID.
    */
@@ -115,7 +115,7 @@ public:
   {
     // Define a vector to store the IDs of the registered cameras.
     std::vector<std::string> registeredCameraIds({});
-    // ITerate through the map of registered cameras.
+    // iterate through the map of registered cameras.
     for (auto camera = registeredCameras.begin(); camera != registeredCameras.end(); camera++)
     {
       // Push the ID of each registered camera into the cameras ID list.

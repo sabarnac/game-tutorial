@@ -9,16 +9,24 @@
 #include "render.cpp"
 #include "../light/light_base.cpp"
 
+/**
+ * A manager class for managing lights in a scene.
+ */
 class LightManager
 {
 private:
+  // Singleton instance of the light manager.
   static LightManager instance;
 
+  // The render manager responsible for rendering objects.
   RenderManager &renderManager;
 
+  // A dead version of simple (2D texture) light (required due to a OpenGL bug on certain GPUs/drivers).
   std::shared_ptr<LightBase> deadSimpleLight;
+  // A dead version of cube (cubemap texture) light (required due to a OpenGL bug on certain GPUs/drivers).
   std::shared_ptr<LightBase> deadCubeLight;
 
+  // The map of registered lights.
   std::map<std::string, std::shared_ptr<LightBase>> registeredLights;
 
   LightManager()
@@ -26,81 +34,149 @@ private:
         registeredLights({}) {}
 
 public:
+  // Preventing copying the light manager, making sure only one instance can exist.
   LightManager(LightManager &) = delete;
 
-  void registerLight(std::shared_ptr<LightBase> light)
-  {
-    registeredLights.insert(std::pair<std::string, std::shared_ptr<LightBase>>(light->getLightId(), light));
-    renderManager.registerLight(light);
-    light->init();
-  }
-
+  /**
+   * Register a dead simple light into the light manager.
+   * 
+   * @param light  The light to register.
+   */
   void registerDeadSimpleLight(std::shared_ptr<LightBase> light)
   {
+    // Set the light as the dead simple light.
     deadSimpleLight = light;
+    // Register the dead light with the render manager as well so that it can be used to deal with the OpenGL bug.
     renderManager.registerDeadSimpleLight(deadSimpleLight);
   }
 
+  /**
+   * Register a dead cube light into the light manager.
+   * 
+   * @param light  The light to register.
+   */
   void registerDeadCubeLight(std::shared_ptr<LightBase> light)
   {
+    // Set the light as the dead cube light.
     deadCubeLight = light;
+    // Register the dead light with the render manager as well so that it can be used to deal with the OpenGL bug.
     renderManager.registerDeadCubeLight(deadCubeLight);
   }
 
-  void deregisterLight(std::shared_ptr<LightBase> light)
+  /**
+   * Register a new light into the light manager.
+   * 
+   * @param light  The light to register.
+   */
+  void registerLight(std::shared_ptr<LightBase> light)
   {
-    registeredLights.erase(light->getLightId());
-    renderManager.deregisterLight(light);
-    light->deinit();
+    // Let the light initialize itself.
+    light->init();
+    // Insert the light to the map of registered lights.
+    registeredLights.insert(std::pair<std::string, std::shared_ptr<LightBase>>(light->getLightId(), light));
+    // Register the light with the render manager as well so that it can be used for rendering.
+    renderManager.registerLight(light);
   }
 
+  /**
+   * De-register an existing light from the light manager.
+   * 
+   * @param light  The ID of the light to de-register.
+   */
   void deregisterLight(std::string lightId)
   {
+    // Get the light that is registered with the given light ID.
     auto light = registeredLights[lightId];
-    registeredLights.erase(lightId);
-    renderManager.deregisterLight(lightId);
+    // Remove the light from the map of registered lights.
+    deregisterLight(light);
+  }
+
+  /**
+   * De-register an existing light from the light manager.
+   * 
+   * @param light  The light to de-register.
+   */
+  void deregisterLight(std::shared_ptr<LightBase> light)
+  {
+    // Remove the light from the map of registered lights.
+    registeredLights.erase(light->getLightId());
+    // De-register the light from the render manager as well.
+    renderManager.deregisterLight(light);
+    // Let the light de-initialize itself.
     light->deinit();
   }
 
+  /**
+   * Return the light registered with the given light ID.
+   * 
+   * @param light  The ID of the light to return.
+   * 
+   * @return The light registered with the given light ID.
+   */
   std::shared_ptr<LightBase> getLight(std::string lightId)
   {
     return registeredLights[lightId];
   }
 
+  /**
+   * Return the list of all lights registered with the light manager.
+   * 
+   * @return The list of all registered lights.
+   */
   std::vector<std::shared_ptr<LightBase>> getAllLights()
   {
+    // Define a vector to store the list of registered lights.
     std::vector<std::shared_ptr<LightBase>> lights({});
+    // Iterate through the map of registered lights.
     for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
     {
+      // Push each registered light into the lights list.
       lights.push_back(light->second);
     }
+    // Return the list of registered lights.
     return lights;
   }
 
+  /**
+   * Run the update operation on all the registered lights.
+   */
   void updateAllLights()
   {
+    // Define a vector to store the IDs of the registered lights.
     std::vector<std::string> registeredLightIds({});
+    // iterate through the map of registered lights.
     for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
     {
+      // Push the ID of each registered light into the lights ID list.
       registeredLightIds.push_back(light->first);
     }
 
+    // Iterate through the list of light IDs.
     for (auto lightId = registeredLightIds.begin(); lightId != registeredLightIds.end(); lightId++)
     {
+      // Find the light registered with the given light ID.
       auto result = registeredLights.find(*(lightId));
+      // Check if the light still exists in the registration map.
       if (result != registeredLights.end())
       {
+        // If it does, tell the light to perform an update on itself.
         result->second->update();
       }
     }
   }
 
+  /**
+   * Returns the singleton instance of the light manager.
+   * 
+   * @return The light manager singleton instance.
+   */
   static LightManager &getInstance()
   {
     return instance;
   }
 };
 
+// Initialize the light manager singleton instance static variable.
 LightManager LightManager::instance;
 
 #endif
