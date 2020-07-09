@@ -4,13 +4,14 @@
 
 ### Mac
 
-1. Install Clang compiler (can use `brew`).
-2. Install CMake (available on the website).
-3. Open the project folder
-4. Create a `build` folder and `cd` into it.
-5. Run `cmake ..`. There should be no errors.
-6. Run `make all`. There should be no errors.
-7. Now you can launch the game by running `./launch-main.sh`!
+1. Run `xcode-select --install`.
+2. Install Clang compiler (can use `brew`).
+3. Install CMake (available on the website).
+4. Open the project folder.
+5. Create a `build` folder and `cd` into it.
+6. Run `cmake ..`. There should be no errors.
+7. Run `make all`. There should be no errors.
+8. Now you can launch the game by running `./launch-main.sh`!
 
 ## Controls
 
