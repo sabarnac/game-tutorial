@@ -18,6 +18,7 @@
 * Use `W`, `A`, `S`, `D` keys to move the character.
 * Press `SpaceBar` to shoot and destroy the cubes.
 * Press `M` to toggle the ability to move the camera.
+  * Use `↑`, `←`, `↓`, `→` keys to move the camera, and the mouse to look around.
 * Press `B` to toggle debug render mode.
 * Press `L` to toggle disabling/enabling shadows and lighting.
 * Press `J` to disable lighting from the player models' eyes.
