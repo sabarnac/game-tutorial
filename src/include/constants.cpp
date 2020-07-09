@@ -5,8 +5,8 @@
  * A bunch of constants that's required to be known globally.
  */
 
-int WINDOW_WIDTH = 1024;
-int WINDOW_HEIGHT = 768;
+int WINDOW_WIDTH = 800;
+int WINDOW_HEIGHT = 600;
 int VIEWPORT_WIDTH = WINDOW_WIDTH;
 int VIEWPORT_HEIGHT = WINDOW_HEIGHT;
 int FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH * 2;
