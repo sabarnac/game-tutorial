@@ -6,6 +6,7 @@
 
 1. Run `xcode-select --install` to install the XCode developer tools.
 2. Install CMake (available on the website).
+   * After installing, if the cmake bin directory is not exported into your shells' config (`.bashrc`, `.bash_profile`, `.zshrc`, etc.) file, add this line manually: `export PATH="/Applications/CMake.app/Contents/bin":$PATH`
 3. Open the project folder.
 4. Create a `build` folder and `cd` into it.
 5. Run `cmake ..`. There should be no errors.
