@@ -18,13 +18,13 @@ class TextureDetails
 	friend class TextureManager;
 
 private:
+	// The ID of the texture containing the texture data.
+	GLuint textureId;
+
 	// The name of the texture.
 	std::string textureName;
 	// The file path to the texture data.
 	std::string textureFilePath;
-
-	// The ID of the texture containing the texture data.
-	GLuint textureId;
 
 public:
 	TextureDetails(GLuint textureId, std::string textureName, std::string textureFilePath)
@@ -77,7 +77,7 @@ private:
 	 * 
 	 * @return The ID of the texture.
 	 */
-	GLuint create2dTexture(std::string textureName, unsigned char *textureData, unsigned int width, unsigned int height)
+	GLuint create2dTexture(unsigned char *textureData, unsigned int width, unsigned int height)
 	{
 		// Define a variable for storing the texture ID.
 		GLuint textureId;
@@ -127,7 +127,8 @@ private:
 		if (!file)
 		{
 			// Could not read the BMP file. Time to crash.
-			std::cout << "Failed at texture 1" << std::endl;
+			std::cout << textureName << std::endl
+								<< "Failed at texture 1" << std::endl;
 			exit(1);
 		}
 
@@ -138,7 +139,8 @@ private:
 		{
 			// Could not read the BMP file. Time to crash.
 			fclose(file);
-			std::cout << "Failed at texture 2" << std::endl;
+			std::cout << textureName << std::endl
+								<< "Failed at texture 2" << std::endl;
 			exit(1);
 		}
 		// Check if the first two characters of the header start with "BM".
@@ -146,7 +148,8 @@ private:
 		{
 			// Invalid file. Time to crash.
 			fclose(file);
-			std::cout << "Failed at texture 3" << std::endl;
+			std::cout << textureName << std::endl
+								<< "Failed at texture 3" << std::endl;
 			exit(1);
 		}
 		// Check if number of bits per pixel is 24 (1 byte per color channel).
@@ -154,7 +157,8 @@ private:
 		{
 			// Cannot support color format. Time to crash.
 			fclose(file);
-			std::cout << "Failed at texture 4" << std::endl;
+			std::cout << textureName << std::endl
+								<< "Failed at texture 4" << std::endl;
 			exit(1);
 		}
 		// Check if compression is enabled.
@@ -162,7 +166,8 @@ private:
 		{
 			// Cannot support compressed BMPs. Time to crash.
 			fclose(file);
-			std::cout << "Failed at texture 5" << std::endl;
+			std::cout << textureName << std::endl
+								<< "Failed at texture 5" << std::endl;
 			exit(1);
 		}
 
@@ -196,7 +201,7 @@ private:
 		fclose(file);
 
 		// Create the 2D texture and store the texture data there.
-		auto textureId = create2dTexture(textureName, textureData, width, height);
+		auto textureId = create2dTexture(textureData, width, height);
 
 		// Delete the texture data file we're storing since we no longer need it.
 		delete[] textureData;

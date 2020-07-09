@@ -20,6 +20,9 @@ class ShaderDetails
 	friend class ShaderManager;
 
 private:
+	// The ID of the shader program.
+	GLuint shaderId;
+
 	// The name of the shader.
 	std::string shaderName;
 	// The file path to the vertex shader.
@@ -28,9 +31,6 @@ private:
 	std::string geometryShaderFilePath;
 	// The file path to the fragment shader.
 	std::string fragmentShaderFilePath;
-
-	// The ID of the shader program.
-	GLuint shaderId;
 
 public:
 	ShaderDetails(GLuint shaderId, std::string shaderName, std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath)

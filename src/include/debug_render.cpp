@@ -112,9 +112,9 @@ public:
   std::vector<glm::vec3> getLineVertices(std::vector<glm::vec3> &boundingBoxVertices)
   {
     std::vector<glm::vec3> lineVertices({});
-    for (auto i = 0; i < boundingBoxVertices.size(); i++)
+    for (unsigned long i = 0; i < boundingBoxVertices.size(); i++)
     {
-      for (auto j = i + 1; j < boundingBoxVertices.size(); j++)
+      for (unsigned long j = i + 1; j < boundingBoxVertices.size(); j++)
       {
         lineVertices.push_back(boundingBoxVertices[i]);
         lineVertices.push_back(boundingBoxVertices[j]);
@@ -125,8 +125,6 @@ public:
 
   void renderLights()
   {
-    auto currentTime = glfwGetTime();
-
     auto activeCamera = renderManager.registeredCameras[renderManager.activeCameraId];
     auto viewMatrix = activeCamera->getViewMatrix();
     auto projectionMatrix = activeCamera->getProjectionMatrix();
@@ -158,8 +156,6 @@ public:
 
   void renderModels()
   {
-    auto currentTime = glfwGetTime();
-
     auto activeCamera = renderManager.registeredCameras[renderManager.activeCameraId];
     auto viewMatrix = activeCamera->getViewMatrix();
     auto projectionMatrix = activeCamera->getProjectionMatrix();

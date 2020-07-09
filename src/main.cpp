@@ -26,7 +26,6 @@ int main(void)
 	auto &cameraManager = CameraManager::getInstance();
 	auto &renderManager = RenderManager::getInstance();
 	auto &debugRenderManager = DebugRenderManager::getInstance();
-	auto &shaderManager = ShaderManager::getInstance();
 
 	// Poll for events and set the mouse to the center of the screen
 	controlManager.pollEvents();

@@ -131,8 +131,8 @@ private:
   static double ambientFactor;
 
   // The maximum number of simple and cube lights allowed.
-  static int maxSimpleLights;
-  static int maxCubeLights;
+  static unsigned long maxSimpleLights;
+  static unsigned long maxCubeLights;
 
   // The flags for disabling shadows and lighting.
   static int DISABLE_SHADOW;
@@ -329,8 +329,8 @@ public:
     // Create a map of the categorized lights.
     std::map<ShadowBufferType, std::vector<LightDetails>> categorizedLights({{ShadowBufferType::SIMPLE, {}}, {ShadowBufferType::CUBE, {}}});
 
-    // Set the current active shader ID to -1.
-    auto currentShaderId = -1;
+    // Set the current active shader ID to 0.
+    GLuint currentShaderId = 0;
 
     // Iterate through all the lights in the scene.
     for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
@@ -408,7 +408,7 @@ public:
       glUniform1f(farPlaneFragmentId, lightDetails.farPlane);
 
       // Iterate through the view matrices of the light.
-      for (auto i = 0; i < viewMatrices.size(); i++)
+      for (unsigned long i = 0; i < viewMatrices.size(); i++)
       {
         // Calculate the projection-view matrix.
         auto vpMatrix = projectionMatrices[i] * viewMatrices[i];
@@ -463,13 +463,8 @@ public:
     // Clear the color buffer and depth buffer of the screen.
     windowManager.clearScreen(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Calculate the time difference between the start of the last frame and the current frame.
-    auto deltaTime = currentTime - lastTime;
-    // Calculate the total time since the initialization of the render manager.
-    auto totalTime = currentTime - startTime;
-
-    // Set the current active shader ID to -1.
-    auto currentShaderId = -1;
+    // Set the current active shader ID to 0.
+    GLuint currentShaderId = 0;
     // Get the active camera to use to render the video.
     auto activeCamera = registeredCameras[activeCameraId];
     // Get the view matrix of the camera.
@@ -523,7 +518,7 @@ public:
       if (disableFeatureMask < DISABLE_LIGHT)
       {
         // Iterate through the simple lights in the scene.
-        for (auto i = 0; i < categorizedLights[ShadowBufferType::SIMPLE].size(); i++)
+        for (unsigned long i = 0; i < categorizedLights[ShadowBufferType::SIMPLE].size(); i++)
         {
           // Get the details of the simple light.
           auto lightDetails = categorizedLights[ShadowBufferType::SIMPLE][i];
@@ -538,7 +533,7 @@ public:
           auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
           glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
           auto lightVpMatrixFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
-          glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
+          glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
 
           // Get the uniform ID of the light color variable and set it.
           auto lightColorVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("simpleLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
@@ -580,9 +575,10 @@ public:
           glUniform1i(lightTextureId, i + 1);
         }
 
-        for (auto i = 0; i < categorizedLights[ShadowBufferType::CUBE].size(); i++)
+        // Iterate through the cube lights in the scene.
+        for (unsigned long i = 0; i < categorizedLights[ShadowBufferType::CUBE].size(); i++)
         {
-          // Get the details of the simple light.
+          // Get the details of the cube light.
           auto lightDetails = categorizedLights[ShadowBufferType::CUBE][i];
 
           // Get the uniform ID of the light position variable and set it.
@@ -595,7 +591,7 @@ public:
           auto lightVpMatrixVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightVpMatrix").c_str());
           glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
           auto lightVpMatrixFragmentId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
-          glUniformMatrix4fv(lightVpMatrixVertexId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
+          glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
 
           // Get the uniform ID of the light color variable and set it.
           auto lightColorVertexId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), ("cubeLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
@@ -710,9 +706,9 @@ RenderManager RenderManager::instance;
 // Initialize the ambient lighting factor static variable.
 double RenderManager::ambientFactor = 0.25;
 // Initialize the maximum supported simple lights static variable.
-int RenderManager::maxSimpleLights = 2;
+unsigned long RenderManager::maxSimpleLights = 2;
 // Initialize the maximum supported cube lights static variable.
-int RenderManager::maxCubeLights = 8;
+unsigned long RenderManager::maxCubeLights = 8;
 // Initialize the mask value for disabling shadows static variable.
 int RenderManager::DISABLE_SHADOW = 1;
 // Initialize the mask value for disabling lighting static variable.

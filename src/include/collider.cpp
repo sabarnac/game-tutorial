@@ -677,9 +677,9 @@ private:
     auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
     // Calculate the point on the box that is closest to the sphere.
     auto boxPointClosesToSphere = glm::vec3(
-        glm::max(boxAABB.getMinCorner().x, glm::min(spherePositionInBoxSpace.x, boxAABB.getMaxCorner().x)),
-        glm::max(boxAABB.getMinCorner().y, glm::min(spherePositionInBoxSpace.y, boxAABB.getMaxCorner().y)),
-        glm::max(boxAABB.getMinCorner().z, glm::min(spherePositionInBoxSpace.z, boxAABB.getMaxCorner().z)));
+        glm::max(boxAABBMinCorners.x, glm::min(spherePositionInBoxSpace.x, boxAABBMaxCorners.x)),
+        glm::max(boxAABBMinCorners.y, glm::min(spherePositionInBoxSpace.y, boxAABBMaxCorners.y)),
+        glm::max(boxAABBMinCorners.z, glm::min(spherePositionInBoxSpace.z, boxAABBMaxCorners.z)));
     // Calculate the distance between the boxes' closest point and the center of the sphere.
     auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
 

@@ -29,9 +29,6 @@ class ShadowBufferDetails
   friend class ShadowBufferManager;
 
 private:
-  // The name of the shadow buffer.
-  std::string shadowBufferName;
-
   // The ID of the shadow buffer.
   GLuint shadowBufferId;
   // The ID of the texture the shadow buffer copies data to.
@@ -39,12 +36,15 @@ private:
   // The type of the shadow buffer.
   ShadowBufferType shadowBufferType;
 
+  // The name of the shadow buffer.
+  std::string shadowBufferName;
+
 public:
   ShadowBufferDetails(GLuint shadowBufferId, GLuint shadowBufferTextureId, std::string shadowBufferName, ShadowBufferType shadowBufferType)
       : shadowBufferId(shadowBufferId),
         shadowBufferTextureId(shadowBufferTextureId),
-        shadowBufferName(shadowBufferName),
-        shadowBufferType(shadowBufferType) {}
+        shadowBufferType(shadowBufferType),
+        shadowBufferName(shadowBufferName) {}
 
   /**
    * Get the ID of the shadow buffer.
@@ -201,7 +201,8 @@ private:
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
       // Framebuffer is not ready. Time to crash.
-      std::cout << "Failed at shadow buffer" << std::endl;
+      std::cout << shadowBufferName << std::endl
+                << "Failed at shadow buffer" << std::endl;
       exit(1);
     }
 
