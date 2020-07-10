@@ -5,7 +5,11 @@ project (GameTutorial)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+	set(CMAKE_CXX_FLAGS "-Wall")
+else()
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+endif()
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
