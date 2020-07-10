@@ -13,6 +13,16 @@
 6. Run `make all`. There should be no errors.
 7. Now you can launch the game by running `./launch-main.sh`!
 
+### Linux
+
+1. Install the latest GPU drivers (they can be out-of-date depending on your Linux distro).
+2. Install these libraries: `cmake make g++ libx11-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxext-dev libxcursor-dev libxinerama-dev libxi-dev`. These may be named different based on the Linux distro. Should be this in Ubuntu and other Debian based distros. You can refer to Arch Wiki if you run Arch Linux.
+3. Open the project folder.
+4. Create a `build` folder and `cd` into it.
+5. Run `cmake ..`. There should be no errors.
+6. Run `make all`. There should be no errors.
+7. Now you can launch the game by running `./launch-main.sh`!
+
 ## Controls
 
 * Use `W`, `A`, `S`, `D` keys to move the character.
