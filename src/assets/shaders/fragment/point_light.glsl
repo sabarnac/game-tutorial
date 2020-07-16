@@ -1,7 +1,5 @@
 #version 330 core
 
-in vec4 fragmentPosition;
-
 // The reason for suffixing the structure and variables with the
 //   shader component name, is so that they don't collide with
 //   definitions in other shaders.
@@ -12,6 +10,9 @@ in vec4 fragmentPosition;
 //   variables in the initial shader component compilation step, then
 //   fails to link the two shader components together because their
 //   structures are now different.
+
+// The position of the fragment as interpolated by the GPU from the geometry shader.
+in vec4 fragmentPosition;
 
 // The structure defining the details regarding the point light.
 struct LightDetails_Fragment

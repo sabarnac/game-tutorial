@@ -626,7 +626,7 @@ public:
       // Get the uniform ID of the point light shadow map texture array and set it.
       auto pointLightTextureId = glGetUniformLocation(model->second->getShaderDetails()->getShaderId(), "pointLightTextures");
       glActiveTexture(GL_TEXTURE2);
-      glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, shadowBufferManager.getPointLightTextureArrayId());
+      glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, shadowBufferManager.getPointLightTextureArrayId());
       glUniform1i(pointLightTextureId, 2);
 
       // Define vertex attribute arrays that contains the vertex position, UV coordinates, and normal vector data of the model.

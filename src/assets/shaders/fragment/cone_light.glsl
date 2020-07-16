@@ -11,8 +11,17 @@
 //   fails to link the two shader components together because their
 //   structures are now different.
 
+// The position of the fragment as interpolated by the GPU from the geometry shader.
+in vec4 fragmentPosition;
+
+// The color of the fragment.
+out vec4 color;
+
 void main()
 {
+  // The fragment position variable needs to be used, so just assigning it to the output
+  //   color (this value will be ignored by the framebuffer).
+  color = fragmentPosition;
   // Don't need to do anything. We're capturing the depth component,
   //   which is already set by the fragment shader since it interpolated
   //   it from the position values returned by the vertex shader.

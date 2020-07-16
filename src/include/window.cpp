@@ -2,6 +2,7 @@
 #define INCLUDE_WINDOW_CPP
 
 #include <iostream>
+#include <set>
 #include <string>
 
 #include <GL/glew.h>
@@ -72,9 +73,9 @@ private:
     glfwSwapInterval(0);
 
     // Define the framebuffer width as double the viewport width.
-    FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH * 2;
+    FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
     // Define the framebuffer height as double the viewport width (so that framebuffer is a square).
-    FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH * 2;
+    FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
 
     // Setup glew as experimental mode so that we can initialize the core OpenGL profile.
     glewExperimental = true; // Needed for core profile
@@ -86,8 +87,17 @@ private:
       exit(1);
     }
 
+    int numberOfExtensions;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &numberOfExtensions);
+    std::set<std::string> supportedExtensions;
+    for (int i = 0; i < numberOfExtensions; i++)
+    {
+      auto extensionName = (const char *)glGetStringi(GL_EXTENSIONS, i);
+      supportedExtensions.insert(std::string(extensionName));
+    }
+
     // Check if cube map array textures are supported
-    if (!GLEW_ARB_texture_cube_map_array)
+    if (supportedExtensions.find("GL_ARB_texture_cube_map_array") == supportedExtensions.end())
     {
       // Not supported. Time to crash.
       std::cout << "Failed at window 4" << std::endl;

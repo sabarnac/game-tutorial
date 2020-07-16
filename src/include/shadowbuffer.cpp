@@ -252,14 +252,6 @@ private:
     //   being drawn to the texture array as a whole.
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, frameBufferWidth, frameBufferHeight, maxConeLights, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
-    // Iterate through all the layers in the texture array.
-    for (auto layerId = 0; layerId < maxConeLights; layerId++)
-    {
-      // Define the size of an image and the type of data being drawn to the texture
-      //   array at the specified layer.
-      glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerId, frameBufferWidth, frameBufferHeight, 1, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    }
-
     // Provide parameters for behaviour when reading coordinates that are out-of-bounds,
     //   as well as algorithms to use for maginifcation and minification.
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -288,11 +280,11 @@ private:
     glGenTextures(1, &pointLightTextureArrayId);
 
     // Bind the texture as a cube map texture array.
-    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, pointLightTextureArrayId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, pointLightTextureArrayId);
     // Define the size of a cube map, number of cube maps (face layers), and the type
     //   of data being drawn to the texture array as a whole.
     glTexImage3D(
-        GL_TEXTURE_CUBE_MAP_ARRAY_ARB,
+        GL_TEXTURE_CUBE_MAP_ARRAY,
         0,
         GL_DEPTH_COMPONENT,
         frameBufferWidth,
@@ -303,39 +295,16 @@ private:
         GL_FLOAT,
         nullptr);
 
-    // Iterate through all the layers in the texture array.
-    for (auto layerId = 0; layerId < maxPointLights; layerId++)
-    {
-      // Iterate through the number of faces in a cube map.
-      for (auto faceId = 0; faceId < facesPerCubeMap; faceId++)
-      {
-        // Define the size of an image and the type of data being drawn to the texture
-        //   array at the specified layer face.
-        glTexSubImage3D(
-            GL_TEXTURE_CUBE_MAP_ARRAY_ARB,
-            0,
-            0,
-            0,
-            (facesPerCubeMap * layerId) + faceId,
-            frameBufferWidth,
-            frameBufferHeight,
-            1,
-            GL_DEPTH_COMPONENT,
-            GL_FLOAT,
-            nullptr);
-      }
-    }
-
     // Provide parameters for behaviour when reading coordinates that are out-of-bounds,
     //   as well as algorithms to use for maginifcation and minification.
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Unbind the texture now that we're done.
-    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY_ARB, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
     // Generate a shadow framebuffer for the point light texture array and save the ID.
     pointLightShadowBufferId = createShadowBuffer(pointLightTextureArrayId);
