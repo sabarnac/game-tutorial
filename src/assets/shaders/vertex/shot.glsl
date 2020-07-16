@@ -27,7 +27,7 @@ out vec2 fragmentUv;
 
 
 // The structure defining the details regarding the model.
-struct ModelDetails
+struct ModelDetails_Vertex
 {
 	mat4 modelMatrix;
 	mat4 viewMatrix;
@@ -35,14 +35,14 @@ struct ModelDetails
 };
 
 // The details of the model.
-uniform ModelDetails modelDetails;
+uniform ModelDetails_Vertex modelDetails_vertex;
 
 void main()
 {
 	// Transform the model vertex into world-space, and then further transform it
 	//   based on the view and projection of the camera, and return that as the
 	//   vertex position.
-	gl_Position = modelDetails.projectionMatrix * modelDetails.viewMatrix * modelDetails.modelMatrix * vec4(vertexPosition, 1.0);
+	gl_Position = modelDetails_vertex.projectionMatrix * modelDetails_vertex.viewMatrix * modelDetails_vertex.modelMatrix * vec4(vertexPosition, 1.0);
 
 	// Set the value of the UV coordinate of all fragments that are interpolated through this vertex.
 	fragmentUv = vertexUv;

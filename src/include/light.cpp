@@ -21,11 +21,6 @@ private:
   // The render manager responsible for rendering objects.
   RenderManager &renderManager;
 
-  // A dead version of simple (2D texture) light (required due to a OpenGL bug on certain GPUs/drivers).
-  std::shared_ptr<LightBase> deadSimpleLight;
-  // A dead version of cube (cubemap texture) light (required due to a OpenGL bug on certain GPUs/drivers).
-  std::shared_ptr<LightBase> deadCubeLight;
-
   // The map of registered lights.
   std::map<std::string, std::shared_ptr<LightBase>> registeredLights;
 
@@ -36,32 +31,6 @@ private:
 public:
   // Preventing copying the light manager, making sure only one instance can exist.
   LightManager(LightManager &) = delete;
-
-  /**
-   * Register a dead simple light into the light manager.
-   * 
-   * @param light  The light to register.
-   */
-  void registerDeadSimpleLight(std::shared_ptr<LightBase> light)
-  {
-    // Set the light as the dead simple light.
-    deadSimpleLight = light;
-    // Register the dead light with the render manager as well so that it can be used to deal with the OpenGL bug.
-    renderManager.registerDeadSimpleLight(deadSimpleLight);
-  }
-
-  /**
-   * Register a dead cube light into the light manager.
-   * 
-   * @param light  The light to register.
-   */
-  void registerDeadCubeLight(std::shared_ptr<LightBase> light)
-  {
-    // Set the light as the dead cube light.
-    deadCubeLight = light;
-    // Register the dead light with the render manager as well so that it can be used to deal with the OpenGL bug.
-    renderManager.registerDeadCubeLight(deadCubeLight);
-  }
 
   /**
    * Register a new light into the light manager.

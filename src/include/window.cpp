@@ -32,7 +32,7 @@ private:
     // Initialize GLFW library
     if (!glfwInit())
     {
-      // Failed to initialize, time to crash.
+      // Failed to initialize. Time to crash.
       std::cout << "Failed at window 1" << std::endl;
       exit(1);
     }
@@ -49,7 +49,7 @@ private:
     // Check if the window creation was successful.
     if (window == NULL)
     {
-      // Failed to create, time to crash.
+      // Failed to create. Time to crash.
       std::cout << "Failed at window 2" << std::endl;
       exit(1);
     }
@@ -81,8 +81,16 @@ private:
     // Initialize GLEW.
     if (glewInit() != GLEW_OK)
     {
-      // Failed to initialize, time to crash.
+      // Failed to initialize. Time to crash.
       std::cout << "Failed at window 3" << std::endl;
+      exit(1);
+    }
+
+    // Check if cube map array textures are supported
+    if (!GLEW_ARB_texture_cube_map_array)
+    {
+      // Not supported. Time to crash.
+      std::cout << "Failed at window 4" << std::endl;
       exit(1);
     }
 

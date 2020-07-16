@@ -16,6 +16,7 @@ in vec4 fragmentPosition;
 // The structure defining the details regarding the point light.
 struct LightDetails_Fragment
 {
+  int layerId;
 	vec3 lightPosition;
 	mat4 vpMatrices[6];
 	int vpMatrixCount;

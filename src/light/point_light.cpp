@@ -56,11 +56,11 @@ public:
             lightId,
             "PointLight",
             glm::vec3(1.0), 100.0,
-            "assets/shaders/vertex/point_light.glsl", "assets/shaders/geometry/point_light.glsl", "assets/shaders/fragment/point_light.glsl",
+            "assets/shaders/vertex/light_base.glsl", "assets/shaders/geometry/light_base.glsl", "assets/shaders/fragment/point_light.glsl",
             glm::vec3(0.0),
             0.1, 100.0,
             createViewMatrices(), createProjectionMatrices(0.1, 100.0),
-            ShadowBufferType::CUBE) {}
+            ShadowBufferType::POINT) {}
 
   virtual ~PointLight() {}
 

@@ -17,23 +17,11 @@
 // The vertex position attribute of the model.
 layout(location = 0) in vec3 vertexPosition;
 
-// The structure defining the details regarding the cone light.
-struct LightDetails_Vertex
-{
-	vec3 lightPosition;
-	mat4 vpMatrices[1];
-	int vpMatrixCount;
-};
-
 // The transformation matrix to transform the model into world-space.
 uniform mat4 modelMatrix;
-// The details of the current cone light.
-uniform LightDetails_Vertex lightDetails_vertex;
 
 void main()
 {
-	// Transform the model vertex into world-space, and then further transform it
-	//   based on the view and projection of the cone light, and return that as the
-	//   vertex position.
-	gl_Position =  lightDetails_vertex.vpMatrices[0] * modelMatrix * vec4(vertexPosition, 1.0);
+	// Transform the model vertex into world-space, and return that as the vertex position.
+	gl_Position = modelMatrix * vec4(vertexPosition, 1.0);
 }

@@ -60,12 +60,6 @@ int main(void)
 	auto playerModel = PlayerModel::create("MainPlayer");
 	modelManager.registerModel(playerModel);
 
-	// Create dead lights for the render manager.
-	auto deadConeLight = ConeLight::create("DeadConeLight");
-	lightManager.registerDeadSimpleLight(deadConeLight);
-	auto deadPointLight = PointLight::create("DeadPointLight");
-	lightManager.registerDeadCubeLight(deadPointLight);
-
 	// Set debug mode to initially false.
 	auto debugEnabled = false;
 	// Set the timestamp for when debug mode toggle was changed to 10 seconds in the past.

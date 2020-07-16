@@ -19,7 +19,7 @@ class LightBase
 private:
   // The shader manager responsible for creating shader programs.
   ShaderManager &shaderManager;
-  // The shadow buffer manager responsible for creating shader programs.
+  // The shadow buffer manager responsible for creating shadow buffers for lights.
   ShadowBufferManager &shadowBufferManager;
 
   // The ID of the light.
@@ -73,7 +73,7 @@ protected:
     // Create the shader program for the light.
     shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath);
     // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType);
   }
 
   LightBase(
@@ -100,61 +100,7 @@ protected:
     // Create the shader program for the light.
     shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
     // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType);
-  }
-
-  LightBase(
-      std::string lightId,
-      std::string lightName,
-      glm::vec3 lightColor, double lightIntensity,
-      std::string vertexShaderFilePath, std::string fragmentShaderFilePath,
-      glm::vec3 position,
-      double nearPlane, double farPlane,
-      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
-      ShadowBufferType shadowBufferType, float outsideMapDepth[3])
-      : shaderManager(ShaderManager::getInstance()),
-        shadowBufferManager(ShadowBufferManager::getInstance()),
-        lightId(lightId),
-        lightName(lightName),
-        lightColor(lightColor),
-        lightIntensity(lightIntensity),
-        position(position),
-        nearPlane(nearPlane),
-        farPlane(farPlane),
-        viewMatrices(viewMatrices),
-        projectionMatrices(projectionMatrices)
-  {
-    // Create the shader program for the light.
-    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath);
-    // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType, outsideMapDepth);
-  }
-
-  LightBase(
-      std::string lightId,
-      std::string lightName,
-      glm::vec3 lightColor, double lightIntensity,
-      std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath,
-      glm::vec3 position,
-      double nearPlane, double farPlane,
-      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
-      ShadowBufferType shadowBufferType, float outsideMapDepth[3])
-      : shaderManager(ShaderManager::getInstance()),
-        shadowBufferManager(ShadowBufferManager::getInstance()),
-        lightId(lightId),
-        lightName(lightName),
-        lightColor(lightColor),
-        lightIntensity(lightIntensity),
-        position(position),
-        nearPlane(nearPlane),
-        farPlane(farPlane),
-        viewMatrices(viewMatrices),
-        projectionMatrices(projectionMatrices)
-  {
-    // Create the shader program for the light.
-    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
-    // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightName + "::ShadowMap", shadowBufferType, outsideMapDepth);
+    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType);
   }
 
   virtual ~LightBase()
