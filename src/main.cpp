@@ -96,6 +96,7 @@ int main(void)
 		}
 
 		// Render text
+		textManager.addText("Hello World!", glm::vec2(1, 1), 1.0);
 		textManager.render();
 
 		// Swap the window framebuffers.
