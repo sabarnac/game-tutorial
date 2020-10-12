@@ -21,19 +21,19 @@ class ShaderDetails
 
 private:
 	// The ID of the shader program.
-	GLuint shaderId;
+	const GLuint shaderId;
 
 	// The name of the shader.
-	std::string shaderName;
+	const std::string shaderName;
 	// The file path to the vertex shader.
-	std::string vertexShaderFilePath;
+	const std::string vertexShaderFilePath;
 	// The file path to the geometry shader.
-	std::string geometryShaderFilePath;
+	const std::string geometryShaderFilePath;
 	// The file path to the fragment shader.
-	std::string fragmentShaderFilePath;
+	const std::string fragmentShaderFilePath;
 
 public:
-	ShaderDetails(GLuint shaderId, std::string shaderName, std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath)
+	ShaderDetails(const GLuint &shaderId, const std::string &shaderName, const std::string &vertexShaderFilePath, const std::string &geometryShaderFilePath, const std::string &fragmentShaderFilePath)
 			: shaderId(shaderId),
 				shaderName(shaderName),
 				vertexShaderFilePath(vertexShaderFilePath),
@@ -45,7 +45,7 @@ public:
    * 
    * @return The shader program name.
    */
-	std::string getShaderName()
+	const std::string &getShaderName() const
 	{
 		return shaderName;
 	}
@@ -55,7 +55,7 @@ public:
    * 
    * @return The shader program ID.
    */
-	GLuint getShaderId()
+	const GLuint &getShaderId() const
 	{
 		return shaderId;
 	}
@@ -71,9 +71,9 @@ private:
 	static ShaderManager instance;
 
 	// A map of created shaders.
-	std::map<std::string, std::shared_ptr<ShaderDetails>> namedShaders;
+	std::map<const std::string, const std::shared_ptr<const ShaderDetails>> namedShaders;
 	// A map counting the references to the created shaders.
-	std::map<std::string, int> namedShaderReferences;
+	std::map<const std::string, int> namedShaderReferences;
 
 	/**
 	 * Read the shader code from the given shader file.
@@ -83,10 +83,10 @@ private:
 	 * 
 	 * @return The shader code.
 	 */
-	std::string loadShaderCode(std::string shaderName, std::string shaderFilePath)
+	std::string loadShaderCode(const std::string &shaderName, const std::string &shaderFilePath)
 	{
 		// Create an input file stream for reading the shader file.
-		std::ifstream shaderStream(shaderFilePath, std::ios::in);
+		const std::ifstream shaderStream(shaderFilePath, std::ios::in);
 		// Check if the input file stream is open.
 		if (!shaderStream.is_open())
 		{
@@ -100,8 +100,6 @@ private:
 		std::stringstream sstr;
 		// Push the contents of the input file stream into the string stream.
 		sstr << shaderStream.rdbuf();
-		// Close the input file stream.
-		shaderStream.close();
 
 		// Return the string contents of the string stream.
 		return sstr.str();
@@ -114,10 +112,10 @@ private:
 	 * @param shaderCode  The shader code.
 	 * @param shaderId    The ID of the shader.
 	 */
-	void compileShader(std::string shaderName, std::string shaderCode, GLuint shaderId)
+	void compileShader(const std::string &shaderName, const std::string &shaderCode, const GLuint &shaderId)
 	{
 		// Convert the shader source code string into a character array.
-		auto sourcePointer = shaderCode.c_str();
+		const auto sourcePointer = shaderCode.c_str();
 		// Set the source code of the shader code to the given shader code.
 		glShaderSource(shaderId, 1, &sourcePointer, NULL);
 		// Compile the shader.
@@ -148,10 +146,10 @@ private:
 	 * @param shaderName  The name of the shader program being compiled.
 	 * @param shaderIds   The IDs of the shaders to link together.
 	 */
-	GLuint createProgram(std::string shaderName, std::vector<GLuint> shaderIds)
+	GLuint createProgram(const std::string &shaderName, const std::vector<GLuint> &shaderIds)
 	{
 		// Create a new shader program.
-		auto programId = glCreateProgram();
+		const auto programId = glCreateProgram();
 		// Iterate through the IDs of the shader.
 		for (auto shaderId = shaderIds.begin(); shaderId != shaderIds.end(); shaderId++)
 		{
@@ -192,17 +190,17 @@ private:
 	 * 
 	 * @return The ID of the shader program.
 	 */
-	GLuint loadShaders(std::string shaderName, std::string vertexShaderFilePath, std::string fragmentShaderFilePath)
+	GLuint loadShaders(const std::string &shaderName, const std::string &vertexShaderFilePath, const std::string &fragmentShaderFilePath)
 	{
 		// Create a vertex shader.
-		auto vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+		const auto vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 		// Create a fragment shader.
-		auto fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+		const auto fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
 		// Load the vertex shader code.
-		auto vertexShaderCode = loadShaderCode(shaderName, vertexShaderFilePath);
+		const auto vertexShaderCode = loadShaderCode(shaderName, vertexShaderFilePath);
 		// Load the fragment shader code.
-		auto fragmentShaderCode = loadShaderCode(shaderName, fragmentShaderFilePath);
+		const auto fragmentShaderCode = loadShaderCode(shaderName, fragmentShaderFilePath);
 
 		// Compile the vertex shader code.
 		compileShader(shaderName, vertexShaderCode, vertexShaderId);
@@ -210,7 +208,7 @@ private:
 		compileShader(shaderName, fragmentShaderCode, fragmentShaderId);
 
 		// Create the shader program using the vertex shader and fragment shader.
-		auto programId = createProgram(shaderName, std::vector<GLuint>({vertexShaderId, fragmentShaderId}));
+		const auto programId = createProgram(shaderName, std::vector<GLuint>({vertexShaderId, fragmentShaderId}));
 
 		// Detach and delete the vertex shader since it's no longer required.
 		glDetachShader(programId, vertexShaderId);
@@ -234,21 +232,21 @@ private:
 	 * 
 	 * @return The ID of the shader program.
 	 */
-	GLuint loadShaders(std::string shaderName, std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath)
+	GLuint loadShaders(const std::string &shaderName, const std::string &vertexShaderFilePath, const std::string &geometryShaderFilePath, const std::string &fragmentShaderFilePath)
 	{
 		// Create a vertex shader.
-		auto vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+		const auto vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 		// Create a geometry shader.
-		auto geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
+		const auto geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
 		// Create a fragment shader.
-		auto fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+		const auto fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
 		// Load the vertex shader code.
-		auto vertexShaderCode = loadShaderCode(shaderName, vertexShaderFilePath);
+		const auto vertexShaderCode = loadShaderCode(shaderName, vertexShaderFilePath);
 		// Load the geometry shader code.
-		auto geometryShaderCode = loadShaderCode(shaderName, geometryShaderFilePath);
+		const auto geometryShaderCode = loadShaderCode(shaderName, geometryShaderFilePath);
 		// Load the fragment shader code.
-		auto fragmentShaderCode = loadShaderCode(shaderName, fragmentShaderFilePath);
+		const auto fragmentShaderCode = loadShaderCode(shaderName, fragmentShaderFilePath);
 
 		// Compile the vertex shader code.
 		compileShader(shaderName, vertexShaderCode, vertexShaderId);
@@ -258,7 +256,7 @@ private:
 		compileShader(shaderName, fragmentShaderCode, fragmentShaderId);
 
 		// Create the shader program using the vertex shader, geometry shader and fragment shader.
-		auto programId = createProgram(shaderName, std::vector<GLuint>({vertexShaderId, geometryShaderId, fragmentShaderId}));
+		const auto programId = createProgram(shaderName, std::vector<GLuint>({vertexShaderId, geometryShaderId, fragmentShaderId}));
 
 		// Detach and delete the vertex shader since it's no longer required.
 		glDetachShader(programId, vertexShaderId);
@@ -282,7 +280,7 @@ private:
 
 public:
 	// Preventing copying the shader manager, making sure only one instance can exist.
-	ShaderManager(ShaderManager &) = delete;
+	ShaderManager(const ShaderManager &) = delete;
 
 	/**
 	 * Load and create a shader program from the given shader file paths. If a shader program with the same name was already created,
@@ -294,10 +292,10 @@ public:
 	 * 
 	 * @return The details of the loaded shader program.
 	 */
-	std::shared_ptr<ShaderDetails> &createShaderProgram(std::string shaderName, std::string vertexShaderFilePath, std::string fragmentShaderFilePath)
+	const std::shared_ptr<const ShaderDetails> &createShaderProgram(const std::string &shaderName, const std::string &vertexShaderFilePath, const std::string &fragmentShaderFilePath)
 	{
 		// Check if an shader program with the name already exists.
-		auto existingShader = namedShaders.find(shaderName);
+		const auto existingShader = namedShaders.find(shaderName);
 		if (existingShader != namedShaders.end())
 		{
 			// Shader already loaded. Increase its reference count and return it.
@@ -306,13 +304,13 @@ public:
 		}
 
 		// Load the shader program and store its details.
-		auto shaderProgramId = loadShaders(shaderName, vertexShaderFilePath, fragmentShaderFilePath);
+		const auto shaderProgramId = loadShaders(shaderName, vertexShaderFilePath, fragmentShaderFilePath);
 
 		// Create a new shader program details with the captured data.
-		auto newShader = std::make_shared<ShaderDetails>(shaderProgramId, shaderName, vertexShaderFilePath, "", fragmentShaderFilePath);
+		const auto newShader = std::make_shared<const ShaderDetails>(shaderProgramId, shaderName, vertexShaderFilePath, "", fragmentShaderFilePath);
 
 		// Insert the newly created shader program into the map of created shader programs.
-		namedShaders[shaderName] = newShader;
+		namedShaders.insert(std::make_pair(shaderName, newShader));
 		// Set the reference count of the shader program to 1.
 		namedShaderReferences[shaderName] = 1;
 
@@ -331,10 +329,10 @@ public:
 	 * 
 	 * @return The details of the loaded shader program.
 	 */
-	std::shared_ptr<ShaderDetails> &createShaderProgram(std::string shaderName, std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath)
+	const std::shared_ptr<const ShaderDetails> &createShaderProgram(const std::string &shaderName, const std::string &vertexShaderFilePath, const std::string &geometryShaderFilePath, const std::string &fragmentShaderFilePath)
 	{
 		// Check if an shader program with the name already exists.
-		auto existingShader = namedShaders.find(shaderName);
+		const auto existingShader = namedShaders.find(shaderName);
 		if (existingShader != namedShaders.end())
 		{
 			// Shader already loaded. Increase its reference count and return it.
@@ -343,13 +341,13 @@ public:
 		}
 
 		// Load the shader program and store its details.
-		auto shaderProgramId = loadShaders(shaderName, vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
+		const auto shaderProgramId = loadShaders(shaderName, vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
 
 		// Create a new shader program details with the captured data.
-		auto newShader = std::make_shared<ShaderDetails>(shaderProgramId, shaderName, vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
+		const auto newShader = std::make_shared<const ShaderDetails>(shaderProgramId, shaderName, vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
 
 		// Insert the newly created shader program into the map of created shader programs.
-		namedShaders[shaderName] = newShader;
+		namedShaders.insert(std::make_pair(shaderName, newShader));
 		// Set the reference count of the shader program to 1.
 		namedShaderReferences[shaderName] = 1;
 
@@ -364,9 +362,9 @@ public:
    * 
    * @return The shader program created with the given name.
    */
-	std::shared_ptr<ShaderDetails> &getShaderDetails(std::string shaderName)
+	const std::shared_ptr<const ShaderDetails> &getShaderDetails(const std::string &shaderName) const
 	{
-		return namedShaders[shaderName];
+		return namedShaders.at(shaderName);
 	}
 
 	/**
@@ -374,7 +372,7 @@ public:
 	 * 
 	 * @param shaderDetails  The details of the shader program to destroy.
 	 */
-	void destroyShaderProgram(std::shared_ptr<ShaderDetails> &shaderDetails)
+	void destroyShaderProgram(const std::shared_ptr<const ShaderDetails> &shaderDetails)
 	{
 		// Reduce the reference count of the shader program.
 		namedShaderReferences[shaderDetails->getShaderName()]--;

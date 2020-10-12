@@ -31,24 +31,24 @@ class ShadowBufferDetails
 
 private:
   // The ID of the shadow buffer.
-  GLuint shadowBufferId;
+  const GLuint shadowBufferId;
   // The ID of the texture array the shadow buffer copies data to in a layer.
-  GLuint shadowBufferTextureArrayId;
+  const GLuint shadowBufferTextureArrayId;
   // The ID of the layer of the texture array that the shadow buffer data is stored in.
-  unsigned int shadowBufferTextureArrayLayerId;
+  const unsigned int shadowBufferTextureArrayLayerId;
   // The type of the shadow buffer.
-  ShadowBufferType shadowBufferType;
+  const ShadowBufferType shadowBufferType;
 
   // The name of the shadow buffer.
-  std::string shadowBufferName;
+  const std::string shadowBufferName;
 
 public:
   ShadowBufferDetails(
-      GLuint shadowBufferId,
-      GLuint shadowBufferTextureArrayId,
-      unsigned int shadowBufferTextureArrayLayerId,
-      std::string shadowBufferName,
-      ShadowBufferType shadowBufferType)
+      const GLuint &shadowBufferId,
+      const GLuint &shadowBufferTextureArrayId,
+      const unsigned int &shadowBufferTextureArrayLayerId,
+      const std::string &shadowBufferName,
+      const ShadowBufferType &shadowBufferType)
       : shadowBufferId(shadowBufferId),
         shadowBufferTextureArrayId(shadowBufferTextureArrayId),
         shadowBufferTextureArrayLayerId(shadowBufferTextureArrayLayerId),
@@ -60,7 +60,7 @@ public:
    * 
    * @return The shadow buffer ID.
    */
-  GLuint getShadowBufferId()
+  const GLuint &getShadowBufferId() const
   {
     return shadowBufferId;
   }
@@ -70,7 +70,7 @@ public:
    * 
    * @return The shadow buffer texture array ID.
    */
-  GLuint getShadowBufferTextureArrayId()
+  const GLuint &getShadowBufferTextureArrayId() const
   {
     return shadowBufferTextureArrayId;
   }
@@ -80,7 +80,7 @@ public:
    * 
    * @return The layer ID.
    */
-  GLuint getShadowBufferTextureArrayLayerId()
+  const GLuint &getShadowBufferTextureArrayLayerId() const
   {
     return shadowBufferTextureArrayLayerId;
   }
@@ -90,7 +90,7 @@ public:
    * 
    * @return The shadow buffer name.
    */
-  std::string getShadowBufferName()
+  const std::string &getShadowBufferName() const
   {
     return shadowBufferName;
   }
@@ -100,7 +100,7 @@ public:
    * 
    * @return The shadow buffer type.
    */
-  ShadowBufferType getShadowBufferType()
+  const ShadowBufferType &getShadowBufferType() const
   {
     return shadowBufferType;
   }
@@ -112,39 +112,30 @@ public:
 class ShadowBufferManager
 {
 private:
-  // The width of the framebuffer.
-  static int frameBufferWidth;
-  // The height of the framebuffer.
-  static int frameBufferHeight;
-
-  // The maximum number of cone lights supported.
-  static unsigned int maxConeLights;
-  // The maximum number of point lights supported.
-  static unsigned int maxPointLights;
   // The number of faces in a cube map.
-  static unsigned short facesPerCubeMap;
+  const static unsigned short facesPerCubeMap;
 
   // Singleton instance of the shadow buffer manager.
   static ShadowBufferManager instance;
 
-  // The shadow framebuffer ID that the texture array for cone lights is attached to.
-  static GLuint coneLightShadowBufferId;
+  // A map of created textures.
+  std::map<const std::string, const std::shared_ptr<const ShadowBufferDetails>> namedShadowBuffers;
+  // A map counting the references to the created textures.
+  std::map<const std::string, int> namedShadowBufferReferences;
+
   // The texture ID of the texture array for cone lights.
-  static GLuint coneLightTextureArrayId;
+  const GLuint coneLightTextureArrayId;
+  // The shadow framebuffer ID that the texture array for cone lights is attached to.
+  const GLuint coneLightShadowBufferId;
   // The set of layer IDs being used in the texture array for cone lights.
   static std::set<unsigned int> assignedConeLightTextureArrayLayerIds;
 
-  // The shadow framebuffer ID that the texture array for point lights is attached to.
-  static GLuint pointLightShadowBufferId;
   // The texture ID of the texture array for point lights.
-  static GLuint pointLightTextureArrayId;
+  const GLuint pointLightTextureArrayId;
+  // The shadow framebuffer ID that the texture array for point lights is attached to.
+  const GLuint pointLightShadowBufferId;
   // The set of layer IDs being used in the texture array for point lights.
   static std::set<unsigned int> assignedPointLightTextureArrayLayerIds;
-
-  // A map of created textures.
-  std::map<std::string, std::shared_ptr<ShadowBufferDetails>> namedShadowBuffers;
-  // A map counting the references to the created textures.
-  std::map<std::string, int> namedShadowBufferReferences;
 
   /**
    * Finds a free layer ID in the shadow map texture array that can be assigned to a cone light and returns it.
@@ -154,7 +145,7 @@ private:
   unsigned int createNewConeLightLayerId()
   {
     // Iterate through all possible indices for layers in the cone light shadow map texture array.
-    for (unsigned int i = 0; i < maxConeLights; i++)
+    for (unsigned int i = 0; i < MAX_CONE_LIGHTS; i++)
     {
       // Check if the index is already in use.
       if (assignedConeLightTextureArrayLayerIds.find(i) != assignedConeLightTextureArrayLayerIds.end())
@@ -181,7 +172,7 @@ private:
   unsigned int createNewPointLightLayerId()
   {
     // Iterate through all possible indices for layers in the point light shadow map texture array.
-    for (unsigned int i = 0; i < maxPointLights; i++)
+    for (unsigned int i = 0; i < MAX_POINT_LIGHTS; i++)
     {
       // Check if the index is already in use.
       if (assignedPointLightTextureArrayLayerIds.find(i) != assignedPointLightTextureArrayLayerIds.end())
@@ -207,7 +198,7 @@ private:
 	 * 
 	 * @return The ID of the depth texture.
 	 */
-  GLuint createShadowBuffer(GLuint shadowBufferTextureArrayId)
+  GLuint createShadowBuffer(const GLuint &shadowBufferTextureArrayId)
   {
     // Define a variable for storing the framebuffer ID.
     GLuint shadowBufferId;
@@ -241,16 +232,17 @@ private:
    * Initialize the cone light shadow map texture array to which cone light
    *   shadow maps are drawn to.
    */
-  void initializeConeLightTextureArrays()
+  GLuint initializeConeLightTextureArrays()
   {
+    GLuint newTextureId;
     // Generate a new texture.
-    glGenTextures(1, &coneLightTextureArrayId);
+    glGenTextures(1, &newTextureId);
 
     // Bind the texture as a 2D image texture array.
-    glBindTexture(GL_TEXTURE_2D_ARRAY, coneLightTextureArrayId);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, newTextureId);
     // Define the size of an image, number of images (layers), and the type of data
     //   being drawn to the texture array as a whole.
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, frameBufferWidth, frameBufferHeight, maxConeLights, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, MAX_CONE_LIGHTS, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     // Provide parameters for behaviour when reading coordinates that are out-of-bounds,
     //   as well as algorithms to use for maginifcation and minification.
@@ -271,25 +263,26 @@ private:
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     // Generate a shadow framebuffer for the cone light texture array and save the ID.
-    coneLightShadowBufferId = createShadowBuffer(coneLightTextureArrayId);
+    return newTextureId;
   }
 
-  void initializePointLightTextureArrays()
+  GLuint initializePointLightTextureArrays()
   {
+    GLuint newTextureId;
     // Generate a new texture.
-    glGenTextures(1, &pointLightTextureArrayId);
+    glGenTextures(1, &newTextureId);
 
     // Bind the texture as a cube map texture array.
-    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, pointLightTextureArrayId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, newTextureId);
     // Define the size of a cube map, number of cube maps (face layers), and the type
     //   of data being drawn to the texture array as a whole.
     glTexImage3D(
         GL_TEXTURE_CUBE_MAP_ARRAY,
         0,
         GL_DEPTH_COMPONENT,
-        frameBufferWidth,
-        frameBufferHeight,
-        facesPerCubeMap * maxPointLights,
+        FRAMEBUFFER_WIDTH,
+        FRAMEBUFFER_HEIGHT,
+        facesPerCubeMap * MAX_POINT_LIGHTS,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
@@ -307,25 +300,17 @@ private:
     glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
     // Generate a shadow framebuffer for the point light texture array and save the ID.
-    pointLightShadowBufferId = createShadowBuffer(pointLightTextureArrayId);
+    return newTextureId;
   }
 
   ShadowBufferManager()
       : namedShadowBuffers({}),
-        namedShadowBufferReferences({})
+        namedShadowBufferReferences({}),
+        coneLightTextureArrayId(initializeConeLightTextureArrays()),
+        coneLightShadowBufferId(createShadowBuffer(coneLightTextureArrayId)),
+        pointLightTextureArrayId(initializePointLightTextureArrays()),
+        pointLightShadowBufferId(createShadowBuffer(pointLightTextureArrayId))
   {
-    // Check if the cone light shadow map texture array has already been created.
-    if (coneLightTextureArrayId == 0)
-    {
-      // If not, create it.
-      initializeConeLightTextureArrays();
-    }
-    // Check if the point light shadow map texture array has already been created.
-    if (pointLightTextureArrayId == 0)
-    {
-      // If not, create it.
-      initializePointLightTextureArrays();
-    }
   }
 
   ~ShadowBufferManager()
@@ -341,7 +326,7 @@ private:
 
 public:
   // Preventing copying the shadow buffer manager, making sure only one instance can exist.
-  ShadowBufferManager(ShadowBufferManager &) = delete;
+  ShadowBufferManager(const ShadowBufferManager &) = delete;
 
   /**
 	 * Load and create an shadow buffer from the given shadow buffer file path. If an shadow buffer with the same name was already created,
@@ -353,10 +338,10 @@ public:
 	 * 
 	 * @return The details of the loaded shadow buffer.
 	 */
-  std::shared_ptr<ShadowBufferDetails> &createShadowBuffer(std::string shadowBufferName, ShadowBufferType shadowBufferType)
+  const std::shared_ptr<const ShadowBufferDetails> &createShadowBuffer(const std::string &shadowBufferName, const ShadowBufferType &shadowBufferType)
   {
     // Check if an shadow buffer with the name already exists.
-    auto existingShadowBuffer = namedShadowBuffers.find(shadowBufferName);
+    const auto existingShadowBuffer = namedShadowBuffers.find(shadowBufferName);
     if (existingShadowBuffer != namedShadowBuffers.end())
     {
       // Shadow buffer already created. Increase its reference count and return it.
@@ -391,10 +376,10 @@ public:
     }
 
     // Create a new shadow buffer details with the captured data.
-    auto newShadowBuffer = std::make_shared<ShadowBufferDetails>(shadowBufferId, shadowBufferTextureArrayId, shadowBufferTextureArrayLayerId, shadowBufferName, shadowBufferType);
+    const auto newShadowBuffer = std::make_shared<const ShadowBufferDetails>(shadowBufferId, shadowBufferTextureArrayId, shadowBufferTextureArrayLayerId, shadowBufferName, shadowBufferType);
 
     // Insert the newly created shadow buffer into the map of created textures.
-    namedShadowBuffers[shadowBufferName] = newShadowBuffer;
+    namedShadowBuffers.insert(std::make_pair(shadowBufferName, newShadowBuffer));
     // Set the reference count of the shadow buffer to 1.
     namedShadowBufferReferences[shadowBufferName] = 1;
 
@@ -409,9 +394,9 @@ public:
    * 
    * @return The shadow buffer created with the given name.
    */
-  std::shared_ptr<ShadowBufferDetails> &getShadowBufferDetails(std::string shadowBufferName)
+  const std::shared_ptr<const ShadowBufferDetails> &getShadowBufferDetails(const std::string &shadowBufferName) const
   {
-    return namedShadowBuffers[shadowBufferName];
+    return namedShadowBuffers.at(shadowBufferName);
   }
 
   /**
@@ -419,7 +404,7 @@ public:
 	 * 
 	 * @param shadowBufferDetails  The details of the shadow buffer to destroy.
 	 */
-  void destroyShadowBuffer(std::shared_ptr<ShadowBufferDetails> &shadowBufferDetails)
+  void destroyShadowBuffer(const std::shared_ptr<const ShadowBufferDetails> &shadowBufferDetails)
   {
     // Reduce the reference count of the shadow buffer.
     namedShadowBufferReferences[shadowBufferDetails->getShadowBufferName()]--;
@@ -450,7 +435,7 @@ public:
    * 
    * @return The ID of the texture array.
    */
-  GLuint getConeLightTextureArrayId()
+  const GLuint &getConeLightTextureArrayId() const
   {
     return coneLightTextureArrayId;
   }
@@ -460,7 +445,7 @@ public:
    * 
    * @return The ID of the texture array.
    */
-  GLuint getPointLightTextureArrayId()
+  const GLuint &getPointLightTextureArrayId() const
   {
     return pointLightTextureArrayId;
   }
@@ -470,7 +455,7 @@ public:
    * 
    * @return The ID of the shadow buffer.
    */
-  GLuint getConeLightShadowBufferId()
+  const GLuint &getConeLightShadowBufferId() const
   {
     return coneLightShadowBufferId;
   }
@@ -480,7 +465,7 @@ public:
    * 
    * @return The ID of the shadow buffer.
    */
-  GLuint getPointLightShadowBufferId()
+  const GLuint &getPointLightShadowBufferId() const
   {
     return pointLightShadowBufferId;
   }
@@ -496,26 +481,10 @@ public:
   }
 };
 
-// Initialize the framebuffer width instance static variable.
-int ShadowBufferManager::frameBufferWidth = FRAMEBUFFER_WIDTH;
-// Initialize the framebuffer height instance static variable.
-int ShadowBufferManager::frameBufferHeight = FRAMEBUFFER_HEIGHT;
-// Initialize the max cone lights static variable.
-unsigned int ShadowBufferManager::maxConeLights = MAX_CONE_LIGHTS;
-// Initialize the max point lights static variable.
-unsigned int ShadowBufferManager::maxPointLights = MAX_POINT_LIGHTS;
 // Initialize the number of faces in a single cube map static variable.
-unsigned short ShadowBufferManager::facesPerCubeMap = 6;
-// Initialize the cone lights texture array shadow framebuffer ID static variable.
-GLuint ShadowBufferManager::coneLightShadowBufferId = 0;
-// Initialize the cone lights texture array ID static variable.
-GLuint ShadowBufferManager::coneLightTextureArrayId = 0;
+const unsigned short ShadowBufferManager::facesPerCubeMap = 6;
 // Initialize the cone lights texture array assigned layer IDs set static variable.
 std::set<unsigned int> ShadowBufferManager::assignedConeLightTextureArrayLayerIds = std::set<unsigned int>({});
-// Initialize the point lights texture array shadow framebuffer ID static variable.
-GLuint ShadowBufferManager::pointLightShadowBufferId = 0;
-// Initialize the point lights texture array ID static variable.
-GLuint ShadowBufferManager::pointLightTextureArrayId = 0;
 // Initialize the point lights texture array assigned layer IDs set static variable.
 std::set<unsigned int> ShadowBufferManager::assignedPointLightTextureArrayLayerIds = std::set<unsigned int>({});
 // Initialize the shadow buffer manager singleton instance static variable.

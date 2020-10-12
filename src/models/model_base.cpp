@@ -34,9 +34,9 @@ private:
   ShaderManager &shaderManager;
 
   // The ID of the model.
-  std::string modelId;
+  const std::string modelId;
   // The name of the model.
-  std::string modelName;
+  const std::string modelName;
 
   // The position of the model.
   glm::vec3 position;
@@ -48,13 +48,13 @@ private:
   // The model matrix of the model.
   glm::mat4 modelMatrix;
   // The object details of the model.
-  std::shared_ptr<ObjectDetails> objectDetails;
+  const std::shared_ptr<const ObjectDetails> objectDetails;
   // The texture details of the model.
-  std::shared_ptr<TextureDetails> textureDetails;
+  const std::shared_ptr<const TextureDetails> textureDetails;
   // The shader program details of the model.
-  std::shared_ptr<ShaderDetails> shaderDetails;
+  const std::shared_ptr<const ShaderDetails> shaderDetails;
   // The collider details of the model.
-  std::shared_ptr<ColliderDetails> colliderDetails;
+  const std::shared_ptr<ColliderDetails> colliderDetails;
 
   /**
    * Create the model matrix of the madel.
@@ -65,60 +65,8 @@ private:
     return glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale);
   }
 
-protected:
-  ModelBase(
-      std::string modelId,
-      std::string modelName,
-      glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
-      std::string modelObjectFilePath,
-      std::string modelTextureFilePath,
-      std::string modelVertexShaderFilePath, std::string modelFragmentShaderFilePath,
-      std::shared_ptr<ColliderShape> colliderShape)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
-        position(position),
-        rotation(rotation),
-        scale(scale),
-        modelMatrix(createModelMatrix())
+  const std::shared_ptr<ColliderDetails> createColliderDetails(const ColliderShapeType &colliderShapeType)
   {
-    // Create the object for the model.
-    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    // Create the texture for the model.
-    textureDetails = textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath);
-    // Create the shader program for the model.
-    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
-    // Create the collider for the model.
-    colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", colliderShape);
-  }
-
-  ModelBase(
-      std::string modelId,
-      std::string modelName,
-      glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
-      std::string modelObjectFilePath,
-      std::string modelTextureFilePath,
-      std::string modelVertexShaderFilePath, std::string modelFragmentShaderFilePath,
-      ColliderShapeType colliderShapeType)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
-        position(position),
-        rotation(rotation),
-        scale(scale),
-        modelMatrix(createModelMatrix())
-  {
-    // Create the object for the model.
-    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
-    // Create the texture for the model.
-    textureDetails = textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath);
-    // Create the shader program for the model.
-    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
-
     // Get the vertices of the model.
     auto modelVertices = objectDetails->getVertices();
     // Check what collider shape is required,
@@ -126,12 +74,61 @@ protected:
     {
     case BOX:
       // Create a box collider for the model.
-      colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", std::make_shared<BoxColliderShape>(position, rotation, scale, modelVertices));
+      return std::make_shared<ColliderDetails>(modelName + "::Collider", std::make_shared<BoxColliderShape>(position, rotation, scale, modelVertices));
       break;
     default:
       // Create a sphere collider for the model.
-      colliderDetails = std::make_shared<ColliderDetails>(modelName + "::Collider", std::make_shared<SphereColliderShape>(position, rotation, scale, modelVertices));
+      return std::make_shared<ColliderDetails>(modelName + "::Collider", std::make_shared<SphereColliderShape>(position, rotation, scale, modelVertices));
     }
+  }
+
+protected:
+  ModelBase(
+      const std::string &modelId,
+      const std::string &modelName,
+      const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
+      const std::string &modelObjectFilePath,
+      const std::string &modelTextureFilePath,
+      const std::string &modelVertexShaderFilePath, const std::string &modelFragmentShaderFilePath,
+      const std::shared_ptr<ColliderShape> &colliderShape)
+      : objectManager(ObjectManager::getInstance()),
+        textureManager(TextureManager::getInstance()),
+        shaderManager(ShaderManager::getInstance()),
+        modelId(modelId),
+        modelName(modelName),
+        position(position),
+        rotation(rotation),
+        scale(scale),
+        modelMatrix(createModelMatrix()),
+        objectDetails(objectManager.createObject(modelName + "::Object", modelObjectFilePath)),
+        textureDetails(textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath)),
+        shaderDetails(shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath)),
+        colliderDetails(std::make_shared<ColliderDetails>(modelName + "::Collider", colliderShape))
+  {
+  }
+
+  ModelBase(
+      const std::string &modelId,
+      const std::string &modelName,
+      const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
+      const std::string &modelObjectFilePath,
+      const std::string &modelTextureFilePath,
+      const std::string &modelVertexShaderFilePath, const std::string &modelFragmentShaderFilePath,
+      const ColliderShapeType &colliderShapeType)
+      : objectManager(ObjectManager::getInstance()),
+        textureManager(TextureManager::getInstance()),
+        shaderManager(ShaderManager::getInstance()),
+        modelId(modelId),
+        modelName(modelName),
+        position(position),
+        rotation(rotation),
+        scale(scale),
+        modelMatrix(createModelMatrix()),
+        objectDetails(objectManager.createObject(modelName + "::Object", modelObjectFilePath)),
+        textureDetails(textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath)),
+        shaderDetails(shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath)),
+        colliderDetails(createColliderDetails(colliderShapeType))
+  {
   }
 
   virtual ~ModelBase()
@@ -150,7 +147,7 @@ public:
    * 
    * @return The model ID.
    */
-  std::string getModelId()
+  const std::string &getModelId() const
   {
     return modelId;
   }
@@ -160,7 +157,7 @@ public:
    * 
    * @return The model name.
    */
-  std::string getModelName()
+  const std::string &getModelName() const
   {
     return modelName;
   }
@@ -170,7 +167,7 @@ public:
    * 
    * @return The model position.
    */
-  glm::vec3 &getModelPosition()
+  const glm::vec3 &getModelPosition() const
   {
     return position;
   }
@@ -180,7 +177,7 @@ public:
    * 
    * @return The model rotation.
    */
-  glm::vec3 &getModelRotation()
+  const glm::vec3 &getModelRotation() const
   {
     return rotation;
   }
@@ -190,7 +187,7 @@ public:
    * 
    * @return The model scale.
    */
-  glm::vec3 &getModelScale()
+  const glm::vec3 &getModelScale() const
   {
     return scale;
   }
@@ -200,7 +197,7 @@ public:
    * 
    * @return The model object details.
    */
-  std::shared_ptr<ObjectDetails> &getObjectDetails()
+  const std::shared_ptr<const ObjectDetails> &getObjectDetails() const
   {
     return objectDetails;
   }
@@ -210,7 +207,7 @@ public:
    * 
    * @return The model texture details.
    */
-  std::shared_ptr<TextureDetails> &getTextureDetails()
+  const std::shared_ptr<const TextureDetails> &getTextureDetails() const
   {
     return textureDetails;
   }
@@ -220,7 +217,7 @@ public:
    * 
    * @return The model shader program details.
    */
-  std::shared_ptr<ShaderDetails> &getShaderDetails()
+  const std::shared_ptr<const ShaderDetails> &getShaderDetails() const
   {
     return shaderDetails;
   }
@@ -230,7 +227,7 @@ public:
    * 
    * @return The model collider details.
    */
-  std::shared_ptr<ColliderDetails> &getColliderDetails()
+  const std::shared_ptr<ColliderDetails> &getColliderDetails() const
   {
     return colliderDetails;
   }
@@ -240,7 +237,7 @@ public:
    * 
    * @return The model matrix.
    */
-  glm::mat4 &getModelMatrix()
+  const glm::mat4 &getModelMatrix() const
   {
     return modelMatrix;
   }
@@ -250,7 +247,7 @@ public:
    * 
    * @param newPosition  The model position.
    */
-  void setModelPosition(glm::vec3 newPosition)
+  void setModelPosition(const glm::vec3 &newPosition)
   {
     // Set the new position.
     position = newPosition;
@@ -265,7 +262,7 @@ public:
    * 
    * @param newRotation  The model rotation.
    */
-  void setModelRotation(glm::vec3 newRotation)
+  void setModelRotation(const glm::vec3 &newRotation)
   {
     // Set the new rotation.
     rotation = newRotation;
@@ -280,7 +277,7 @@ public:
    * 
    * @param newScale  The model scale.
    */
-  void setModelScale(glm::vec3 newScale)
+  void setModelScale(const glm::vec3 &newScale)
   {
     // Set the new scale.
     scale = newScale;

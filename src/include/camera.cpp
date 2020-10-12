@@ -22,7 +22,7 @@ private:
   RenderManager &renderManager;
 
   // The map of registered cameras.
-  std::map<std::string, std::shared_ptr<CameraBase>> registeredCameras;
+  std::map<const std::string, const std::shared_ptr<CameraBase>> registeredCameras;
 
   CameraManager()
       : renderManager(RenderManager::getInstance()),
@@ -30,19 +30,19 @@ private:
 
 public:
   // Preventing copying the camera manager, making sure only one instance can exist.
-  CameraManager(CameraManager &) = delete;
+  CameraManager(const CameraManager &) = delete;
 
   /**
    * Register a new camera into the camera manager.
    * 
    * @param camera  The camera to register.
    */
-  void registerCamera(std::shared_ptr<CameraBase> camera)
+  void registerCamera(const std::shared_ptr<CameraBase> camera)
   {
     // Let the camera initialize itself.
     camera->init();
     // Insert the camera to the map of registered cameras.
-    registeredCameras.insert(std::pair<std::string, std::shared_ptr<CameraBase>>(camera->getCameraId(), camera));
+    registeredCameras.insert(std::pair<const std::string, const std::shared_ptr<CameraBase>>(camera->getCameraId(), camera));
     // Register the camera with the render manager as well so that it can be used for rendering.
     renderManager.registerCamera(camera);
     // Set the camera as the active camera so that it's used to render to the window.
@@ -54,7 +54,7 @@ public:
    * 
    * @param camera  The ID of the camera to de-register.
    */
-  void deregisterCamera(std::string cameraId)
+  void deregisterCamera(const std::string &cameraId)
   {
     // Get the camera that is registered with the given camera ID.
     auto camera = registeredCameras[cameraId];
@@ -67,7 +67,7 @@ public:
    * 
    * @param camera  The camera to de-register.
    */
-  void deregisterCamera(std::shared_ptr<CameraBase> camera)
+  void deregisterCamera(const std::shared_ptr<CameraBase> &camera)
   {
     // Remove the camera from the map of registered cameras.
     registeredCameras.erase(camera->getCameraId());
@@ -84,9 +84,9 @@ public:
    * 
    * @return The camera registered with the given camera ID.
    */
-  std::shared_ptr<CameraBase> getCamera(std::string cameraId)
+  const std::shared_ptr<CameraBase> &getCamera(const std::string &cameraId) const
   {
-    return registeredCameras[cameraId];
+    return registeredCameras.at(cameraId);
   }
 
   /**
@@ -94,7 +94,7 @@ public:
    * 
    * @return The list of all registered cameras.
    */
-  std::vector<std::shared_ptr<CameraBase>> getAllCameras()
+  const std::vector<std::shared_ptr<CameraBase>> getAllCameras() const
   {
     // Define a vector to store the list of registered cameras.
     std::vector<std::shared_ptr<CameraBase>> cameras({});
@@ -126,7 +126,7 @@ public:
     for (auto cameraId = registeredCameraIds.begin(); cameraId != registeredCameraIds.end(); cameraId++)
     {
       // Find the camera registered with the given camera ID.
-      auto result = registeredCameras.find(*(cameraId));
+      const auto result = registeredCameras.find(*(cameraId));
       // Check if the camera still exists in the registration map.
       if (result != registeredCameras.end())
       {

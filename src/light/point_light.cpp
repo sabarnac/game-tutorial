@@ -23,7 +23,7 @@ private:
    */
   std::vector<glm::mat4> createViewMatrices()
   {
-    auto position = getLightPosition();
+    const auto position = getLightPosition();
     return std::vector<glm::mat4>({glm::lookAt(position, position + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
                                    glm::lookAt(position, position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
                                    glm::lookAt(position, position + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),
@@ -40,7 +40,7 @@ private:
    * 
    * @return The list of projection matrices for the point light.
    */
-  std::vector<glm::mat4> createProjectionMatrices(double nearPlane, double farPlane)
+  std::vector<glm::mat4> createProjectionMatrices(const double &nearPlane, const double &farPlane)
   {
     return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
                                    glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
@@ -51,7 +51,7 @@ private:
   }
 
 public:
-  PointLight(std::string lightId)
+  PointLight(const std::string &lightId)
       : LightBase(
             lightId,
             "PointLight",
@@ -64,7 +64,7 @@ public:
 
   virtual ~PointLight() {}
 
-  void setLightPosition(glm::vec3 newPosition) override
+  void setLightPosition(const glm::vec3 &newPosition) override
   {
     // Update the light position.
     LightBase::setLightPosition(newPosition);
@@ -72,7 +72,7 @@ public:
     setViewMatrices(createViewMatrices());
   }
 
-  void setLightNearPlane(double newNearPlane) override
+  void setLightNearPlane(const double &newNearPlane) override
   {
     // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
@@ -80,7 +80,7 @@ public:
     setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
-  void setLightFarPlane(double newFarPlane) override
+  void setLightFarPlane(const double &newFarPlane) override
   {
     // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);
@@ -91,7 +91,7 @@ public:
   /**
    * Creates a new instance of the point light.
    */
-  static std::shared_ptr<PointLight> create(std::string lightId)
+  const static std::shared_ptr<PointLight> create(const std::string &lightId)
   {
     return std::make_shared<PointLight>(lightId);
   };

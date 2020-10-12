@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 find_package(OpenGL REQUIRED)
+find_package(Freetype REQUIRED)
 
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
@@ -55,6 +56,7 @@ set(ALL_LIBS
 	${OPENGL_LIBRARY}
 	glfw
 	GLEW_1130
+	${FREETYPE_LIBRARIES}
 )
 
 add_definitions(
@@ -73,6 +75,7 @@ add_executable(main
 target_link_libraries(main
 	${ALL_LIBS}
 )
+target_include_directories(main PRIVATE ${FREETYPE_INCLUDE_DIRS})
 # Xcode and Visual working directories
 set_target_properties(main PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 create_target_launcher(main WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/")

@@ -27,25 +27,25 @@ private:
    * 
    * @return The list of view matrices for the cone light.
    */
-  std::vector<glm::mat4> createViewMatrices(double horizontalAngle, double verticalAngle)
+  std::vector<glm::mat4> createViewMatrices(const double &horizontalAngle, const double &verticalAngle)
   {
     // Calculate the direction of the light.
-    auto direction = glm::vec3(
+    const auto direction = glm::vec3(
         cos(verticalAngle) * sin(horizontalAngle),
         sin(verticalAngle),
         cos(verticalAngle) * cos(horizontalAngle));
 
     // Calculate the right vector of the light.
-    auto right = glm::vec3(
+    const auto right = glm::vec3(
         sin(horizontalAngle - glm::pi<double>() / 2.0),
         0,
         cos(horizontalAngle - glm::pi<double>() / 2.0));
 
     // Calculate the up vector of the light.
-    auto up = glm::cross(right, direction);
+    const auto up = glm::cross(right, direction);
 
     // Get the position of the light.
-    auto position = getLightPosition();
+    const auto position = getLightPosition();
 
     // Calculate and return the view matrices of the light.
     return std::vector<glm::mat4>({glm::lookAt(position, position + direction, up)});
@@ -59,13 +59,13 @@ private:
    * 
    * @return The list of projection matrices for the cone light.
    */
-  std::vector<glm::mat4> createProjectionMatrices(double nearPlane, double farPlane)
+  std::vector<glm::mat4> createProjectionMatrices(const double &nearPlane, const double &farPlane)
   {
     return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane)});
   }
 
 public:
-  ConeLight(std::string lightId)
+  ConeLight(const std::string &lightId)
       : LightBase(
             lightId,
             "ConeLight",
@@ -80,7 +80,7 @@ public:
 
   virtual ~ConeLight() {}
 
-  void setLightPosition(glm::vec3 newPosition) override
+  void setLightPosition(const glm::vec3 &newPosition) override
   {
     // Update the light position.
     LightBase::setLightPosition(newPosition);
@@ -88,7 +88,7 @@ public:
     setViewMatrices(createViewMatrices(horizontalAngle, verticalAngle));
   }
 
-  void setLightAngles(double newHorizontalAngle, double newVerticalAngle)
+  void setLightAngles(const double &newHorizontalAngle, const double &newVerticalAngle)
   {
     // Update the light angles.
     horizontalAngle = newHorizontalAngle;
@@ -97,7 +97,7 @@ public:
     setViewMatrices(createViewMatrices(newHorizontalAngle, newVerticalAngle));
   }
 
-  void setLightNearPlane(double newNearPlane) override
+  void setLightNearPlane(const double &newNearPlane) override
   {
     // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
@@ -105,7 +105,7 @@ public:
     setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
-  void setLightFarPlane(double newFarPlane) override
+  void setLightFarPlane(const double &newFarPlane) override
   {
     // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);
@@ -116,7 +116,7 @@ public:
   /**
    * Creates a new instance of the cone light.
    */
-  static std::shared_ptr<ConeLight> create(std::string lightId)
+  const static std::shared_ptr<ConeLight> create(const std::string &lightId)
   {
     return std::make_shared<ConeLight>(lightId);
   };

@@ -17,14 +17,14 @@ class DebugVertexAttributeArray
 private:
   static std::set<GLuint> attributeIds;
 
-  GLuint attributeId;
-  std::string attributeName;
-  GLuint bufferId;
-  unsigned int bufferElementSize;
+  const GLuint attributeId;
+  const std::string attributeName;
+  const GLuint bufferId;
+  const unsigned int bufferElementSize;
 
   GLuint createAttributeId()
   {
-    GLuint maxId = std::numeric_limits<GLuint>::max();
+    const GLuint maxId = std::numeric_limits<GLuint>::max();
     for (GLuint i = 0; i < maxId; i++)
     {
       if (attributeIds.find(i) == attributeIds.end())
@@ -37,14 +37,14 @@ private:
   }
 
 public:
-  DebugVertexAttributeArray(DebugVertexAttributeArray &) = delete;
+  DebugVertexAttributeArray(const DebugVertexAttributeArray &) = delete;
 
-  DebugVertexAttributeArray(std::string attributeName, GLuint bufferId, unsigned int bufferElementSize)
-      : attributeName(attributeName),
+  DebugVertexAttributeArray(const std::string &attributeName, const GLuint &bufferId, const unsigned int &bufferElementSize)
+      : attributeId(createAttributeId()),
+        attributeName(attributeName),
         bufferId(bufferId),
         bufferElementSize(bufferElementSize)
   {
-    attributeId = createAttributeId();
     attributeIds.insert(attributeId);
   }
 
@@ -69,36 +69,43 @@ class DebugRenderManager
 private:
   static DebugRenderManager instance;
 
-  static glm::vec4 debugColor1;
-  static glm::vec4 debugColor2;
-  static glm::vec4 debugColor3;
+  const static glm::vec4 debugColor1;
+  const static glm::vec4 debugColor2;
+  const static glm::vec4 debugColor3;
 
-  WindowManager &windowManager;
+  const WindowManager &windowManager;
   ObjectManager &objectManager;
   ShaderManager &shaderManager;
-  RenderManager &renderManager;
+  const RenderManager &renderManager;
 
-  std::shared_ptr<ObjectDetails> sphereDetails;
-  std::shared_ptr<ShaderDetails> debugAabbShader;
-  std::shared_ptr<ShaderDetails> debugBoxShader;
-  std::shared_ptr<ShaderDetails> debugSphereShader;
-  GLuint debugModelBufferId;
+  const std::shared_ptr<const ObjectDetails> sphereDetails;
+  const std::shared_ptr<const ShaderDetails> debugAabbShader;
+  const std::shared_ptr<const ShaderDetails> debugBoxShader;
+  const std::shared_ptr<const ShaderDetails> debugSphereShader;
+  const GLuint debugModelBufferId;
+
+  GLuint createDebugModelBuffer()
+  {
+    GLuint bufferId;
+    glGenBuffers(1, &bufferId);
+    return bufferId;
+  }
 
   DebugRenderManager()
       : windowManager(WindowManager::getInstance()),
         objectManager(ObjectManager::getInstance()),
         shaderManager(ShaderManager::getInstance()),
-        renderManager(RenderManager::getInstance())
+        renderManager(RenderManager::getInstance()),
+        sphereDetails(objectManager.createObject("DebugSphere", "assets/objects/sphere.obj")),
+        debugAabbShader(shaderManager.createShaderProgram("DebugAabbShader", "assets/shaders/vertex/debug_aabb.glsl", "assets/shaders/fragment/debug.glsl")),
+        debugBoxShader(shaderManager.createShaderProgram("DebugBoxShader", "assets/shaders/vertex/debug_box.glsl", "assets/shaders/fragment/debug.glsl")),
+        debugSphereShader(shaderManager.createShaderProgram("DebugSphereShader", "assets/shaders/vertex/debug_sphere.glsl", "assets/shaders/fragment/debug.glsl")),
+        debugModelBufferId(createDebugModelBuffer())
   {
-    sphereDetails = objectManager.createObject("DebugSphere", "assets/objects/sphere.obj");
-    debugAabbShader = shaderManager.createShaderProgram("DebugAabbShader", "assets/shaders/vertex/debug_aabb.glsl", "assets/shaders/fragment/debug.glsl");
-    debugBoxShader = shaderManager.createShaderProgram("DebugBoxShader", "assets/shaders/vertex/debug_box.glsl", "assets/shaders/fragment/debug.glsl");
-    debugSphereShader = shaderManager.createShaderProgram("DebugSphereShader", "assets/shaders/vertex/debug_sphere.glsl", "assets/shaders/fragment/debug.glsl");
-    glGenBuffers(1, &debugModelBufferId);
   }
 
 public:
-  DebugRenderManager(DebugRenderManager &) = delete;
+  DebugRenderManager(const DebugRenderManager &) = delete;
 
   ~DebugRenderManager()
   {
@@ -109,7 +116,7 @@ public:
     glDeleteBuffers(1, &debugModelBufferId);
   }
 
-  std::vector<glm::vec3> getLineVertices(std::vector<glm::vec3> &boundingBoxVertices)
+  std::vector<glm::vec3> getLineVertices(const std::vector<glm::vec3> &boundingBoxVertices) const
   {
     std::vector<glm::vec3> lineVertices({});
     for (unsigned long i = 0; i < boundingBoxVertices.size(); i++)
@@ -123,11 +130,11 @@ public:
     return lineVertices;
   }
 
-  void renderLights()
+  void renderLights() const
   {
-    auto activeCamera = renderManager.registeredCameras[renderManager.activeCameraId];
-    auto viewMatrix = activeCamera->getViewMatrix();
-    auto projectionMatrix = activeCamera->getProjectionMatrix();
+    const auto activeCamera = renderManager.registeredCameras.at(renderManager.activeCameraId);
+    const auto viewMatrix = activeCamera->getViewMatrix();
+    const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
     GLuint shaderId = -1;
     for (auto light = renderManager.registeredLights.begin(); light != renderManager.registeredLights.end(); light++)
@@ -138,11 +145,11 @@ public:
         glUseProgram(shaderId);
       }
 
-      auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
-      auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
-      auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
+      const auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
+      const auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
+      const auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
-      auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light->second->getLightPosition()) * glm::mat4();
+      const auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light->second->getLightPosition()) * glm::mat4();
       glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
       glUniform1f(radiusId, 0.5);
       glUniform4f(lineColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
@@ -154,11 +161,11 @@ public:
     }
   }
 
-  void renderModels()
+  void renderModels() const
   {
-    auto activeCamera = renderManager.registeredCameras[renderManager.activeCameraId];
-    auto viewMatrix = activeCamera->getViewMatrix();
-    auto projectionMatrix = activeCamera->getProjectionMatrix();
+    const auto activeCamera = renderManager.registeredCameras.at(renderManager.activeCameraId);
+    const auto viewMatrix = activeCamera->getViewMatrix();
+    const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
     GLuint shaderId = -1;
     for (auto model = renderManager.registeredModels.begin(); model != renderManager.registeredModels.end(); model++)
@@ -171,11 +178,11 @@ public:
           glUseProgram(shaderId);
         }
 
-        auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
-        auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
-        auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
+        const auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
+        const auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
+        const auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
-        auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform1f(radiusId, std::dynamic_pointer_cast<SphereColliderShape>(model->second->getColliderDetails()->getColliderShape())->getRadius());
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
@@ -193,14 +200,14 @@ public:
           glUseProgram(shaderId);
         }
 
-        auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
-        auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
+        const auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
+        const auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
-        auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
-        auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getBaseBox()->getCorners());
+        const auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getBaseBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -218,10 +225,10 @@ public:
           glUseProgram(shaderId);
         }
 
-        auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
-        auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
+        const auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
+        const auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
-        auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->second->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform4f(lineColorId, debugColor2.r, debugColor2.g, debugColor2.b, debugColor2.a);
 
@@ -238,15 +245,15 @@ public:
           glUseProgram(shaderId);
         }
 
-        auto viewMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "viewMatrix");
-        auto projectionMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "projectionMatrix");
-        auto lineColorId = glGetUniformLocation(debugAabbShader->getShaderId(), "lineColor");
+        const auto viewMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "viewMatrix");
+        const auto projectionMatrixId = glGetUniformLocation(debugAabbShader->getShaderId(), "projectionMatrix");
+        const auto lineColorId = glGetUniformLocation(debugAabbShader->getShaderId(), "lineColor");
 
         glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &viewMatrix[0][0]);
         glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
-        auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getTransformedBox()->getCorners());
+        const auto debugModelBuffer = getLineVertices(model->second->getColliderDetails()->getColliderShape()->getTransformedBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -259,7 +266,7 @@ public:
     }
   }
 
-  void render()
+  void render() const
   {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -276,8 +283,8 @@ public:
 };
 
 DebugRenderManager DebugRenderManager::instance;
-glm::vec4 DebugRenderManager::debugColor1 = glm::vec4(1.0, 0.0, 0.0, 1.0);
-glm::vec4 DebugRenderManager::debugColor2 = glm::vec4(0.0, 0.0, 1.0, 1.0);
-glm::vec4 DebugRenderManager::debugColor3 = glm::vec4(0.0, 1.0, 0.0, 1.0);
+const glm::vec4 DebugRenderManager::debugColor1 = glm::vec4(1.0, 0.0, 0.0, 1.0);
+const glm::vec4 DebugRenderManager::debugColor2 = glm::vec4(0.0, 0.0, 1.0, 1.0);
+const glm::vec4 DebugRenderManager::debugColor3 = glm::vec4(0.0, 1.0, 0.0, 1.0);
 
 #endif

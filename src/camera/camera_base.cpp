@@ -15,9 +15,9 @@ class CameraBase
 
 private:
   // The ID of the camera.
-  std::string cameraId;
+  const std::string cameraId;
   // The name of the camera.
-  std::string cameraName;
+  const std::string cameraName;
 
   // The position of the camera.
   glm::vec3 position;
@@ -32,7 +32,12 @@ private:
   glm::mat4 projectionMatrix;
 
 protected:
-  CameraBase(std::string cameraId, std::string cameraName, glm::vec3 position, glm::vec3 direction, glm::vec3 up, glm::mat4 projectionMatrix)
+  CameraBase(const std::string &cameraId,
+             const std::string &cameraName,
+             const glm::vec3 &position,
+             const glm::vec3 &direction,
+             const glm::vec3 &up,
+             const glm::mat4 &projectionMatrix)
       : cameraId(cameraId),
         cameraName(cameraName),
         position(position),
@@ -48,7 +53,7 @@ public:
    * 
    * @return The camera ID.
    */
-  std::string getCameraId()
+  const std::string &getCameraId() const
   {
     return cameraId;
   }
@@ -58,7 +63,7 @@ public:
    * 
    * @return The camera name.
    */
-  std::string getCameraName()
+  const std::string &getCameraName() const
   {
     return cameraName;
   }
@@ -68,7 +73,7 @@ public:
    * 
    * @return The camera position.
    */
-  glm::vec3 &getCameraPosition()
+  const glm::vec3 &getCameraPosition() const
   {
     return position;
   }
@@ -78,7 +83,7 @@ public:
    * 
    * @return The camera view direction.
    */
-  glm::vec3 &getCameraDirection()
+  const glm::vec3 &getCameraDirection() const
   {
     return direction;
   }
@@ -88,7 +93,7 @@ public:
    * 
    * @return The camera up vector.
    */
-  glm::vec3 &getCameraUp()
+  const glm::vec3 &getCameraUp() const
   {
     return up;
   }
@@ -98,7 +103,7 @@ public:
    * 
    * @return The camera view matrix.
    */
-  glm::mat4 &getViewMatrix()
+  const glm::mat4 &getViewMatrix() const
   {
     return viewMatrix;
   }
@@ -108,7 +113,7 @@ public:
    * 
    * @return The camera projection matrix.
    */
-  glm::mat4 &getProjectionMatrix()
+  const glm::mat4 &getProjectionMatrix() const
   {
     return projectionMatrix;
   }
@@ -118,7 +123,7 @@ public:
    * 
    * @param newPosition  The camera position.
    */
-  void setCameraPosition(glm::vec3 newPosition)
+  void setCameraPosition(const glm::vec3 &newPosition)
   {
     position = newPosition;
   }
@@ -128,7 +133,7 @@ public:
    * 
    * @param newDirection  The camera view direction.
    */
-  void setCameraDirection(glm::vec3 newDirection)
+  void setCameraDirection(const glm::vec3 &newDirection)
   {
     direction = newDirection;
   }
@@ -138,7 +143,7 @@ public:
    * 
    * @param newUp  The camera up vector.
    */
-  void setCameraUp(glm::vec3 newUp)
+  void setCameraUp(const glm::vec3 &newUp)
   {
     up = newUp;
   }
@@ -169,7 +174,7 @@ public:
    * 
    * @return The calculated projection matrix.
    */
-  virtual glm::mat4 createProjectionMatrix() = 0;
+  const virtual glm::mat4 createProjectionMatrix() = 0;
 };
 
 #endif

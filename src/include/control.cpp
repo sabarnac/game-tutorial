@@ -18,19 +18,19 @@ class CursorPosition
 {
 private:
   // The x-coordinate of the cursor.
-  double x;
+  const double x;
   // The y-coordinate of the cursor.
-  double y;
+  const double y;
 
 public:
-  CursorPosition(double x, double y) : x(x), y(y) {}
+  CursorPosition(const double &x, const double &y) : x(x), y(y) {}
 
   /**
    * Returns the x-coordinate of the vector.
    * 
    * @return The x-coordinate.
    */
-  double getX()
+  const double &getX() const
   {
     return x;
   }
@@ -40,7 +40,7 @@ public:
    * 
    * @return The y-coordinate.
    */
-  double getY()
+  const double &getY() const
   {
     return y;
   }
@@ -53,28 +53,28 @@ class ControlManager
 {
 private:
   // The width of the window.
-  static int width;
+  const static int width;
   // The height of the window.
-  static int height;
+  const static int height;
 
   // Singleton instance of the control manager.
   static ControlManager instance;
 
   // The window manager responsible for managing the window and properties related to it.
-  WindowManager &windowManager;
+  const WindowManager &windowManager;
 
   ControlManager() : windowManager(WindowManager::getInstance()) {}
 
 public:
   // Preventing copying the control manager, making sure only one instance can exist.
-  ControlManager(ControlManager &) = delete;
+  ControlManager(const ControlManager &) = delete;
 
   /**
    * Returns the position of the cursor on the window.
    * 
    * @return The cursor position.
    */
-  std::shared_ptr<CursorPosition> getCursorPosition()
+  const std::shared_ptr<CursorPosition> getCursorPosition() const
   {
     // Define variables for the x,y-coordinates of the cursor.
     double x, y;
@@ -89,7 +89,7 @@ public:
    * 
    * @param newPosition  The position that the cursor should be set to.
    */
-  void setCursorPosition(CursorPosition newPosition)
+  void setCursorPosition(const CursorPosition &newPosition)
   {
     // Tell GLFW to set the position of the cursor. GLFW requires the absolute position of the cursor on the window,
     //   but the input coordinates are normalized, so multiply them with the dimensions of the window.
@@ -103,7 +103,7 @@ public:
    * 
    * @return Whether the key has been pressed or not.
    */
-  bool isKeyPressed(int key)
+  bool isKeyPressed(const int &key) const
   {
     // Query GLFW to see the status of the key and return true if it is being pressed.
     return glfwGetKey(windowManager.getWindow(), key) == GLFW_PRESS;
@@ -129,9 +129,9 @@ public:
 };
 
 // Initialize the window width to the WINDOW_WIDTH constant.
-int ControlManager::width = WINDOW_WIDTH;
+const int ControlManager::width = WINDOW_WIDTH;
 // Initialize the window height to the WINDOW_HEIGHT constant.
-int ControlManager::height = WINDOW_HEIGHT;
+const int ControlManager::height = WINDOW_HEIGHT;
 // Initialize the control manager singleton instance static variable.
 ControlManager ControlManager::instance;
 

@@ -17,9 +17,9 @@ class ColliderShape;
 class SphereColliderShape;
 class BoxColliderShape;
 
-bool haveSphereSphereCollided(SphereColliderShape &sphere1, SphereColliderShape &sphere2);
-bool haveBoxSphereCollided(BoxColliderShape &box, SphereColliderShape &sphere);
-bool haveBoxBoxCollided(BoxColliderShape &box1, BoxColliderShape &box2);
+bool haveSphereSphereCollided(const SphereColliderShape &sphere1, const SphereColliderShape &sphere2);
+bool haveBoxSphereCollided(const BoxColliderShape &box, const SphereColliderShape &sphere);
+bool haveBoxBoxCollided(const BoxColliderShape &box1, const BoxColliderShape &box2);
 
 // https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
 //   is a good read to understand the collision concepts here.
@@ -44,9 +44,9 @@ private:
   void updateCorners()
   {
     // Grab the minimum and maximum values of the box at the x,y,z axes using the min/max-corners.
-    glm::vec2 minMaxX(glm::min(minCorner.x, maxCorner.x), glm::max(minCorner.x, maxCorner.x));
-    glm::vec2 minMaxY(glm::min(minCorner.y, maxCorner.y), glm::max(minCorner.y, maxCorner.y));
-    glm::vec2 minMaxZ(glm::min(minCorner.z, maxCorner.z), glm::max(minCorner.z, maxCorner.z));
+    const glm::vec2 minMaxX(glm::min(minCorner.x, maxCorner.x), glm::max(minCorner.x, maxCorner.x));
+    const glm::vec2 minMaxY(glm::min(minCorner.y, maxCorner.y), glm::max(minCorner.y, maxCorner.y));
+    const glm::vec2 minMaxZ(glm::min(minCorner.z, maxCorner.z), glm::max(minCorner.z, maxCorner.z));
 
     // Iterate through the minimum and maximum coordinate values of all the axes
     for (auto x = 0; x < 2; x++)
@@ -67,7 +67,7 @@ private:
    * 
    * @param vertices  The list of vertices of the object using which to calculate the min/max-corners.
    */
-  void updateMinMaxCorners(std::vector<glm::vec3> vertices)
+  void updateMinMaxCorners(const std::vector<glm::vec3> &vertices)
   {
     // Iterate through all the vertices
     for (auto vertex = vertices.begin(); vertex != vertices.end(); vertex++)
@@ -83,7 +83,7 @@ private:
   }
 
 public:
-  AxisAlignedBoundingBox(glm::vec3 minCorner, glm::vec3 maxCorner)
+  AxisAlignedBoundingBox(const glm::vec3 &minCorner, const glm::vec3 &maxCorner)
       : minCorner(minCorner),
         maxCorner(maxCorner)
   {
@@ -91,7 +91,7 @@ public:
     updateCorners();
   }
 
-  AxisAlignedBoundingBox(std::vector<glm::vec3> vertices)
+  AxisAlignedBoundingBox(const std::vector<glm::vec3> &vertices)
       : minCorner(vertices[0]),
         maxCorner(vertices[0])
   {
@@ -106,7 +106,7 @@ public:
    * 
    * @return The minimum size corner.
    */
-  glm::vec3 &getMinCorner()
+  const glm::vec3 &getMinCorner() const
   {
     return minCorner;
   }
@@ -116,7 +116,7 @@ public:
    * 
    * @return The maximum size corner.
    */
-  glm::vec3 &getMaxCorner()
+  const glm::vec3 &getMaxCorner() const
   {
     return maxCorner;
   }
@@ -126,7 +126,7 @@ public:
    * 
    * @return The list of the eight corners.
    */
-  std::vector<glm::vec3> &getCorners()
+  const std::vector<glm::vec3> &getCorners() const
   {
     return corners;
   }
@@ -138,7 +138,7 @@ public:
    * @param newMinCorner  The minimum size corner.
    * @param newMiaxorner  The maximum size corner.
    */
-  void update(glm::vec3 newMinCorner, glm::vec3 newMaxCorner)
+  void update(const glm::vec3 &newMinCorner, const glm::vec3 &newMaxCorner)
   {
     // Update the min-corner.
     minCorner = newMinCorner;
@@ -154,7 +154,7 @@ public:
    * 
    * @param newVertices  The set of vertices to use to calculate the min/max-corners.
    */
-  void update(std::vector<glm::vec3> newVertices)
+  void update(const std::vector<glm::vec3> &newVertices)
   {
     // Set the min-corner to the first vertex in the list.
     minCorner = newVertices[0];
@@ -173,7 +173,7 @@ public:
    * 
    * @return Whether a collision has occurred or not.
    */
-  bool hasCollided(AxisAlignedBoundingBox &otherBox)
+  bool hasCollided(const AxisAlignedBoundingBox &otherBox) const
   {
     // Assume that a collision has occured.
     auto hasCollided = true;
@@ -204,7 +204,7 @@ class ColliderShape
 {
 protected:
   // The shape type of the collider.
-  ColliderShapeType type;
+  const ColliderShapeType type;
   // The position of the collider.
   glm::vec3 position;
   // The rotation of the collider.
@@ -218,16 +218,16 @@ protected:
   // This may seem to defeat the purpose of the AABB since it looses its axis-aligned properties, but if we inverse-transform
   //   the entire world back using the models' transformation matrix, the base AABB becomes a proper AABB again, and everything
   //   is now aligned with that AABB, making it possible to detect collisions against it again.
-  std::shared_ptr<AxisAlignedBoundingBox> baseBox;
+  std::shared_ptr<const AxisAlignedBoundingBox> baseBox;
   // Since the base AABB is being transformed around, another AABB is generated using the base AABB post-transformation.
   //   This gives us a base AABB to perform a shallow collision check against.
-  std::shared_ptr<AxisAlignedBoundingBox> transformedBox;
+  std::shared_ptr<const AxisAlignedBoundingBox> transformedBox;
 
   // Update the transformed AABB using the transformed base AABB.
   void updateTransformedBox()
   {
     // Get all the corners of the base AABB.
-    auto baseBoxCorners = baseBox->getCorners();
+    const auto baseBoxCorners = baseBox->getCorners();
     // Define a vector where we will store the transformed corners of the base AABB.
     std::vector<glm::vec3> newCorners({});
     // Iterate through each corner of the base AABB.
@@ -237,10 +237,10 @@ protected:
       newCorners.push_back(glm::vec3(glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale) * glm::vec4(*corner, 1.0)));
     }
     // Generate the new AABB using the transformed base AABB.
-    transformedBox = std::make_shared<AxisAlignedBoundingBox>(newCorners);
+    transformedBox = std::make_shared<const AxisAlignedBoundingBox>(newCorners);
   }
 
-  void updateBaseBox(std::shared_ptr<AxisAlignedBoundingBox> newBaseBox)
+  void updateBaseBox(const std::shared_ptr<const AxisAlignedBoundingBox> &newBaseBox)
   {
     // Update the base AABB.
     baseBox = newBaseBox;
@@ -250,11 +250,11 @@ protected:
 
 public:
   ColliderShape(
-      ColliderShapeType type,
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      std::shared_ptr<AxisAlignedBoundingBox> baseBox)
+      const ColliderShapeType &type,
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const std::shared_ptr<const AxisAlignedBoundingBox> &baseBox)
       : type(type),
         position(position),
         rotation(rotation),
@@ -272,7 +272,7 @@ public:
    * 
    * @return The collider shape type.
    */
-  ColliderShapeType getType()
+  const ColliderShapeType &getType() const
   {
     return type;
   }
@@ -282,7 +282,7 @@ public:
    * 
    * @return The collider position.
    */
-  glm::vec3 &getPosition()
+  const glm::vec3 &getPosition() const
   {
     return position;
   }
@@ -292,7 +292,7 @@ public:
    * 
    * @return The collider rotation.
    */
-  glm::vec3 &getRotation()
+  const glm::vec3 &getRotation() const
   {
     return rotation;
   }
@@ -302,7 +302,7 @@ public:
    * 
    * @return The collider scale.
    */
-  glm::vec3 &getScale()
+  const glm::vec3 &getScale() const
   {
     return scale;
   }
@@ -312,7 +312,7 @@ public:
    * 
    * @return The collider base AABB.
    */
-  std::shared_ptr<AxisAlignedBoundingBox> &getBaseBox()
+  const std::shared_ptr<const AxisAlignedBoundingBox> &getBaseBox() const
   {
     return baseBox;
   }
@@ -322,7 +322,7 @@ public:
    * 
    * @return The collider transformation AABB.
    */
-  std::shared_ptr<AxisAlignedBoundingBox> &getTransformedBox()
+  const std::shared_ptr<const AxisAlignedBoundingBox> &getTransformedBox() const
   {
     return transformedBox;
   }
@@ -334,7 +334,7 @@ public:
    * @param newRotation  The new rotation of the collider.
    * @param newScale     The new scale of the collider.
    */
-  virtual void updateTransformations(glm::vec3 newPosition, glm::vec3 newRotation, glm::vec3 newScale)
+  virtual void updateTransformations(const glm::vec3 &newPosition, const glm::vec3 &newRotation, const glm::vec3 &newScale)
   {
     // Update the collider position.
     position = newPosition;
@@ -363,7 +363,7 @@ private:
    * 
    * @return The collider base AABB.
    */
-  std::shared_ptr<AxisAlignedBoundingBox> createBaseBox(double radius)
+  const std::shared_ptr<const AxisAlignedBoundingBox> createBaseBox(const double radius)
   {
     // Generates the base AABB by using the negative and positive values of the radius to get the min/max-corners of the AABB.
     return std::make_shared<AxisAlignedBoundingBox>(glm::vec3(-radius, -radius, -radius), glm::vec3(radius, radius, radius));
@@ -376,7 +376,7 @@ private:
    * 
    * @return The radius of the sphere.
    */
-  double createRadius(std::vector<glm::vec3> vertices)
+  double createRadius(const std::vector<glm::vec3> &vertices)
   {
     // Set the farthest vertex distance from the center of the model as the length of the vertex.
     // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
@@ -388,7 +388,7 @@ private:
       // Calculate the distance of the vertex from the center of the model.
       // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
       //   vector is enough
-      auto currentVertexDistance = glm::length(*vertex);
+      const auto currentVertexDistance = glm::length(*vertex);
       // Check if the current vector is further away than the last checked farthest vector.
       if (currentVertexDistance > farthestVertexDistance)
       {
@@ -403,10 +403,10 @@ private:
 
 public:
   SphereColliderShape(
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      double radius)
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const double &radius)
       : ColliderShape(
             ColliderShapeType::SPHERE,
             position,
@@ -416,10 +416,10 @@ public:
         radius(radius) {}
 
   SphereColliderShape(
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      std::vector<glm::vec3> vertices)
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const std::vector<glm::vec3> &vertices)
       : ColliderShape(
             ColliderShapeType::SPHERE,
             position,
@@ -433,7 +433,7 @@ public:
    * 
    * @return The sphere radius.
    */
-  double getRadius()
+  const double &getRadius() const
   {
     return radius;
   }
@@ -445,8 +445,10 @@ public:
    * @param newRotation  The new rotation of the collider.
    * @param newScale  The new scale of the collider.
    */
-  void updateTransformations(glm::vec3 newPosition, glm::vec3 newRotation, glm::vec3 newScale) override
+  void updateTransformations(const glm::vec3 &newPosition, const glm::vec3 &newRotation, const glm::vec3 &newScale) override
   {
+    (void)newRotation;
+
     // Update the collider position.
     position = newPosition;
     // We're not updating the rotation because it is useless.
@@ -463,7 +465,7 @@ public:
    * 
    * @param newRadius  The new radius of the sphere.
    */
-  void update(double newRadius)
+  void update(const double &newRadius)
   {
     // Update the collider sphere radius.
     radius = newRadius;
@@ -476,7 +478,7 @@ public:
    * 
    * @param newVertices  The list vertices of the model to use to calculate the new radius.
    */
-  void update(std::vector<glm::vec3> newVertices)
+  void update(const std::vector<glm::vec3> &newVertices)
   {
     // Update the collider sphere radius.
     radius = createRadius(newVertices);
@@ -501,10 +503,10 @@ private:
    * 
    * @return The collider base AABB.
    */
-  std::shared_ptr<AxisAlignedBoundingBox> createBaseBox(std::vector<glm::vec3> corners)
+  const std::shared_ptr<const AxisAlignedBoundingBox> createBaseBox(const std::vector<glm::vec3> &corners)
   {
     // Just forward the corners of the box to the AABB constructor, which can generate the AABB accordingly.
-    return std::make_shared<AxisAlignedBoundingBox>(corners);
+    return std::make_shared<const AxisAlignedBoundingBox>(corners);
   }
 
   /**
@@ -514,7 +516,7 @@ private:
    * 
    * @return The corners of the box.
    */
-  std::vector<glm::vec3> createCorners(std::vector<glm::vec3> vertices)
+  const std::vector<glm::vec3> createCorners(const std::vector<glm::vec3> &vertices)
   {
     // Set the min-corner to the first vertex in the list.
     glm::vec3 minCorner = vertices[0];
@@ -534,9 +536,9 @@ private:
     }
 
     // Grab the minimum and maximum values of the box at the x,y,z axes using the min/max-corners.
-    glm::vec2 minMaxX(glm::min(minCorner.x, maxCorner.x), glm::max(minCorner.x, maxCorner.x));
-    glm::vec2 minMaxY(glm::min(minCorner.y, maxCorner.y), glm::max(minCorner.y, maxCorner.y));
-    glm::vec2 minMaxZ(glm::min(minCorner.z, maxCorner.z), glm::max(minCorner.z, maxCorner.z));
+    const glm::vec2 minMaxX(glm::min(minCorner.x, maxCorner.x), glm::max(minCorner.x, maxCorner.x));
+    const glm::vec2 minMaxY(glm::min(minCorner.y, maxCorner.y), glm::max(minCorner.y, maxCorner.y));
+    const glm::vec2 minMaxZ(glm::min(minCorner.z, maxCorner.z), glm::max(minCorner.z, maxCorner.z));
 
     // Define a vector for storing the corners of the collider box.
     std::vector<glm::vec3> newCorners({});
@@ -559,11 +561,11 @@ private:
 
 public:
   BoxColliderShape(
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      glm::vec3 oppositeCorner1,
-      glm::vec3 oppositeCorner2)
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const glm::vec3 &oppositeCorner1,
+      const glm::vec3 &oppositeCorner2)
       : ColliderShape(
             ColliderShapeType::BOX,
             position,
@@ -573,10 +575,10 @@ public:
         corners(createCorners(std::vector<glm::vec3>({oppositeCorner1, oppositeCorner2}))) {}
 
   BoxColliderShape(
-      glm::vec3 position,
-      glm::vec3 rotation,
-      glm::vec3 scale,
-      std::vector<glm::vec3> vertices)
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const std::vector<glm::vec3> &vertices)
       : ColliderShape(
             ColliderShapeType::BOX,
             position,
@@ -590,7 +592,7 @@ public:
    * 
    * @return The list of the eight corners.
    */
-  std::vector<glm::vec3> &getCorners()
+  const std::vector<glm::vec3> &getCorners() const
   {
     return corners;
   }
@@ -601,7 +603,7 @@ public:
    * @param newOppositeCorner1  The first corner among the opposite corner pair.
    * @param newOppositeCorner2  The second corner among the opposite corner pair.
    */
-  void update(glm::vec3 newOppositeCorner1, glm::vec3 newOppositeCorner2)
+  void update(const glm::vec3 &newOppositeCorner1, const glm::vec3 &newOppositeCorner2)
   {
     // Generate the new corners of the box using the opposite corners provided.
     corners = createCorners(std::vector<glm::vec3>({newOppositeCorner1, newOppositeCorner2}));
@@ -614,7 +616,7 @@ public:
    * 
    * @param newVertices  The list vertices of the model to use to calculate the new corners.
    */
-  void update(std::vector<glm::vec3> newVertices)
+  void update(const std::vector<glm::vec3> &newVertices)
   {
     // Generate the new corners of the box using the given vertices of the model.
     corners = createCorners(newVertices);
@@ -637,15 +639,15 @@ private:
    * 
    * @return Whether the two sphere colliders have collided or not.
    */
-  static bool haveSphereSphereCollided(std::shared_ptr<SphereColliderShape> sphere1, std::shared_ptr<SphereColliderShape> sphere2)
+  static bool haveSphereSphereCollided(const std::shared_ptr<const SphereColliderShape> &sphere1, const std::shared_ptr<const SphereColliderShape> &sphere2)
   {
     // Calculate the scaled radius of the first collider sphere based on the scale of the collider.
-    auto sphere1ScaledRadius = sphere1->getRadius() * sphere1->getScale().x;
+    const auto sphere1ScaledRadius = sphere1->getRadius() * sphere1->getScale().x;
     // Calculate the scaled radius of the second collider sphere based on the scale of the collider.
-    auto sphere2ScaledRadius = sphere2->getRadius() * sphere2->getScale().x;
+    const auto sphere2ScaledRadius = sphere2->getRadius() * sphere2->getScale().x;
 
     // Calculate the distance between the centres of the spheres.
-    auto distanceBetweenSpheres = glm::distance(sphere1->getPosition(), sphere2->getPosition());
+    const auto distanceBetweenSpheres = glm::distance(sphere1->getPosition(), sphere2->getPosition());
     // If the distance between the spheres is greater than the sum of the radii of the two spheres, then the two have not collided.
     return distanceBetweenSpheres <= (sphere1ScaledRadius + sphere2ScaledRadius);
   }
@@ -658,30 +660,30 @@ private:
    * 
    * @return Whether the box and sphere colliders have collided or not.
    */
-  static bool haveBoxSphereCollided(std::shared_ptr<BoxColliderShape> box, std::shared_ptr<SphereColliderShape> sphere)
+  static bool haveBoxSphereCollided(const std::shared_ptr<const BoxColliderShape> &box, const std::shared_ptr<const SphereColliderShape> &sphere)
   {
     // Get the transformation matrix of the collider box.
-    auto boxTransformationMatrix = glm::translate(box->getPosition()) * glm::toMat4(glm::quat(box->getRotation())) * glm::scale(box->getScale()) * glm::mat4();
+    const auto boxTransformationMatrix = glm::translate(box->getPosition()) * glm::toMat4(glm::quat(box->getRotation())) * glm::scale(box->getScale()) * glm::mat4();
     // Calculate the inverse of the boxes' transformation matrix.
-    auto boxInverseTransformationMatrix = glm::inverse(boxTransformationMatrix);
+    const auto boxInverseTransformationMatrix = glm::inverse(boxTransformationMatrix);
     // Create an AABB using the corners of the box (doing this just as a way to get the min/max-corners).
-    AxisAlignedBoundingBox boxAABB(box->getCorners());
+    const AxisAlignedBoundingBox boxAABB(box->getCorners());
     // Get the min-corner of the box.
-    auto boxAABBMinCorners = boxAABB.getMinCorner();
+    const auto boxAABBMinCorners = boxAABB.getMinCorner();
     // Get the max-corner of the box.
-    auto boxAABBMaxCorners = boxAABB.getMaxCorner();
+    const auto boxAABBMaxCorners = boxAABB.getMaxCorner();
 
     // Calculate the scaled radius of the collider sphere based on the scale of the collider.
-    auto sphereScaledRadius = sphere->getRadius() * sphere->getScale().x;
+    const auto sphereScaledRadius = sphere->getRadius() * sphere->getScale().x;
     // Calculate the position of the wphere w.r.t the box using the boxes' inverse transformation matrix.
-    auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
+    const auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
     // Calculate the point on the box that is closest to the sphere.
-    auto boxPointClosesToSphere = glm::vec3(
+    const auto boxPointClosesToSphere = glm::vec3(
         glm::max(boxAABBMinCorners.x, glm::min(spherePositionInBoxSpace.x, boxAABBMaxCorners.x)),
         glm::max(boxAABBMinCorners.y, glm::min(spherePositionInBoxSpace.y, boxAABBMaxCorners.y)),
         glm::max(boxAABBMinCorners.z, glm::min(spherePositionInBoxSpace.z, boxAABBMaxCorners.z)));
     // Calculate the distance between the boxes' closest point and the center of the sphere.
-    auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
+    const auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
 
     // If the distance between the closest point on the box and the center of the sphere is greater than the radius of the sphere,
     //   then the two have not collided.
@@ -696,20 +698,20 @@ private:
    * 
    * @return Whether the two box colliders have collided or not.
    */
-  static bool haveBoxBoxCollided(std::shared_ptr<BoxColliderShape> box1, std::shared_ptr<BoxColliderShape> box2)
+  static bool haveBoxBoxCollided(const std::shared_ptr<const BoxColliderShape> &box1, const std::shared_ptr<const BoxColliderShape> &box2)
   {
     // Get the transformation matrix of the first collider box.
-    auto box1TransformationMatrix = glm::translate(box1->getPosition()) * glm::toMat4(glm::quat(box1->getRotation())) * glm::scale(box1->getScale()) * glm::mat4();
+    const auto box1TransformationMatrix = glm::translate(box1->getPosition()) * glm::toMat4(glm::quat(box1->getRotation())) * glm::scale(box1->getScale()) * glm::mat4();
     // Calculate the inverse of the first boxes' transformation matrix.
-    auto box1InverseTransformationMatrix = glm::inverse(box1TransformationMatrix);
+    const auto box1InverseTransformationMatrix = glm::inverse(box1TransformationMatrix);
 
     // Get the transformation matrix of the second collider box.
-    auto box2TransformationMatrix = glm::translate(box2->getPosition()) * glm::toMat4(glm::quat(box2->getRotation())) * glm::scale(box2->getScale()) * glm::mat4();
+    const auto box2TransformationMatrix = glm::translate(box2->getPosition()) * glm::toMat4(glm::quat(box2->getRotation())) * glm::scale(box2->getScale()) * glm::mat4();
     // Calculate the inverse of the second boxes' transformation matrix.
-    auto box2InverseTransformationMatrix = glm::inverse(box2TransformationMatrix);
+    const auto box2InverseTransformationMatrix = glm::inverse(box2TransformationMatrix);
 
     // Get the corners of the first box.
-    auto box1Corners = box1->getCorners();
+    const auto box1Corners = box1->getCorners();
     // Define a vector for storing the transformed corners of the first box.
     std::vector<glm::vec3> box1TransformedCorners({});
     // Iterate through the corners of the first box.
@@ -719,7 +721,7 @@ private:
       box1TransformedCorners.push_back(glm::vec3(box1TransformationMatrix * glm::vec4(*box1Corner, 1.0)));
     }
 
-    auto box2Corners = box2->getCorners();
+    const auto box2Corners = box2->getCorners();
     // Define a vector for storing the transformed corners of the first box.
     std::vector<glm::vec3> box2TransformedCorners({});
     // Iterate through the corners of the second box.
@@ -730,20 +732,20 @@ private:
     }
 
     // Create an AABB using the corners of the second box (doing this just as a way to get the min/max-corners).
-    AxisAlignedBoundingBox box2AABB(box2->getCorners());
+    const AxisAlignedBoundingBox box2AABB(box2->getCorners());
     // Get the min-corner of the second box.
-    auto box2AABBMinCorners = box2AABB.getMinCorner();
+    const auto box2AABBMinCorners = box2AABB.getMinCorner();
     // Get the max-corner of the second box.
-    auto box2AABBMaxCorners = box2AABB.getMaxCorner();
+    const auto box2AABBMaxCorners = box2AABB.getMaxCorner();
     // Iterate through the transformed vertices of the first box.
     for (auto box1Corner = box1TransformedCorners.begin(); box1Corner != box1TransformedCorners.end(); box1Corner++)
     {
       // Transform the vertex of the first box into the space of the second box
-      auto box1CornerInBox2Space = glm::vec3(box2InverseTransformationMatrix * glm::vec4(*box1Corner, 1.0));
+      const auto box1CornerInBox2Space = glm::vec3(box2InverseTransformationMatrix * glm::vec4(*box1Corner, 1.0));
       // Check if the vertex of the first box has collided with the second box.
-      auto isBox1CornerInBox2 = (box1CornerInBox2Space.x >= box2AABBMinCorners.x && box1CornerInBox2Space.x <= box2AABBMaxCorners.x) &&
-                                (box1CornerInBox2Space.y >= box2AABBMinCorners.y && box1CornerInBox2Space.y <= box2AABBMaxCorners.y) &&
-                                (box1CornerInBox2Space.z >= box2AABBMinCorners.z && box1CornerInBox2Space.z <= box2AABBMaxCorners.z);
+      const auto isBox1CornerInBox2 = (box1CornerInBox2Space.x >= box2AABBMinCorners.x && box1CornerInBox2Space.x <= box2AABBMaxCorners.x) &&
+                                      (box1CornerInBox2Space.y >= box2AABBMinCorners.y && box1CornerInBox2Space.y <= box2AABBMaxCorners.y) &&
+                                      (box1CornerInBox2Space.z >= box2AABBMinCorners.z && box1CornerInBox2Space.z <= box2AABBMaxCorners.z);
       // If we have detected a collision, then the two boxes have collided.
       if (isBox1CornerInBox2)
       {
@@ -752,20 +754,20 @@ private:
     }
 
     // Create an AABB using the corners of the first box (doing this just as a way to get the min/max-corners).
-    AxisAlignedBoundingBox box1AABB(box1->getCorners());
+    const AxisAlignedBoundingBox box1AABB(box1->getCorners());
     // Get the min-corner of the first box.
-    auto box1AABBMinCorners = box1AABB.getMinCorner();
+    const auto box1AABBMinCorners = box1AABB.getMinCorner();
     // Get the max-corner of the first box.
-    auto box1AABBMaxCorners = box1AABB.getMaxCorner();
+    const auto box1AABBMaxCorners = box1AABB.getMaxCorner();
     // Iterate through the transformed vertices of the second box.
     for (auto box2Corner = box2TransformedCorners.begin(); box2Corner != box2TransformedCorners.end(); box2Corner++)
     {
       // Transform the vertex of the second box into the space of the first box
-      auto box2CornerInBox1Space = glm::vec3(box1InverseTransformationMatrix * glm::vec4(*box2Corner, 1.0));
+      const auto box2CornerInBox1Space = glm::vec3(box1InverseTransformationMatrix * glm::vec4(*box2Corner, 1.0));
       // Check if the vertex of the second box has collided with the first box.
-      auto isBox2CornerInBox1 = (box2CornerInBox1Space.x >= box1AABBMinCorners.x && box2CornerInBox1Space.x <= box1AABBMaxCorners.x) &&
-                                (box2CornerInBox1Space.y >= box1AABBMinCorners.y && box2CornerInBox1Space.y <= box1AABBMaxCorners.y) &&
-                                (box2CornerInBox1Space.z >= box1AABBMinCorners.z && box2CornerInBox1Space.z <= box1AABBMaxCorners.z);
+      const auto isBox2CornerInBox1 = (box2CornerInBox1Space.x >= box1AABBMinCorners.x && box2CornerInBox1Space.x <= box1AABBMaxCorners.x) &&
+                                      (box2CornerInBox1Space.y >= box1AABBMinCorners.y && box2CornerInBox1Space.y <= box1AABBMaxCorners.y) &&
+                                      (box2CornerInBox1Space.z >= box1AABBMinCorners.z && box2CornerInBox1Space.z <= box1AABBMaxCorners.z);
       // If we have detected a collision, then the two boxes have collided.
       if (isBox2CornerInBox1)
       {
@@ -788,7 +790,7 @@ public:
    * 
    * @return Whether the two colldier shapes have collided or not.
    */
-  static bool haveShapesCollided(std::shared_ptr<ColliderShape> shape1, std::shared_ptr<ColliderShape> shape2, bool deepCollisionCheck)
+  static bool haveShapesCollided(const std::shared_ptr<const ColliderShape> &shape1, const std::shared_ptr<const ColliderShape> &shape2, const bool &deepCollisionCheck)
   {
     // Check if the AABBs of the two shapes have collided or not.
     if (!shape1->getTransformedBox()->hasCollided(*(shape2->getTransformedBox())))
@@ -803,22 +805,22 @@ public:
     }
 
     // Calculate a mask to determine what shape collision function is required.
-    auto shapeTypeMask = (shape1->getType()) + (2 * shape2->getType());
+    const auto shapeTypeMask = (shape1->getType()) + (2 * shape2->getType());
     // Put the mask through a switch case.
     switch (shapeTypeMask)
     {
     case 0:
       // Both colliders are a sphere. Perform the check accordingly.
-      return haveSphereSphereCollided(std::dynamic_pointer_cast<SphereColliderShape>(shape1), std::dynamic_pointer_cast<SphereColliderShape>(shape2));
+      return haveSphereSphereCollided(std::dynamic_pointer_cast<const SphereColliderShape>(shape1), std::dynamic_pointer_cast<const SphereColliderShape>(shape2));
     case 1:
       // First collider is a box, second is a sphere. Perform the check accordingly.
-      return haveBoxSphereCollided(std::dynamic_pointer_cast<BoxColliderShape>(shape1), std::dynamic_pointer_cast<SphereColliderShape>(shape2));
+      return haveBoxSphereCollided(std::dynamic_pointer_cast<const BoxColliderShape>(shape1), std::dynamic_pointer_cast<const SphereColliderShape>(shape2));
     case 2:
       // First collider is a sphere, second is a box. Perform the check accordingly.
-      return haveBoxSphereCollided(std::dynamic_pointer_cast<BoxColliderShape>(shape2), std::dynamic_pointer_cast<SphereColliderShape>(shape1));
+      return haveBoxSphereCollided(std::dynamic_pointer_cast<const BoxColliderShape>(shape2), std::dynamic_pointer_cast<const SphereColliderShape>(shape1));
     case 3:
       // Both colliders are a box. Perform the check accordingly.
-      return haveBoxBoxCollided(std::dynamic_pointer_cast<BoxColliderShape>(shape1), std::dynamic_pointer_cast<BoxColliderShape>(shape2));
+      return haveBoxBoxCollided(std::dynamic_pointer_cast<const BoxColliderShape>(shape1), std::dynamic_pointer_cast<const BoxColliderShape>(shape2));
     default:
       // Can't determine the shapes, so say the two haven't collided.
       return false;
@@ -833,14 +835,14 @@ class ColliderDetails
 {
 private:
   // The name of the collider.
-  std::string colliderName;
+  const std::string colliderName;
   // The shape of the collider.
-  std::shared_ptr<ColliderShape> colliderShape;
+  const std::shared_ptr<ColliderShape> colliderShape;
 
 public:
   ColliderDetails(
-      std::string colliderName,
-      std::shared_ptr<ColliderShape> colliderShape)
+      const std::string colliderName,
+      const std::shared_ptr<ColliderShape> colliderShape)
       : colliderName(colliderName),
         colliderShape(colliderShape) {}
 
@@ -849,7 +851,7 @@ public:
    * 
    * @return The collider name.
    */
-  std::string getColliderName()
+  const std::string &getColliderName() const
   {
     return colliderName;
   }
@@ -859,7 +861,7 @@ public:
    * 
    * @return The collider shape.
    */
-  std::shared_ptr<ColliderShape> &getColliderShape()
+  const std::shared_ptr<ColliderShape> &getColliderShape() const
   {
     return colliderShape;
   }

@@ -8,6 +8,7 @@
 #include "include/light.cpp"
 #include "include/render.cpp"
 #include "include/debug_render.cpp"
+#include "include/text.cpp"
 #include "light/cone_light.cpp"
 #include "light/point_light.cpp"
 #include "camera/perspective_camera.cpp"
@@ -25,7 +26,8 @@ int main(void)
 	auto &lightManager = LightManager::getInstance();
 	auto &cameraManager = CameraManager::getInstance();
 	auto &renderManager = RenderManager::getInstance();
-	auto &debugRenderManager = DebugRenderManager::getInstance();
+	const auto &debugRenderManager = DebugRenderManager::getInstance();
+	auto &textManager = TextManager::getInstance();
 
 	// Poll for events and set the mouse to the center of the screen
 	controlManager.pollEvents();
@@ -37,7 +39,7 @@ int main(void)
 	glBindVertexArray(vertexArrayID);
 
 	// Create a perspective camera, and set its properties.
-	auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
+	const auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
 	cameraManager.registerCamera(perspectiveCamera);
 	perspectiveCamera->setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
 	perspectiveCamera->setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.3));
@@ -49,7 +51,7 @@ int main(void)
 		{
 			for (auto k = -2; k <= 0; k++)
 			{
-				auto enemyModel = EnemyModel::create("Enemy" + std::to_string((9 * (i + 2)) + (3 * (j + 1)) + (k + 2)));
+				const auto enemyModel = EnemyModel::create("Enemy" + std::to_string((9 * (i + 2)) + (3 * (j + 1)) + (k + 2)));
 				modelManager.registerModel(enemyModel);
 				enemyModel->setModelPosition(glm::vec3(i * 5, j * 5, k * 5));
 			}
@@ -57,7 +59,7 @@ int main(void)
 	}
 
 	// Create a player model.
-	auto playerModel = PlayerModel::create("MainPlayer");
+	const auto playerModel = PlayerModel::create("MainPlayer");
 	modelManager.registerModel(playerModel);
 
 	// Set debug mode to initially false.
@@ -69,7 +71,7 @@ int main(void)
 	do
 	{
 		// Get the time at the start of the loop.
-		auto currentTime = glfwGetTime();
+		const auto currentTime = glfwGetTime();
 
 		// Check if "B" key was pressed beyond 500ms since the last debug mode toggle.
 		if (controlManager.isKeyPressed(GLFW_KEY_B) && (currentTime - lastDebugEnabledChange) > 0.5)
@@ -92,6 +94,9 @@ int main(void)
 			// Render the debug models fo the main models and lights.
 			debugRenderManager.render();
 		}
+
+		// Render text
+		textManager.render();
 
 		// Swap the window framebuffers.
 		windowManager.swapBuffers();

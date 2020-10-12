@@ -22,7 +22,7 @@ private:
   RenderManager &renderManager;
 
   // The map of registered lights.
-  std::map<std::string, std::shared_ptr<LightBase>> registeredLights;
+  std::map<const std::string, std::shared_ptr<LightBase>> registeredLights;
 
   LightManager()
       : renderManager(RenderManager::getInstance()),
@@ -30,19 +30,19 @@ private:
 
 public:
   // Preventing copying the light manager, making sure only one instance can exist.
-  LightManager(LightManager &) = delete;
+  LightManager(const LightManager &) = delete;
 
   /**
    * Register a new light into the light manager.
    * 
    * @param light  The light to register.
    */
-  void registerLight(std::shared_ptr<LightBase> light)
+  void registerLight(const std::shared_ptr<LightBase> &light)
   {
     // Let the light initialize itself.
     light->init();
     // Insert the light to the map of registered lights.
-    registeredLights.insert(std::pair<std::string, std::shared_ptr<LightBase>>(light->getLightId(), light));
+    registeredLights.insert(std::pair<const std::string, std::shared_ptr<LightBase>>(light->getLightId(), light));
     // Register the light with the render manager as well so that it can be used for rendering.
     renderManager.registerLight(light);
   }
@@ -52,7 +52,7 @@ public:
    * 
    * @param light  The ID of the light to de-register.
    */
-  void deregisterLight(std::string lightId)
+  void deregisterLight(const std::string &lightId)
   {
     // Get the light that is registered with the given light ID.
     auto light = registeredLights[lightId];
@@ -65,7 +65,7 @@ public:
    * 
    * @param light  The light to de-register.
    */
-  void deregisterLight(std::shared_ptr<LightBase> light)
+  void deregisterLight(const std::shared_ptr<LightBase> &light)
   {
     // Remove the light from the map of registered lights.
     registeredLights.erase(light->getLightId());
@@ -82,9 +82,9 @@ public:
    * 
    * @return The light registered with the given light ID.
    */
-  std::shared_ptr<LightBase> getLight(std::string lightId)
+  const std::shared_ptr<LightBase> &getLight(const std::string &lightId) const
   {
-    return registeredLights[lightId];
+    return registeredLights.at(lightId);
   }
 
   /**
@@ -92,7 +92,7 @@ public:
    * 
    * @return The list of all registered lights.
    */
-  std::vector<std::shared_ptr<LightBase>> getAllLights()
+  const std::vector<std::shared_ptr<LightBase>> getAllLights() const
   {
     // Define a vector to store the list of registered lights.
     std::vector<std::shared_ptr<LightBase>> lights({});
@@ -124,7 +124,7 @@ public:
     for (auto lightId = registeredLightIds.begin(); lightId != registeredLightIds.end(); lightId++)
     {
       // Find the light registered with the given light ID.
-      auto result = registeredLights.find(*(lightId));
+      const auto result = registeredLights.find(*(lightId));
       // Check if the light still exists in the registration map.
       if (result != registeredLights.end())
       {

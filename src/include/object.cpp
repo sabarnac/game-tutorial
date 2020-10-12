@@ -24,31 +24,31 @@ class ObjectDetails
 
 private:
 	// The name of the object.
-	std::string objectName;
+	const std::string objectName;
 	// The file path to the object data.
-	std::string objectFilePath;
+	const std::string objectFilePath;
 
 	// The list of vertices of the object.
-	std::vector<glm::vec3> vertices;
+	const std::vector<glm::vec3> vertices;
 
 	// The ID of the array buffer containing the vertex position data of the object.
-	GLuint vertexBufferId;
+	const GLuint vertexBufferId;
 	// The ID of the array buffer containing the vertex UV coordinates data of the object.
-	GLuint uvBufferId;
+	const GLuint uvBufferId;
 	// The ID of the array buffer containing the vertex normal vector data of the object.
-	GLuint normalBufferId;
+	const GLuint normalBufferId;
 	// The size of the buffer/number of vertices of the object.
-	unsigned int bufferSize;
+	const unsigned int bufferSize;
 
 public:
 	ObjectDetails(
-			std::string objectName,
-			std::string objectFilePath,
-			std::vector<glm::vec3> vertices,
-			GLuint vertexBufferId,
-			GLuint uvBufferId,
-			GLuint normalBufferId,
-			unsigned int bufferCount)
+			const std::string &objectName,
+			const std::string &objectFilePath,
+			const std::vector<glm::vec3> &vertices,
+			const GLuint &vertexBufferId,
+			const GLuint &uvBufferId,
+			const GLuint &normalBufferId,
+			const unsigned int &bufferCount)
 			: objectName(objectName),
 				objectFilePath(objectFilePath),
 				vertices(vertices),
@@ -62,7 +62,7 @@ public:
    * 
    * @return The object name.
    */
-	std::string getObjectName()
+	const std::string &getObjectName() const
 	{
 		return objectName;
 	}
@@ -72,7 +72,7 @@ public:
    * 
    * @return The object vertices.
    */
-	std::vector<glm::vec3> &getVertices()
+	const std::vector<glm::vec3> &getVertices() const
 	{
 		return vertices;
 	}
@@ -82,7 +82,7 @@ public:
    * 
    * @return The array buffer ID.
    */
-	GLuint getVertexBufferId()
+	const GLuint &getVertexBufferId() const
 	{
 		return vertexBufferId;
 	}
@@ -92,7 +92,7 @@ public:
    * 
    * @return The array buffer ID.
    */
-	GLuint getUvBufferId()
+	const GLuint &getUvBufferId() const
 	{
 		return uvBufferId;
 	}
@@ -102,7 +102,7 @@ public:
    * 
    * @return The array buffer ID.
    */
-	GLuint getNormalBufferId()
+	const GLuint &getNormalBufferId() const
 	{
 		return normalBufferId;
 	}
@@ -112,7 +112,7 @@ public:
    * 
    * @return The number of vertices.
    */
-	unsigned int getBufferSize()
+	const unsigned int &getBufferSize() const
 	{
 		return bufferSize;
 	}
@@ -128,9 +128,9 @@ private:
 	static ObjectManager instance;
 
 	// A map of created objects.
-	std::map<std::string, std::shared_ptr<ObjectDetails>> namedObjects;
+	std::map<const std::string, const std::shared_ptr<const ObjectDetails>> namedObjects;
 	// A map counting the references to the created objects.
-	std::map<std::string, int> namedObjectReferences;
+	std::map<const std::string, int> namedObjectReferences;
 
 	/**
 	 * Create a array buffer of the given vector type, and store data as static draw use.
@@ -140,7 +140,7 @@ private:
 	 * @return The ID of the array buffer.
 	 */
 	template <typename VecType>
-	GLuint createBuffer(std::vector<VecType> &bufferData)
+	GLuint createBuffer(const std::vector<VecType> &bufferData)
 	{
 		// Define a variable for storing the buffer ID.
 		GLuint bufferId;
@@ -165,7 +165,7 @@ private:
 	 * 
 	 * @return The number of vertices in the object.
 	 */
-	unsigned int loadObjObject(std::string objectName, std::string objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *vertexBufferId, GLuint *uvBufferId, GLuint *normalBufferId)
+	unsigned int loadObjObject(const std::string &objectName, const std::string &objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *const vertexBufferId, GLuint *const uvBufferId, GLuint *const normalBufferId)
 	{
 		// Define vectors for storing the indices to the vertex information.
 		std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -179,7 +179,7 @@ private:
 		std::vector<glm::vec3> outNormals;
 
 		// Open the OBJ file.
-		auto file = fopen(objectFilePath.c_str(), "r");
+		const auto file = fopen(objectFilePath.c_str(), "r");
 		// Check if the file is accessible.
 		if (file == NULL)
 		{
@@ -313,7 +313,7 @@ private:
 
 public:
 	// Preventing copying the object manager, making sure only one instance can exist.
-	ObjectManager(ObjectManager &) = delete;
+	ObjectManager(const ObjectManager &) = delete;
 
 	/**
 	 * Load and create an object from the given object file path. If an object with the same name was already created,
@@ -324,10 +324,10 @@ public:
 	 * 
 	 * @return The details of the loaded object.
 	 */
-	std::shared_ptr<ObjectDetails> &createObject(std::string objectName, std::string objectFilePath)
+	const std::shared_ptr<const ObjectDetails> &createObject(const std::string &objectName, const std::string &objectFilePath)
 	{
 		// Check if an object with the name already exists.
-		auto existingObject = namedObjects.find(objectName);
+		const auto existingObject = namedObjects.find(objectName);
 		if (existingObject != namedObjects.end())
 		{
 			// Object already loaded. Increase its reference count and return it.
@@ -342,13 +342,13 @@ public:
 		GLuint normalBufferId;
 
 		// Load the OBJ object file and store its details.
-		unsigned int bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
+		const unsigned int bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
 
 		// Create a new object details with the captured data.
-		auto newObject = std::make_shared<ObjectDetails>(objectName, objectFilePath, vertices, vertexBufferId, uvBufferId, normalBufferId, bufferSize);
+		const auto newObject = std::make_shared<ObjectDetails>(objectName, objectFilePath, vertices, vertexBufferId, uvBufferId, normalBufferId, bufferSize);
 
 		// Insert the newly created object into the map of created objects.
-		namedObjects[objectName] = newObject;
+		namedObjects.insert(std::make_pair(objectName, newObject));
 		// Set the reference count of the object to 1.
 		namedObjectReferences[objectName] = 1;
 
@@ -363,9 +363,9 @@ public:
    * 
    * @return The object created with the given name.
    */
-	std::shared_ptr<ObjectDetails> &getObjectDetails(std::string objectName)
+	const std::shared_ptr<const ObjectDetails> &getObjectDetails(const std::string &objectName) const
 	{
-		return namedObjects[objectName];
+		return namedObjects.at(objectName);
 	}
 
 	/**
@@ -373,7 +373,7 @@ public:
 	 * 
 	 * @param objectDetails  The details of the object to destroy.
 	 */
-	void destroyObject(std::shared_ptr<ObjectDetails> &objectDetails)
+	void destroyObject(const std::shared_ptr<const ObjectDetails> &objectDetails)
 	{
 		// Reduce the reference count of the object.
 		namedObjectReferences[objectDetails->getObjectName()]--;

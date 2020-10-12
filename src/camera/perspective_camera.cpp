@@ -17,12 +17,21 @@ class PerspectiveCamera : public CameraBase
 {
 private:
   // The speed of movement with key inputs.
-  static float keyboardSpeed;
+  const static float keyboardSpeed;
   // The speed of movement with mouse inputs.
-  static float mouseSpeed;
+  const static float mouseSpeed;
 
   // The control manager responsible for managing controls and inputs of the window.
   ControlManager &controlManager;
+
+  // The FoV of the camera.
+  const double fieldOfView;
+  // The aspect ratio of the camera.
+  const double aspectRatio;
+  // The closest distance the camera can capture from.
+  const double nearPlane;
+  // The farthest distance the camera can capture till.
+  const double farPlane;
 
   // The timestamp of the last time the update for the camera was started.
   double lastTime;
@@ -30,15 +39,6 @@ private:
   double horizontalAngle;
   // The vertical angle of the camera.
   double verticalAngle;
-  // The FoV of the camera.
-  double fieldOfView;
-  // The aspect ratio of the camera.
-  double aspectRatio;
-  // The closest distance the camera can capture from.
-  double nearPlane;
-  // The farthest distance the camera can capture till.
-  double farPlane;
-
   // Whether to accept input or not.
   bool acceptInput;
   // The last time the ability to accept input was changed.
@@ -49,7 +49,7 @@ private:
    * 
    * @param newDirection  The new direction the camera is pointing towards.
    */
-  void updateCamera(glm::vec3 newDirection)
+  void updateCamera(const glm::vec3 &newDirection)
   {
     // Calculate the vector pointing to the right of the camera.
     auto right = glm::vec3(
@@ -70,7 +70,7 @@ private:
   }
 
 public:
-  PerspectiveCamera(std::string cameraId)
+  PerspectiveCamera(const std::string &cameraId)
       : CameraBase(
             cameraId,
             "PerspectiveCamera",
@@ -79,22 +79,22 @@ public:
             glm::vec3(0.0, 1.0, 0.0),
             glm::perspective(glm::radians(90.0), 4.0 / 3.0, 0.1, 100.0)),
         controlManager(ControlManager::getInstance()),
-        lastTime(glfwGetTime()),
-        horizontalAngle(0.0),
-        verticalAngle(0.0),
         fieldOfView(60.0),
         aspectRatio(4.0 / 3.0),
         nearPlane(0.1),
         farPlane(100.0),
+        lastTime(glfwGetTime()),
+        horizontalAngle(0.0),
+        verticalAngle(0.0),
         acceptInput(false),
         lastAcceptInputChange(glfwGetTime() - 10.0) {}
 
   void update() override
   {
     // Get the current time for the start of the update.
-    auto currentTime = glfwGetTime();
+    const auto currentTime = glfwGetTime();
     // Get the time difference since the start of the last update.
-    auto deltaTime = float(currentTime - lastTime);
+    const auto deltaTime = float(currentTime - lastTime);
 
     // Check if the M key was pressed after 500ms since the last accept input change.
     if (controlManager.isKeyPressed(GLFW_KEY_M) && (currentTime - lastAcceptInputChange) > 0.5)
@@ -124,7 +124,7 @@ public:
     }
 
     // Get the position of the cursor and reset it back to the center of the screen.
-    auto currentCursorPosition = controlManager.getCursorPosition();
+    const auto currentCursorPosition = controlManager.getCursorPosition();
     controlManager.setCursorPosition(CursorPosition(0.5, 0.5));
 
     // Calculate the camera angles based on the mouse movement.
@@ -132,13 +132,13 @@ public:
     verticalAngle += mouseSpeed * (0.5 - currentCursorPosition->getY());
 
     // Calculate the new direction the camera is pointing towards.
-    auto newDirection = glm::vec3(
+    const auto newDirection = glm::vec3(
         cos(verticalAngle) * sin(horizontalAngle),
         sin(verticalAngle),
         cos(verticalAngle) * cos(horizontalAngle));
 
     // Calculate the right vector of he camera.
-    auto right = glm::vec3(
+    const auto right = glm::vec3(
         sin(horizontalAngle - glm::pi<double>() / 2.0),
         0,
         cos(horizontalAngle - glm::pi<double>() / 2.0));
@@ -178,7 +178,7 @@ public:
    * 
    * @return The camera horizontal angle.
    */
-  double getHorizontalAngle()
+  const double &getHorizontalAngle() const
   {
     return horizontalAngle;
   }
@@ -188,7 +188,7 @@ public:
    * 
    * @return The camera vertical angle.
    */
-  double getVerticalAngle()
+  const double &getVerticalAngle() const
   {
     return verticalAngle;
   }
@@ -199,14 +199,14 @@ public:
    * @param newHorizontalAngle  The camera horizontal angle.
    * @param newVerticalAngle    The camera vertical angle.
    */
-  void setCameraAngles(double newHorizontalAngle, double newVerticalAngle)
+  void setCameraAngles(const double &newHorizontalAngle, const double &newVerticalAngle)
   {
     // Set the camera angles.
     horizontalAngle = newHorizontalAngle;
     verticalAngle = newVerticalAngle;
 
     // Calculate the new direction of the camera.
-    auto newDirection = glm::vec3(
+    const auto newDirection = glm::vec3(
         cos(verticalAngle) * sin(horizontalAngle),
         sin(verticalAngle),
         cos(verticalAngle) * cos(horizontalAngle));
@@ -218,7 +218,7 @@ public:
   /**
    * Creates a new instance of the perspective camera.
    */
-  static std::shared_ptr<PerspectiveCamera> create(std::string cameraId)
+  const static std::shared_ptr<PerspectiveCamera> create(const std::string &cameraId)
   {
     return std::make_shared<PerspectiveCamera>(cameraId);
   };
@@ -228,14 +228,14 @@ public:
    * 
    * @return The camera's projection matrix.
    */
-  glm::mat4 createProjectionMatrix() override
+  const glm::mat4 createProjectionMatrix() override
   {
     return glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
   }
 };
 
 // Initialize the mouse speed static variable.
-float PerspectiveCamera::mouseSpeed = 5.0f;
+const float PerspectiveCamera::mouseSpeed = 5.0f;
 // Initialize the keyboard speed static variable.
-float PerspectiveCamera::keyboardSpeed = 20.0f;
+const float PerspectiveCamera::keyboardSpeed = 20.0f;
 #endif

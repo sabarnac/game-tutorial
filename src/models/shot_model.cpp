@@ -34,7 +34,7 @@ private:
   // The light manager responsible for managing the lights in the scene.
   LightManager &lightManager;
   // The control manager responsible for managing controls and inputs of the window.
-  ControlManager &controlManager;
+  const ControlManager &controlManager;
 
   // The timestamp of the last time the update for the camera was started.
   double lastTime;
@@ -103,7 +103,7 @@ private:
   }
 
 public:
-  ShotModel(std::string modelId)
+  ShotModel(const std::string &modelId)
       : ModelBase(
             modelId,
             "Shot",
@@ -121,7 +121,7 @@ public:
   /**
    * Creates a new instance of the shot model.
    */
-  static std::shared_ptr<ShotModel> create(std::string modelId)
+  const static std::shared_ptr<ShotModel> create(const std::string &modelId)
   {
     return std::make_shared<ShotModel>(modelId);
   };
@@ -153,12 +153,12 @@ public:
   void update() override
   {
     // Get the timestamp for the start of the update.
-    auto currentTime = glfwGetTime();
+    const auto currentTime = glfwGetTime();
     // Get the time difference since the start of the last update.
-    auto deltaTime = currentTime - lastTime;
+    const auto deltaTime = currentTime - lastTime;
 
     // Get the position of the shot.
-    auto currentPosition = getModelPosition();
+    const auto currentPosition = getModelPosition();
     // Check if the shot has already gone beyond a threshold.
     if (currentPosition.z < -50.0)
     {
@@ -182,7 +182,7 @@ public:
     updateShotLight();
 
     // Get the list of registered models.
-    auto models = modelManager.getAllModels();
+    const auto models = modelManager.getAllModels();
     // Iterate over the list of registered models.
     for (auto model = models.begin(); model != models.end(); model++)
     {

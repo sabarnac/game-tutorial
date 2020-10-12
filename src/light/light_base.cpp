@@ -23,9 +23,9 @@ private:
   ShadowBufferManager &shadowBufferManager;
 
   // The ID of the light.
-  std::string lightId;
+  const std::string lightId;
   // The name of the light.
-  std::string lightName;
+  const std::string lightName;
 
   // The color of the light.
   glm::vec3 lightColor;
@@ -44,20 +44,20 @@ private:
   // The list of projection matrices of the light.
   std::vector<glm::mat4> projectionMatrices;
   // The shader program details of the light.
-  std::shared_ptr<ShaderDetails> shaderDetails;
+  const std::shared_ptr<const ShaderDetails> shaderDetails;
   // The shadow buffer details of the light.
-  std::shared_ptr<ShadowBufferDetails> shadowBufferDetails;
+  const std::shared_ptr<const ShadowBufferDetails> shadowBufferDetails;
 
 protected:
   LightBase(
-      std::string lightId,
-      std::string lightName,
-      glm::vec3 lightColor, double lightIntensity,
-      std::string vertexShaderFilePath, std::string fragmentShaderFilePath,
-      glm::vec3 position,
-      double nearPlane, double farPlane,
-      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
-      ShadowBufferType shadowBufferType)
+      const std::string &lightId,
+      const std::string &lightName,
+      const glm::vec3 &lightColor, const double &lightIntensity,
+      const std::string &vertexShaderFilePath, const std::string &fragmentShaderFilePath,
+      const glm::vec3 &position,
+      const double &nearPlane, const double &farPlane,
+      const std::vector<glm::mat4> &viewMatrices, const std::vector<glm::mat4> &projectionMatrices,
+      const ShadowBufferType &shadowBufferType)
       : shaderManager(ShaderManager::getInstance()),
         shadowBufferManager(ShadowBufferManager::getInstance()),
         lightId(lightId),
@@ -68,23 +68,21 @@ protected:
         nearPlane(nearPlane),
         farPlane(farPlane),
         viewMatrices(viewMatrices),
-        projectionMatrices(projectionMatrices)
+        projectionMatrices(projectionMatrices),
+        shaderDetails(shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath)),
+        shadowBufferDetails(shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType))
   {
-    // Create the shader program for the light.
-    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, fragmentShaderFilePath);
-    // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType);
   }
 
   LightBase(
-      std::string lightId,
-      std::string lightName,
-      glm::vec3 lightColor, double lightIntensity,
-      std::string vertexShaderFilePath, std::string geometryShaderFilePath, std::string fragmentShaderFilePath,
-      glm::vec3 position,
-      double nearPlane, double farPlane,
-      std::vector<glm::mat4> viewMatrices, std::vector<glm::mat4> projectionMatrices,
-      ShadowBufferType shadowBufferType)
+      const std::string &lightId,
+      const std::string &lightName,
+      const glm::vec3 &lightColor, const double &lightIntensity,
+      const std::string &vertexShaderFilePath, const std::string &geometryShaderFilePath, const std::string &fragmentShaderFilePath,
+      const glm::vec3 &position,
+      const double &nearPlane, const double &farPlane,
+      const std::vector<glm::mat4> &viewMatrices, const std::vector<glm::mat4> &projectionMatrices,
+      const ShadowBufferType &shadowBufferType)
       : shaderManager(ShaderManager::getInstance()),
         shadowBufferManager(ShadowBufferManager::getInstance()),
         lightId(lightId),
@@ -95,12 +93,10 @@ protected:
         nearPlane(nearPlane),
         farPlane(farPlane),
         viewMatrices(viewMatrices),
-        projectionMatrices(projectionMatrices)
+        projectionMatrices(projectionMatrices),
+        shaderDetails(shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath)),
+        shadowBufferDetails(shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType))
   {
-    // Create the shader program for the light.
-    shaderDetails = shaderManager.createShaderProgram(lightName + "::Shader", vertexShaderFilePath, geometryShaderFilePath, fragmentShaderFilePath);
-    // Create the shadow buffer for the light.
-    shadowBufferDetails = shadowBufferManager.createShadowBuffer(lightId + "::ShadowMap", shadowBufferType);
   }
 
   virtual ~LightBase()
@@ -117,7 +113,7 @@ public:
    * 
    * @return The light ID.
    */
-  std::string getLightId()
+  const std::string &getLightId() const
   {
     return lightId;
   }
@@ -127,7 +123,7 @@ public:
    * 
    * @return The light name.
    */
-  std::string getLightName()
+  const std::string &getLightName() const
   {
     return lightName;
   }
@@ -137,7 +133,7 @@ public:
    * 
    * @return The light position.
    */
-  glm::vec3 getLightPosition()
+  const glm::vec3 &getLightPosition() const
   {
     return position;
   }
@@ -147,7 +143,7 @@ public:
    * 
    * @return The light color.
    */
-  glm::vec3 &getLightColor()
+  const glm::vec3 &getLightColor() const
   {
     return lightColor;
   }
@@ -157,7 +153,7 @@ public:
    * 
    * @return The light intensity.
    */
-  double getLightIntensity()
+  const double &getLightIntensity() const
   {
     return lightIntensity;
   }
@@ -167,7 +163,7 @@ public:
    * 
    * @return The light near plane.
    */
-  double getLightNearPlane()
+  const double &getLightNearPlane() const
   {
     return nearPlane;
   }
@@ -177,7 +173,7 @@ public:
    * 
    * @return The light far plane.
    */
-  double getLightFarPlane()
+  const double &getLightFarPlane() const
   {
     return farPlane;
   }
@@ -187,7 +183,7 @@ public:
    * 
    * @return The light shader program details.
    */
-  std::shared_ptr<ShaderDetails> getShaderDetails()
+  const std::shared_ptr<const ShaderDetails> &getShaderDetails() const
   {
     return shaderDetails;
   }
@@ -197,7 +193,7 @@ public:
    * 
    * @return The light shadow buffer.
    */
-  std::shared_ptr<ShadowBufferDetails> getShadowBufferDetails()
+  const std::shared_ptr<const ShadowBufferDetails> &getShadowBufferDetails() const
   {
     return shadowBufferDetails;
   }
@@ -207,7 +203,7 @@ public:
    * 
    * @return The light view matrices.
    */
-  std::vector<glm::mat4> &getViewMatrices()
+  const std::vector<glm::mat4> &getViewMatrices() const
   {
     return viewMatrices;
   }
@@ -217,7 +213,7 @@ public:
    * 
    * @return The light projection matrices.
    */
-  std::vector<glm::mat4> &getProjectionMatrices()
+  const std::vector<glm::mat4> &getProjectionMatrices() const
   {
     return projectionMatrices;
   }
@@ -227,7 +223,7 @@ public:
    * 
    * @param newPosition  The light position.
    */
-  virtual void setLightPosition(glm::vec3 newPosition)
+  virtual void setLightPosition(const glm::vec3 &newPosition)
   {
     position = newPosition;
   }
@@ -237,7 +233,7 @@ public:
    * 
    * @param newLightColor  The light color.
    */
-  virtual void setLightColor(glm::vec3 newLightColor)
+  virtual void setLightColor(const glm::vec3 &newLightColor)
   {
     lightColor = newLightColor;
   }
@@ -247,7 +243,7 @@ public:
    * 
    * @param newLightIntensity  The light intensity.
    */
-  virtual void setLightIntensity(double newLightIntensity)
+  virtual void setLightIntensity(const double &newLightIntensity)
   {
     lightIntensity = newLightIntensity;
   }
@@ -257,7 +253,7 @@ public:
    * 
    * @param newNearPlane  The light near plane.
    */
-  virtual void setLightNearPlane(double newNearPlane)
+  virtual void setLightNearPlane(const double &newNearPlane)
   {
     nearPlane = newNearPlane;
   }
@@ -267,7 +263,7 @@ public:
    * 
    * @param newFarPlane  The light far plane.
    */
-  virtual void setLightFarPlane(double newFarPlane)
+  virtual void setLightFarPlane(const double &newFarPlane)
   {
     farPlane = newFarPlane;
   }
@@ -277,7 +273,7 @@ public:
    * 
    * @param newViewMatrices  The light view matrices.
    */
-  virtual void setViewMatrices(std::vector<glm::mat4> newViewMatrices)
+  virtual void setViewMatrices(const std::vector<glm::mat4> &newViewMatrices)
   {
     viewMatrices = newViewMatrices;
   }
@@ -287,7 +283,7 @@ public:
    * 
    * @param newProjectionMatrices  The light projection matrices.
    */
-  virtual void setProjectionMatrices(std::vector<glm::mat4> newProjectionMatrices)
+  virtual void setProjectionMatrices(const std::vector<glm::mat4> &newProjectionMatrices)
   {
     projectionMatrices = newProjectionMatrices;
   }

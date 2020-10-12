@@ -33,7 +33,7 @@ private:
   double lastTime;
 
 public:
-  EnemyModel(std::string modelId)
+  EnemyModel(const std::string &modelId)
       : ModelBase(
             modelId,
             "Enemy",
@@ -48,15 +48,15 @@ public:
         rotationSpeedZ(mtRotationSpeedDistribution(mtGenerator)),
         lastTime(glfwGetTime()) {}
 
-  static std::shared_ptr<EnemyModel> create(std::string modelId)
+  const static std::shared_ptr<EnemyModel> create(const std::string &modelId)
   {
     return std::make_shared<EnemyModel>(modelId);
   };
 
   void update() override
   {
-    auto currentTime = glfwGetTime();
-    auto deltaTime = currentTime - lastTime;
+    const auto currentTime = glfwGetTime();
+    const auto deltaTime = currentTime - lastTime;
 
     setModelRotation(getModelRotation() - glm::vec3(rotationSpeedX * deltaTime, rotationSpeedY * deltaTime, rotationSpeedZ * deltaTime));
 

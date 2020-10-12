@@ -19,15 +19,15 @@ class TextureDetails
 
 private:
 	// The ID of the texture containing the texture data.
-	GLuint textureId;
+	const GLuint textureId;
 
 	// The name of the texture.
-	std::string textureName;
+	const std::string textureName;
 	// The file path to the texture data.
-	std::string textureFilePath;
+	const std::string textureFilePath;
 
 public:
-	TextureDetails(GLuint textureId, std::string textureName, std::string textureFilePath)
+	TextureDetails(const GLuint &textureId, const std::string &textureName, const std::string &textureFilePath)
 			: textureId(textureId),
 				textureName(textureName),
 				textureFilePath(textureFilePath) {}
@@ -37,7 +37,7 @@ public:
    * 
    * @return The texture name.
    */
-	GLuint getTextureId()
+	const GLuint &getTextureId() const
 	{
 		return textureId;
 	}
@@ -47,7 +47,7 @@ public:
    * 
    * @return The shader program ID.
    */
-	std::string getTextureName()
+	const std::string &getTextureName() const
 	{
 		return textureName;
 	}
@@ -63,9 +63,9 @@ private:
 	static TextureManager instance;
 
 	// A map of created textures.
-	std::map<std::string, std::shared_ptr<TextureDetails>> namedTextures;
+	std::map<const std::string, const std::shared_ptr<const TextureDetails>> namedTextures;
 	// A map counting the references to the created textures.
-	std::map<std::string, int> namedTextureReferences;
+	std::map<const std::string, int> namedTextureReferences;
 
 	/**
 	 * Create a 2D texture of the given width and height, and store the data of the texture.
@@ -77,7 +77,7 @@ private:
 	 * 
 	 * @return The ID of the texture.
 	 */
-	GLuint create2dTexture(unsigned char *textureData, unsigned int width, unsigned int height)
+	GLuint create2dTexture(const unsigned char *const textureData, const unsigned int &width, const unsigned int &height)
 	{
 		// Define a variable for storing the texture ID.
 		GLuint textureId;
@@ -113,7 +113,7 @@ private:
 	 * 
 	 * @return The ID of the texture.
 	 */
-	GLuint loadBmpTexture(std::string textureName, std::string textureFilePath)
+	GLuint loadBmpTexture(const std::string &textureName, const std::string &textureFilePath)
 	{
 		// Define vectors for storing the BMP metadata information.
 		unsigned char header[54];
@@ -122,7 +122,7 @@ private:
 		unsigned int width, height;
 
 		// Open the BMP file.
-		auto file = fopen(textureFilePath.c_str(), "rb");
+		const auto file = fopen(textureFilePath.c_str(), "rb");
 		// Check if the file is accessible.
 		if (!file)
 		{
@@ -133,7 +133,7 @@ private:
 		}
 
 		// Read the first 54 bytes of the file (contains the BMP header).
-		auto readBytes = fread(header, 1, 54, file);
+		const auto readBytes = fread(header, 1, 54, file);
 		// Check if we managed to read the first 54 bytes.
 		if (readBytes != 54)
 		{
@@ -192,7 +192,7 @@ private:
 		}
 
 		// Create a buffer for storing the texture RBG data.
-		auto textureData = new unsigned char[imageSize];
+		const auto textureData = new unsigned char[imageSize];
 
 		// Read the texture data from the file and store into the buffer.
 		fread(textureData, 1, imageSize, file);
@@ -201,7 +201,7 @@ private:
 		fclose(file);
 
 		// Create the 2D texture and store the texture data there.
-		auto textureId = create2dTexture(textureData, width, height);
+		const auto textureId = create2dTexture(textureData, width, height);
 
 		// Delete the texture data file we're storing since we no longer need it.
 		delete[] textureData;
@@ -216,7 +216,7 @@ private:
 
 public:
 	// Preventing copying the texture manager, making sure only one instance can exist.
-	TextureManager(TextureManager &) = delete;
+	TextureManager(const TextureManager &) = delete;
 
 	/**
 	 * Load and create an texture from the given texture file path. If an texture with the same name was already created,
@@ -227,10 +227,10 @@ public:
 	 * 
 	 * @return The details of the loaded texture.
 	 */
-	std::shared_ptr<TextureDetails> &create2dTexture(std::string textureName, std::string textureFilePath)
+	const std::shared_ptr<const TextureDetails> &create2dTexture(const std::string &textureName, const std::string &textureFilePath)
 	{
 		// Check if an texture with the name already exists.
-		auto existingTexture = namedTextures.find(textureName);
+		const auto existingTexture = namedTextures.find(textureName);
 		if (existingTexture != namedTextures.end())
 		{
 			// Texture already loaded. Increase its reference count and return it.
@@ -239,13 +239,13 @@ public:
 		}
 
 		// Load the BMP image file and store its details.
-		GLuint textureId = loadBmpTexture(textureName, textureFilePath);
+		const GLuint textureId = loadBmpTexture(textureName, textureFilePath);
 
 		// Create a new texture details with the captured data.
-		auto newTexture = std::make_shared<TextureDetails>(textureId, textureName, textureFilePath);
+		const auto newTexture = std::make_shared<const TextureDetails>(textureId, textureName, textureFilePath);
 
 		// Insert the newly created texture into the map of created textures.
-		namedTextures[textureName] = newTexture;
+		namedTextures.insert(std::make_pair(textureName, newTexture));
 		// Set the reference count of the texture to 1.
 		namedTextureReferences[textureName] = 1;
 
@@ -260,9 +260,9 @@ public:
    * 
    * @return The texture created with the given name.
    */
-	std::shared_ptr<TextureDetails> &getTextureDetails(std::string textureName)
+	const std::shared_ptr<const TextureDetails> &getTextureDetails(const std::string &textureName) const
 	{
-		return namedTextures[textureName];
+		return namedTextures.at(textureName);
 	}
 
 	/**
@@ -270,7 +270,7 @@ public:
 	 * 
 	 * @param textureDetails  The details of the texture to destroy.
 	 */
-	void destroyTexture(std::shared_ptr<TextureDetails> &textureDetails)
+	void destroyTexture(const std::shared_ptr<const TextureDetails> &textureDetails)
 	{
 		// Reduce the reference count of the texture.
 		namedTextureReferences[textureDetails->getTextureName()]--;

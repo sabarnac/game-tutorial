@@ -12,19 +12,6 @@
 #include FT_FREETYPE_H
 
 /**
- * Enum of supported text alignments relative to text position.
- */
-enum TextAlignment
-{
-  // Left means that the starting position of the text is at the provided text position.
-  LEFT,
-  // center means that the middle position of the text is at the provided text position.
-  CENTER,
-  // Right means that the ending position of the text is at the provided text position.
-  RIGHT
-};
-
-/**
  * Class containing information about a text character.
  */
 class TextCharacter
@@ -34,28 +21,28 @@ class TextCharacter
   friend class TextCharacterSet;
 
 private:
-  char character;
-  unsigned int characterSetLayerId;
-  glm::vec2 size;
-  glm::vec2 bearing;
-  unsigned int advance;
-  glm::vec2 maxUv;
+  const char character;
+  const unsigned int characterSetLayerId;
+  const glm::vec2 size;
+  const glm::vec2 bearing;
+  const unsigned int advance;
+  const glm::vec2 maxUv;
 
 public:
-  TextCharacter(char character,
-                glm::vec2 size,
-                glm::vec2 bearing,
-                unsigned int advance,
-                glm::vec2 maxUv,
-                unsigned int characterSetLayerId)
+  TextCharacter(const char &character,
+                const glm::vec2 &size,
+                const glm::vec2 &bearing,
+                const unsigned int &advance,
+                const glm::vec2 &maxUv,
+                const unsigned int &characterSetLayerId)
       : character(character),
+        characterSetLayerId(characterSetLayerId),
         size(size),
         bearing(bearing),
         advance(advance),
-        maxUv(maxUv),
-        characterSetLayerId(characterSetLayerId) {}
+        maxUv(maxUv) {}
 
-  double getCharacter()
+  double getCharacter() const
   {
     return character;
   }
@@ -67,14 +54,21 @@ class TextCharacterSet
   friend class TextManager;
 
 private:
-  std::string fontId;
-  std::string fontFilePath;
+  const std::string fontId;
+  const std::string fontFilePath;
 
-  GLuint characterTextureArrayId;
+  const GLuint characterTextureArrayId;
 
-  std::map<char, TextCharacter> characterMap;
+  std::map<const char, const TextCharacter> characterMap;
 
-  void loadFont(std::string fontId, std::string fontFilePath)
+  GLuint createTextureArray()
+  {
+    GLuint newTextureArrayId;
+    glGenTextures(1, &newTextureArrayId);
+    return newTextureArrayId;
+  }
+
+  void loadFont(const std::string &fontId, const std::string &fontFilePath)
   {
     FT_Library freeType;
     if (FT_Init_FreeType(&freeType))
@@ -83,6 +77,7 @@ private:
                 << "Failed at text character set 1" << std::endl;
       exit(1);
     }
+
     FT_Face fontFace;
     if (FT_New_Face(freeType, fontFilePath.c_str(), 0, &fontFace))
     {
@@ -94,7 +89,6 @@ private:
     FT_Set_Pixel_Sizes(fontFace, 0, 100);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glGenTextures(1, &characterTextureArrayId);
     glBindTexture(GL_TEXTURE_2D_ARRAY, characterTextureArrayId);
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -132,14 +126,14 @@ private:
       glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, (unsigned int)character, maxWidth, maxRows, 1, GL_RED, GL_UNSIGNED_BYTE, &clearData[0]);
       glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, (unsigned int)character, fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, 1, GL_RED, GL_UNSIGNED_BYTE, fontFace->glyph->bitmap.buffer);
 
-      TextCharacter textCharacter(
+      const TextCharacter textCharacter(
           character,
           glm::vec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),
           glm::vec2(fontFace->glyph->bitmap_left, fontFace->glyph->bitmap_top),
           fontFace->glyph->advance.x,
           glm::vec2(fontFace->glyph->bitmap.width / maxWidth, fontFace->glyph->bitmap.rows / maxRows),
           (unsigned int)character);
-      characterMap.insert(std::pair<char, TextCharacter>(character, textCharacter));
+      characterMap.insert(std::pair<const char, const TextCharacter>(character, textCharacter));
     }
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -149,22 +143,23 @@ private:
     FT_Done_FreeType(freeType);
   }
 
-  TextCharacterSet(std::string fontId, std::string fontFilePath)
+  TextCharacterSet(const std::string &fontId, const std::string &fontFilePath)
       : fontId(fontId),
-        fontFilePath(fontFilePath)
+        fontFilePath(fontFilePath),
+        characterTextureArrayId(createTextureArray())
   {
     loadFont(fontId, fontFilePath);
   }
 
 public:
-  std::string getFontId()
+  const std::string &getFontId() const
   {
     return fontId;
   }
 
-  TextCharacter getCharacter(char character)
+  const TextCharacter &getCharacter(const char &character)
   {
-    return characterMap[character];
+    return characterMap.at(character);
   }
 };
 
@@ -178,39 +173,25 @@ class TextDetails
 
 private:
   // The text content to render.
-  std::string content;
+  const std::string content;
   // The position of the text, with the origin being the top-left of the screen.
-  glm::vec2 position;
-  // The alignment of the text relative to the given text position.
-  TextAlignment alignment;
+  const glm::vec2 position;
 
 public:
   TextDetails(
-      std::string content,
-      glm::vec2 position,
-      TextAlignment alignment)
+      const std::string &content,
+      const glm::vec2 &position)
       : content(content),
-        position(position),
-        alignment(alignment) {}
+        position(position) {}
 
   /**
    * Get the content of the text.
    * 
    * @return The text content.
    */
-  std::string getContent()
+  const std::string &getContent() const
   {
     return content;
-  }
-
-  /**
-   * Get the alignment of the text relative to the given text coordinates.
-   * 
-   * @return The text alignment.
-   */
-  TextAlignment getAlignment()
-  {
-    return alignment;
   }
 
   /**
@@ -218,7 +199,7 @@ public:
    * 
    * @return The text position.
    */
-  glm::vec2 &getPosition()
+  const glm::vec2 &getPosition() const
   {
     return position;
   }
@@ -231,16 +212,18 @@ class TextManager
 {
 private:
   static TextManager instance;
-  static TextCharacterSet characterSet;
+  const static TextCharacterSet characterSet;
 
-  std::vector<std::shared_ptr<TextDetails>> textToRenderMap;
+  std::vector<std::shared_ptr<const TextDetails>> textToRenderMap;
 
   void clearTextToRenderMap()
   {
     textToRenderMap.clear();
   }
 
-  TextManager() {}
+  TextManager()
+  {
+  }
 
 public:
   /**
@@ -252,10 +235,21 @@ public:
   {
     return instance;
   }
+
+  void render()
+  {
+
+    clearTextToRenderMap();
+  }
+
+  void addText(const std::string &content, const glm::vec2 &position)
+  {
+    textToRenderMap.push_back(std::make_shared<const TextDetails>(content, position));
+  }
 };
 
 // Initialize the text character set static variable.
-TextCharacterSet TextManager::characterSet = TextCharacterSet("Roboto", "assets/fonts/Roboto-Regular.ttf");
+const TextCharacterSet TextManager::characterSet = TextCharacterSet("Roboto", "assets/fonts/Roboto-Regular.ttf");
 // Initialize the text manager singleton instance static variable.
 TextManager TextManager::instance;
 

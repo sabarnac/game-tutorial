@@ -33,7 +33,7 @@ private:
   // The light manager responsible for managing the lights in the scene.
   LightManager &lightManager;
   // The control manager responsible for managing controls and inputs of the window.
-  ControlManager &controlManager;
+  const ControlManager &controlManager;
 
   // The timestamp of the last time the update for the camera was started.
   double lastTime;
@@ -93,7 +93,7 @@ private:
   /**
    * Update the existing eye light.
    */
-  void updateEyeLight(glm::vec3 newPosition)
+  void updateEyeLight(const glm::vec3 &newPosition)
   {
     // Check if eye light toggle is enabled.
     if (isEyeLightPresent)
@@ -105,7 +105,7 @@ private:
   }
 
 public:
-  PlayerModel(std::string modelId)
+  PlayerModel(const std::string &modelId)
       : ModelBase(
             modelId,
             "Player",
@@ -124,7 +124,7 @@ public:
   /**
    * Creates a new instance of the player model.
    */
-  static std::shared_ptr<PlayerModel> create(std::string modelId)
+  const static std::shared_ptr<PlayerModel> create(const std::string &modelId)
   {
     return std::make_shared<PlayerModel>(modelId);
   };
@@ -198,7 +198,7 @@ public:
     if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.25)
     {
       // "Space" was pressed. Create a new shot and set its properties.
-      auto newShot = ShotModel::create("Shot" + std::to_string(shotId));
+      const auto newShot = ShotModel::create("Shot" + std::to_string(shotId));
       newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y, newPosition.z - 1.0));
       // Register the shot model.
       modelManager.registerModel(newShot);

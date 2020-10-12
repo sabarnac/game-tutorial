@@ -17,20 +17,24 @@
 class WindowManager
 {
 private:
-  // The width of the window.
-  static int width;
-  // The height of the window.
-  static int height;
-
   // Singleton instance of the window manager.
   static WindowManager instance;
 
+  // Is GLFW initialized.
+  const bool isGlfwInitialized;
   // A pointer to the GLFW created window.
-  GLFWwindow *window;
+  GLFWwindow *const window;
+  // Is GLEW initialized.
+  const bool isGlewInitialized;
 
-  WindowManager()
+  /**
+   * Initialize GLFW library.
+   * 
+   * @return Whether the GLFW was successfully initialized or not.
+   */
+  bool initializeGlfw()
   {
-    // Initialize GLFW library
+    // Initialize GLFW library.
     if (!glfwInit())
     {
       // Failed to initialize. Time to crash.
@@ -45,10 +49,21 @@ private:
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Because MacOS.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create a window.
-    window = glfwCreateWindow(width, height, "Game Tutorial", nullptr, nullptr);
+    return true;
+  }
+
+  /**
+   * Create a new GLFW window.
+   * 
+   * @return Pointer to the newly created window.
+   */
+  GLFWwindow *createWindow()
+  {
+    // Create a new window.
+    const auto newWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game Tutorial", nullptr, nullptr);
+
     // Check if the window creation was successful.
-    if (window == NULL)
+    if (newWindow == NULL)
     {
       // Failed to create. Time to crash.
       std::cout << "Failed at window 2" << std::endl;
@@ -56,29 +71,39 @@ private:
     }
 
     // Set the newly created window as the current context in GLFW.
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(newWindow);
 
     // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is double).
-    glfwGetFramebufferSize(window, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
-
-    // Set the option for sticky keys on the window to true. This means keys will remain in the pressed state until they're processed.
-    // This allows us to catch key presses that may be missed if we didn't poll in time.
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    // Set the option to disable the cursor when the window is active, preventing the user from moving the cursor out of the window,
-    //   and accidentally clicking something else.
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // Set what the interval is for swapping buffers. A value of zero means the swap should be immediate.
-    // A value of 1 means that a single screen refresh should occur before swapping buffers.
-    glfwSwapInterval(0);
-
+    glfwGetFramebufferSize(newWindow, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
     // Define the framebuffer width as double the viewport width.
     FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
     // Define the framebuffer height as double the viewport width (so that framebuffer is a square).
     FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
 
-    // Setup glew as experimental mode so that we can initialize the core OpenGL profile.
-    glewExperimental = true; // Needed for core profile
+    // Set the option for sticky keys on the window to true. This means keys will remain in the pressed state until they're processed.
+    // This allows us to catch key presses that may be missed if we didn't poll in time.
+    glfwSetInputMode(newWindow, GLFW_STICKY_KEYS, GL_TRUE);
+    // Set the option to disable the cursor when the window is active, preventing the user from moving the cursor out of the window,
+    //   and accidentally clicking something else.
+    glfwSetInputMode(newWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // Set what the interval is for swapping buffers. A value of zero means the swap should be immediate.
+    // A value of 1 means that a single screen refresh should occur before swapping buffers.
+    glfwSwapInterval(0);
+
+    // Return the newly created window
+    return newWindow;
+  }
+
+  /**
+   * Initialize GLEW library.
+   * 
+   * @return Whether the GLEW was successfully initialized or not.
+   */
+  bool initializeGlew()
+  {
+    // Setup GLEW as experimental mode so that we can initialize the core OpenGL profile.
+    glewExperimental = true;
     // Initialize GLEW.
     if (glewInit() != GLEW_OK)
     {
@@ -92,7 +117,7 @@ private:
     std::set<std::string> supportedExtensions;
     for (int i = 0; i < numberOfExtensions; i++)
     {
-      auto extensionName = (const char *)glGetStringi(GL_EXTENSIONS, i);
+      const auto extensionName = (const char *)glGetStringi(GL_EXTENSIONS, i);
       supportedExtensions.insert(std::string(extensionName));
     }
 
@@ -117,11 +142,19 @@ private:
 
     // Enable culling of faces/polygons. This means that any face/polygon that is behind another polygon within the same object is dropped.
     glEnable(GL_CULL_FACE);
+
+    return true;
+  }
+
+  WindowManager() : isGlfwInitialized(initializeGlfw()),
+                    window(createWindow()),
+                    isGlewInitialized(initializeGlew())
+  {
   }
 
 public:
   // Preventing copying the window manager, making sure only one instance can exist.
-  WindowManager(WindowManager &) = delete;
+  WindowManager(const WindowManager &) = delete;
 
   ~WindowManager()
   {
@@ -134,7 +167,7 @@ public:
    * 
    * @return The window pointer.
    */
-  GLFWwindow *getWindow()
+  GLFWwindow *getWindow() const
   {
     return window;
   }
@@ -160,7 +193,7 @@ public:
    * 
    * @param color  The new color.
    */
-  void setClearColor(glm::vec4 color)
+  void setClearColor(const glm::vec4 &color)
   {
     glClearColor(color.r, color.g, color.b, color.a);
   }
@@ -170,7 +203,7 @@ public:
    * 
    * @param mask  What buffers to clear (color/depth/stencil).
    */
-  void clearScreen(GLbitfield mask)
+  void clearScreen(const GLbitfield &mask)
   {
     glClear(mask);
   }
@@ -185,8 +218,10 @@ public:
 
   /**
    * Check if a window termination was requested.
+   * 
+   * @return Whether the window has been requested to be closed or not.
    */
-  bool isWindowCloseRequested()
+  bool isWindowCloseRequested() const
   {
     return glfwWindowShouldClose(window) != 0;
   }
@@ -202,10 +237,6 @@ public:
   }
 };
 
-// Initialize the window width to the WINDOW_WIDTH constant.
-int WindowManager::width = WINDOW_WIDTH;
-// Initialize the window height to the WINDOW_HEIGHT constant.
-int WindowManager::height = WINDOW_HEIGHT;
 // Initialize the window manager singleton instance static variable.
 WindowManager WindowManager::instance;
 

@@ -34,7 +34,7 @@ private:
   RenderManager &renderManager;
 
   // The map of registered models.
-  std::map<std::string, std::shared_ptr<ModelBase>> registeredModels;
+  std::map<const std::string, std::shared_ptr<ModelBase>> registeredModels;
 
   ModelManager()
       : renderManager(RenderManager::getInstance()),
@@ -42,19 +42,19 @@ private:
 
 public:
   // Preventing copying the model manager, making sure only one instance can exist.
-  ModelManager(ModelManager &) = delete;
+  ModelManager(const ModelManager &) = delete;
 
   /**
    * Register a new model into the model manager.
    * 
    * @param model  The model to register.
    */
-  void registerModel(std::shared_ptr<ModelBase> model)
+  void registerModel(const std::shared_ptr<ModelBase> &model)
   {
     // Let the model initialize itself.
     model->init();
     // Insert the model to the map of registered models.
-    registeredModels.insert(std::pair<std::string, std::shared_ptr<ModelBase>>(model->getModelId(), model));
+    registeredModels.insert(std::pair<const std::string, std::shared_ptr<ModelBase>>(model->getModelId(), model));
     // Register the model with the render manager as well so that it can be used for rendering.
     renderManager.registerModel(model);
   }
@@ -64,7 +64,7 @@ public:
    * 
    * @param model  The ID of the model to de-register.
    */
-  void deregisterModel(std::string modelId)
+  void deregisterModel(const std::string &modelId)
   {
     // Get the model that is registered with the given model ID.
     auto model = registeredModels[modelId];
@@ -77,7 +77,7 @@ public:
    * 
    * @param model  The model to de-register.
    */
-  void deregisterModel(std::shared_ptr<ModelBase> model)
+  void deregisterModel(const std::shared_ptr<ModelBase> &model)
   {
     // Remove the model from the map of registered models.
     registeredModels.erase(model->getModelId());
@@ -94,9 +94,9 @@ public:
    * 
    * @return The model registered with the given model ID.
    */
-  std::shared_ptr<ModelBase> getModel(std::string modelId)
+  const std::shared_ptr<ModelBase> &getModel(const std::string &modelId) const
   {
-    return registeredModels[modelId];
+    return registeredModels.at(modelId);
   }
 
   /**
@@ -104,7 +104,7 @@ public:
    * 
    * @return The list of all registered models.
    */
-  std::vector<std::shared_ptr<ModelBase>> getAllModels()
+  const std::vector<std::shared_ptr<ModelBase>> getAllModels() const
   {
     // Define a vector to store the list of registered models.
     std::vector<std::shared_ptr<ModelBase>> models({});
@@ -136,7 +136,7 @@ public:
     for (auto modelId = registeredModelIds.begin(); modelId != registeredModelIds.end(); modelId++)
     {
       // Find the model registered with the given model ID.
-      auto result = registeredModels.find(*(modelId));
+      const auto result = registeredModels.find(*(modelId));
       // Check if the model still exists in the registration map.
       if (result != registeredModels.end())
       {
