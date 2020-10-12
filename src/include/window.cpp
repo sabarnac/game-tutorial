@@ -76,9 +76,11 @@ private:
     // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is double).
     glfwGetFramebufferSize(newWindow, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
     // Define the framebuffer width as double the viewport width.
-    FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
+    FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH * 2;
     // Define the framebuffer height as double the viewport width (so that framebuffer is a square).
-    FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
+    FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH * 2;
+    // Define the text height as 1/21 of the viewport height (so we can fit approx 20 lines in the screen).
+    TEXT_HEIGHT = VIEWPORT_HEIGHT / 21;
 
     // Set the option for sticky keys on the window to true. This means keys will remain in the pressed state until they're processed.
     // This allows us to catch key presses that may be missed if we didn't poll in time.

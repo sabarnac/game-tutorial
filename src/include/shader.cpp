@@ -151,10 +151,10 @@ private:
 		// Create a new shader program.
 		const auto programId = glCreateProgram();
 		// Iterate through the IDs of the shader.
-		for (auto shaderId = shaderIds.begin(); shaderId != shaderIds.end(); shaderId++)
+		for (const auto &shaderId : shaderIds)
 		{
 			// Attach the shader to the main shader program.
-			glAttachShader(programId, *shaderId);
+			glAttachShader(programId, shaderId);
 		}
 		// Link the shader together.
 		glLinkProgram(programId);

@@ -109,10 +109,10 @@ public:
     // Define a vector to store the list of registered models.
     std::vector<std::shared_ptr<ModelBase>> models({});
     // Iterate through the map of registered models.
-    for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+    for (const auto &model : registeredModels)
     {
       // Push each registered model into the models list.
-      models.push_back(model->second);
+      models.push_back(model.second);
     }
     // Return the list of registered models.
     return models;
@@ -126,17 +126,17 @@ public:
     // Define a vector to store the IDs of the registered models.
     std::vector<std::string> registeredModelIds({});
     // iterate through the map of registered models.
-    for (auto model = registeredModels.begin(); model != registeredModels.end(); model++)
+    for (const auto &model : registeredModels)
     {
       // Push the ID of each registered model into the models ID list.
-      registeredModelIds.push_back(model->first);
+      registeredModelIds.push_back(model.first);
     }
 
     // Iterate through the list of model IDs.
-    for (auto modelId = registeredModelIds.begin(); modelId != registeredModelIds.end(); modelId++)
+    for (const auto &modelId : registeredModelIds)
     {
       // Find the model registered with the given model ID.
-      const auto result = registeredModels.find(*(modelId));
+      const auto result = registeredModels.find(modelId);
       // Check if the model still exists in the registration map.
       if (result != registeredModels.end())
       {

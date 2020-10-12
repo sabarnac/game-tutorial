@@ -184,16 +184,16 @@ public:
     // Get the list of registered models.
     const auto models = modelManager.getAllModels();
     // Iterate over the list of registered models.
-    for (auto model = models.begin(); model != models.end(); model++)
+    for (const auto &model : models)
     {
       // Check if the current model is an enemy model.
-      if ((*model)->getModelName() == "Enemy")
+      if (model->getModelName() == "Enemy")
       {
         // Check if collided with the enemy model.
-        if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), (*model)->getColliderDetails()->getColliderShape(), true))
+        if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
         {
           // Shot has collided with an enemy. Destroy both.
-          modelManager.deregisterModel(*model);
+          modelManager.deregisterModel(model);
           modelManager.deregisterModel(this->getModelId());
           break;
         }

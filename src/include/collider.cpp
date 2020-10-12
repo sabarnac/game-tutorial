@@ -70,14 +70,14 @@ private:
   void updateMinMaxCorners(const std::vector<glm::vec3> &vertices)
   {
     // Iterate through all the vertices
-    for (auto vertex = vertices.begin(); vertex != vertices.end(); vertex++)
+    for (const auto &vertex : vertices)
     {
       // For each axis of a vertex coordinate...
       for (auto axis = 0; axis < 3; axis++)
       {
         // Store that value if it is the lowest/highest value observed so far.
-        minCorner[axis] = glm::min(minCorner[axis], (*vertex)[axis]);
-        maxCorner[axis] = glm::max(maxCorner[axis], (*vertex)[axis]);
+        minCorner[axis] = glm::min(minCorner[axis], vertex[axis]);
+        maxCorner[axis] = glm::max(maxCorner[axis], vertex[axis]);
       }
     }
   }
@@ -231,10 +231,10 @@ protected:
     // Define a vector where we will store the transformed corners of the base AABB.
     std::vector<glm::vec3> newCorners({});
     // Iterate through each corner of the base AABB.
-    for (auto corner = baseBoxCorners.begin(); corner != baseBoxCorners.end(); corner++)
+    for (const auto &corner : baseBoxCorners)
     {
       // Transform the corner using the models' transformation matrix and store the result.
-      newCorners.push_back(glm::vec3(glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale) * glm::vec4(*corner, 1.0)));
+      newCorners.push_back(glm::vec3(glm::translate(position) * glm::toMat4(glm::quat(rotation)) * glm::scale(scale) * glm::vec4(corner, 1.0)));
     }
     // Generate the new AABB using the transformed base AABB.
     transformedBox = std::make_shared<const AxisAlignedBoundingBox>(newCorners);
@@ -383,12 +383,12 @@ private:
     //   vector is enough
     auto farthestVertexDistance = glm::length(vertices[0]);
     // Iterate through each vertex of the model.
-    for (auto vertex = vertices.begin(); vertex != vertices.end(); vertex++)
+    for (const auto &vertex : vertices)
     {
       // Calculate the distance of the vertex from the center of the model.
       // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
       //   vector is enough
-      const auto currentVertexDistance = glm::length(*vertex);
+      const auto currentVertexDistance = glm::length(vertex);
       // Check if the current vector is further away than the last checked farthest vector.
       if (currentVertexDistance > farthestVertexDistance)
       {
@@ -524,14 +524,14 @@ private:
     glm::vec3 maxCorner = vertices[0];
 
     // Iterate through all the vertices.
-    for (auto vertex = vertices.begin(); vertex != vertices.end(); vertex++)
+    for (const auto &vertex : vertices)
     {
       // For each axis of a vertex coordinate...
       for (auto axis = 0; axis < 3; axis++)
       {
         // Store that value if it is the lowest/highest value observed so far.
-        minCorner[axis] = glm::min(minCorner[axis], (*vertex)[axis]);
-        maxCorner[axis] = glm::max(maxCorner[axis], (*vertex)[axis]);
+        minCorner[axis] = glm::min(minCorner[axis], vertex[axis]);
+        maxCorner[axis] = glm::max(maxCorner[axis], vertex[axis]);
       }
     }
 
@@ -715,20 +715,20 @@ private:
     // Define a vector for storing the transformed corners of the first box.
     std::vector<glm::vec3> box1TransformedCorners({});
     // Iterate through the corners of the first box.
-    for (auto box1Corner = box1Corners.begin(); box1Corner != box1Corners.end(); box1Corner++)
+    for (const auto &box1Corner : box1Corners)
     {
       // Transform the corner using the boxes' transformation matrix and add it to the result list.
-      box1TransformedCorners.push_back(glm::vec3(box1TransformationMatrix * glm::vec4(*box1Corner, 1.0)));
+      box1TransformedCorners.push_back(glm::vec3(box1TransformationMatrix * glm::vec4(box1Corner, 1.0)));
     }
 
     const auto box2Corners = box2->getCorners();
     // Define a vector for storing the transformed corners of the first box.
     std::vector<glm::vec3> box2TransformedCorners({});
     // Iterate through the corners of the second box.
-    for (auto box2Corner = box2Corners.begin(); box2Corner != box2Corners.end(); box2Corner++)
+    for (const auto &box2Corner : box2Corners)
     {
       // Transform the corner using the boxes' transformation matrix and add it to the result list.
-      box2TransformedCorners.push_back(glm::vec3(box2TransformationMatrix * glm::vec4(*box2Corner, 1.0)));
+      box2TransformedCorners.push_back(glm::vec3(box2TransformationMatrix * glm::vec4(box2Corner, 1.0)));
     }
 
     // Create an AABB using the corners of the second box (doing this just as a way to get the min/max-corners).
@@ -738,10 +738,10 @@ private:
     // Get the max-corner of the second box.
     const auto box2AABBMaxCorners = box2AABB.getMaxCorner();
     // Iterate through the transformed vertices of the first box.
-    for (auto box1Corner = box1TransformedCorners.begin(); box1Corner != box1TransformedCorners.end(); box1Corner++)
+    for (const auto &box1Corner : box1TransformedCorners)
     {
       // Transform the vertex of the first box into the space of the second box
-      const auto box1CornerInBox2Space = glm::vec3(box2InverseTransformationMatrix * glm::vec4(*box1Corner, 1.0));
+      const auto box1CornerInBox2Space = glm::vec3(box2InverseTransformationMatrix * glm::vec4(box1Corner, 1.0));
       // Check if the vertex of the first box has collided with the second box.
       const auto isBox1CornerInBox2 = (box1CornerInBox2Space.x >= box2AABBMinCorners.x && box1CornerInBox2Space.x <= box2AABBMaxCorners.x) &&
                                       (box1CornerInBox2Space.y >= box2AABBMinCorners.y && box1CornerInBox2Space.y <= box2AABBMaxCorners.y) &&
@@ -760,10 +760,10 @@ private:
     // Get the max-corner of the first box.
     const auto box1AABBMaxCorners = box1AABB.getMaxCorner();
     // Iterate through the transformed vertices of the second box.
-    for (auto box2Corner = box2TransformedCorners.begin(); box2Corner != box2TransformedCorners.end(); box2Corner++)
+    for (const auto &box2Corner : box2TransformedCorners)
     {
       // Transform the vertex of the second box into the space of the first box
-      const auto box2CornerInBox1Space = glm::vec3(box1InverseTransformationMatrix * glm::vec4(*box2Corner, 1.0));
+      const auto box2CornerInBox1Space = glm::vec3(box1InverseTransformationMatrix * glm::vec4(box2Corner, 1.0));
       // Check if the vertex of the second box has collided with the first box.
       const auto isBox2CornerInBox1 = (box2CornerInBox1Space.x >= box1AABBMinCorners.x && box2CornerInBox1Space.x <= box1AABBMaxCorners.x) &&
                                       (box2CornerInBox1Space.y >= box1AABBMinCorners.y && box2CornerInBox1Space.y <= box1AABBMaxCorners.y) &&

@@ -97,10 +97,10 @@ public:
     // Define a vector to store the list of registered lights.
     std::vector<std::shared_ptr<LightBase>> lights({});
     // Iterate through the map of registered lights.
-    for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
+    for (const auto &light : registeredLights)
     {
       // Push each registered light into the lights list.
-      lights.push_back(light->second);
+      lights.push_back(light.second);
     }
     // Return the list of registered lights.
     return lights;
@@ -114,17 +114,17 @@ public:
     // Define a vector to store the IDs of the registered lights.
     std::vector<std::string> registeredLightIds({});
     // iterate through the map of registered lights.
-    for (auto light = registeredLights.begin(); light != registeredLights.end(); light++)
+    for (const auto &light : registeredLights)
     {
       // Push the ID of each registered light into the lights ID list.
-      registeredLightIds.push_back(light->first);
+      registeredLightIds.push_back(light.first);
     }
 
     // Iterate through the list of light IDs.
-    for (auto lightId = registeredLightIds.begin(); lightId != registeredLightIds.end(); lightId++)
+    for (const auto &lightId : registeredLightIds)
     {
       // Find the light registered with the given light ID.
-      const auto result = registeredLights.find(*(lightId));
+      const auto result = registeredLights.find(lightId);
       // Check if the light still exists in the registration map.
       if (result != registeredLights.end())
       {

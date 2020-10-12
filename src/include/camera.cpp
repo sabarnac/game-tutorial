@@ -99,10 +99,10 @@ public:
     // Define a vector to store the list of registered cameras.
     std::vector<std::shared_ptr<CameraBase>> cameras({});
     // Iterate through the map of registered cameras.
-    for (auto camera = registeredCameras.begin(); camera != registeredCameras.end(); camera++)
+    for (const auto &camera : registeredCameras)
     {
       // Push each registered camera into the cameras list.
-      cameras.push_back(camera->second);
+      cameras.push_back(camera.second);
     }
     // Return the list of registered cameras.
     return cameras;
@@ -116,17 +116,17 @@ public:
     // Define a vector to store the IDs of the registered cameras.
     std::vector<std::string> registeredCameraIds({});
     // iterate through the map of registered cameras.
-    for (auto camera = registeredCameras.begin(); camera != registeredCameras.end(); camera++)
+    for (const auto &camera : registeredCameras)
     {
       // Push the ID of each registered camera into the cameras ID list.
-      registeredCameraIds.push_back(camera->first);
+      registeredCameraIds.push_back(camera.first);
     }
 
     // Iterate through the list of camera IDs.
-    for (auto cameraId = registeredCameraIds.begin(); cameraId != registeredCameraIds.end(); cameraId++)
+    for (const auto &cameraId : registeredCameraIds)
     {
       // Find the camera registered with the given camera ID.
-      const auto result = registeredCameras.find(*(cameraId));
+      const auto result = registeredCameras.find(cameraId);
       // Check if the camera still exists in the registration map.
       if (result != registeredCameras.end())
       {
