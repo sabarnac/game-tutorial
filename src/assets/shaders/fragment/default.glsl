@@ -16,7 +16,7 @@
 //   because there is no structure to change. Either the entire
 //   variable is kept as is, or completely removed.
 
-#define MAX_SIMPLE_LIGHTS 3
+#define MAX_SIMPLE_LIGHTS 2
 #define MAX_CUBE_LIGHTS 6
 
 // The UV coordinates of the diffuse color of the fragment in the standard object texture.
