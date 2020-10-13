@@ -16,8 +16,8 @@
 //   because there is no structure to change. Either the entire
 //   variable is kept as is, or completely removed.
 
-#define MAX_SIMPLE_LIGHTS 10
-#define MAX_CUBE_LIGHTS 10
+#define MAX_SIMPLE_LIGHTS 4
+#define MAX_CUBE_LIGHTS 6
 
 // The UV coordinates of the diffuse color of the fragment in the standard object texture.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
@@ -25,12 +25,16 @@ in vec2 fragmentUv;
 // The coordinates of the fragment in the standard object model in world-space.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
 in vec4 fragmentPosition_worldSpace;
+in vec4 fragmentPosition_viewSpace;
 // The normal vector of the fragment in the standard object model in view-space.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
 in vec3 fragmentNormal_viewSpace;
 
 // The shadow map coordinates of the current fragment w.r.t all the active cone lights.
 in vec4 coneLightShadowMapCoord[MAX_SIMPLE_LIGHTS];
+in vec4 coneLightPosition_viewSpace[MAX_SIMPLE_LIGHTS];
+
+in vec4 pointLightPosition_viewSpace[MAX_CUBE_LIGHTS];
 
 
 // The final color of the fragment.
@@ -49,8 +53,7 @@ struct LightDetails_Fragment
 {
 	vec3 lightPosition;
 	// mat4 lightVpMatrix;
-	vec3 lightColor;
-	float lightIntensity;
+	vec3 lightColorIntensity;
 	// float nearPlane;
 	float farPlane;
 	int layerId;
@@ -282,89 +285,40 @@ float getPointLightAverageVisibility(vec3 shadowMapCoords, float currentDepth, i
 }
 
 /**
- * Function that calculates the diffuse lighting value from the given cone light source.
+ * Function that calculates the diffuse lighting value from the given light source.
  *
  * @param lightColorIntensity           The product of the color and intensity value of the light sources.
  * @param distanceFromLight             The distance from the light source to the current fragment.
- * @param coneLightDirection_viewSpace  The direction of the light from the light source to the current fragment.
+ * @param lightDirection_viewSpace      The direction of the light from the light source to the current fragment.
  *
- * @return The diffuse lighting value from the given cone light source.
+ * @return The diffuse lighting value from the given light source.
  */
-vec3 getConeLightDiffuseLighting(vec3 lightColorIntensity, float distanceFromLight, vec3 coneLightDirection_viewSpace)
+vec3 getLightDiffuseLighting(vec3 lightColorIntensity, float distanceFromLight, vec3 lightDirection_viewSpace)
 {
 	// Calculate the strength of the diffuse lighting based on the angle of the light against the normal vector of the
 	//   fragment on the surface.
-  float diffuseStrength = clamp(dot(fragmentNormal_viewSpace, coneLightDirection_viewSpace), 0.0, 1.0);
+  float diffuseStrength = clamp(dot(fragmentNormal_viewSpace, lightDirection_viewSpace), 0.0, 1.0);
 	// Calculate the final diffuse lighting value using the light's color and intensity, the diffuse strength, and the
 	//   distance of the light source from the fragment.
   return (lightColorIntensity * diffuseStrength) / (distanceFromLight * distanceFromLight);
 }
 
 /**
- * Function that calculates the diffuse lighting value from the given point light source.
+ * Function that calculates the specular lighting value from the given light source.
  *
- * @param lightColorIntensity            The product of the color and intensity value of the light sources.
- * @param distanceFromLight              The distance from the light source to the current fragment.
- * @param pointLightDirection_viewSpace  The direction of the light from the light source to the current fragment.
- *
- * @return The diffuse lighting value from the given point light source.
- */
-vec3 getPointLightDiffuseLighting(vec3 lightColorIntensity, float distanceFromLight, vec3 pointLightDirection_viewSpace)
-{
-	// Calculate the strength of the diffuse lighting based on the angle of the light against the normal vector of the
-	//   fragment on the surface.
-  float diffuseStrength = clamp(dot(fragmentNormal_viewSpace, pointLightDirection_viewSpace), 0.0, 1.0);
-	// Calculate the final diffuse lighting value using the light's color and intensity, the diffuse strength, and the
-	//   distance of the light source from the fragment.
-  return (lightColorIntensity * diffuseStrength) / (distanceFromLight * distanceFromLight);
-}
-
-
-/**
- * Function that calculates the specular lighting value from the given cone light source.
- *
- * @param fragmentPosition_viewSpace     The position of the current fragment in view-space.
+ * @param fragmentPosition_viewSpace    The position of the current fragment in view-space.
  * @param lightColorIntensity           The product of the color and intensity value of the light sources.
  * @param distanceFromLight             The distance from the light source to the current fragment.
- * @param coneLightDirection_viewSpace  The direction of the light from the light source to the current fragment.
+ * @param lightDirection_viewSpace      The direction of the light from the light source to the current fragment.
  *
- * @return The specular lighting value from the given cone light source.
+ * @return The specular lighting value from the given light source.
  */
-vec3 getConeLightSpecularLighting(vec4 fragmentPosition_viewSpace, vec3 lightColorIntensity, float distanceFromLight, vec3 coneLightDirection_viewSpace)
+vec3 getLightSpecularLighting(vec4 fragmentPosition_viewSpace, vec3 lightColorIntensity, float distanceFromLight, vec3 lightDirection_viewSpace)
 {
 	// Calculate the direction of the view from the fragment position.
 	vec3 viewDirection_viewSpace = normalize(fragmentPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
 	// Calculate the direction of the light after it has reflected from the fragment.
-	highp vec3 lightReflection_viewSpace = reflect(coneLightDirection_viewSpace, fragmentNormal_viewSpace);
-
-	// Calculate the strength of the specular lighting based on the angle of the reflected light against the direction of the camera
-	//   from the fragment position.
-  float specularStrength = clamp(dot(viewDirection_viewSpace, lightReflection_viewSpace), 0.0, 1.0);
-	// Calculate the amount of specular light being reflected by the fragment as a factor of the light's color and intensity, the
-	//   specular strength of the light, the specular lobe factor of the surface, and the distance of the light from the fragment.
-  vec3 specularLight = (lightColorIntensity * pow(specularStrength, specularLobeFactor)) / (distanceFromLight * distanceFromLight);
-
-	// Return the final specular lighting value as the calculated specular light value factored against the reflectivity of the surface
-	//   of the fragment.
-	return specularReflectivity * specularLight;
-}
-
-/**
- * Function that calculates the specular lighting value from the given point light source.
- *
- * @param fragmentPosition_viewSpace     The position of the current fragment in view-space.
- * @param lightColorIntensity            The product of the color and intensity value of the light sources.
- * @param distanceFromLight              The distance from the light source to the current fragment.
- * @param pointLightDirection_viewSpace  The direction of the light from the light source to the current fragment.
- *
- * @return The specular lighting value from the given point light source.
- */
-vec3 getPointLightSpecularLighting(vec4 fragmentPosition_viewSpace, vec3 lightColorIntensity, float distanceFromLight, vec3 pointLightDirection_viewSpace)
-{
-	// Calculate the direction of the view from the fragment position.
-	vec3 viewDirection_viewSpace = normalize(fragmentPosition_viewSpace.xyz - vec3(0.0, 0.0, 0.0));
-	// Calculate the direction of the light after it has reflected from the fragment.
-	highp vec3 lightReflection_viewSpace = reflect(pointLightDirection_viewSpace, fragmentNormal_viewSpace);
+	highp vec3 lightReflection_viewSpace = reflect(lightDirection_viewSpace, fragmentNormal_viewSpace);
 
 	// Calculate the strength of the specular lighting based on the angle of the reflected light against the direction of the camera
 	//   from the fragment position.
@@ -392,12 +346,8 @@ void main()
 		// Iterate through all the active cone lights.
 		for (int lightIndex = 0; lightIndex < coneLightsCount; lightIndex++)
 		{
-			// Calculate the position of the current fragment in view-space.
-			vec4 fragmentPosition_viewSpace = modelDetails_fragment.viewMatrix * fragmentPosition_worldSpace;
-			// Calculate the position of the light in view-space.
-			vec4 lightPosition_viewSpace = modelDetails_fragment.viewMatrix * vec4(coneLightDetails_fragment[lightIndex].lightPosition, 1.0);
 			// Calculate the direction of the light from the source to the fragment in view-space.
-			vec3 coneLightDirection_viewSpace = normalize((lightPosition_viewSpace - fragmentPosition_viewSpace).xyz);
+			vec3 coneLightDirection_viewSpace = normalize((coneLightPosition_viewSpace[lightIndex] - fragmentPosition_viewSpace).xyz);
 
 			// Define variable for storing the visibility of the fragment to the current light source.
 			float visibility;
@@ -415,28 +365,22 @@ void main()
 				visibility = 1.0;
 			}
 
-			// Get the color value from the light after being increased based on the intensity of the light.
-  		vec3 lightColorIntensity = coneLightDetails_fragment[lightIndex].lightColor * coneLightDetails_fragment[lightIndex].lightIntensity;
 			// Calculate the distance of the fragment from the light source.
-  		float distanceFromLight = distance(fragmentPosition_worldSpace.xyz, coneLightDetails_fragment[lightIndex].lightPosition);
+  		float distanceFromLight = distance(fragmentPosition_viewSpace.xyz, coneLightPosition_viewSpace[lightIndex].xyz);
 
 			// Calculate and add the light diffuse lighting value to the final color output, factored against the color of the surface
 			//   and the visibility of the fragment to the light source.
-			color += visibility * surfaceColor * getConeLightDiffuseLighting(lightColorIntensity, distanceFromLight, coneLightDirection_viewSpace);
+			color += visibility * surfaceColor * getLightDiffuseLighting(coneLightDetails_fragment[lightIndex].lightColorIntensity, distanceFromLight, coneLightDirection_viewSpace);
 			// Calculate and add the light specular lighting value to the final color output, factored against the visibility of the
 			//   fragment to the light source.
-			color += visibility * getConeLightSpecularLighting(fragmentPosition_viewSpace, lightColorIntensity, distanceFromLight, coneLightDirection_viewSpace);
+			color += visibility * getLightSpecularLighting(fragmentPosition_viewSpace, coneLightDetails_fragment[lightIndex].lightColorIntensity, distanceFromLight, coneLightDirection_viewSpace);
 		}
 
 		// Iterate through all the active point lights.
 		for (int lightIndex = 0; lightIndex < pointLightsCount; lightIndex++)
 		{
-			// Calculate the position of the current fragment in view-space.
-			vec4 fragmentPosition_viewSpace = modelDetails_fragment.viewMatrix * fragmentPosition_worldSpace;
-			// Calculate the position of the light in view-space.
-			vec4 lightPosition_viewSpace = modelDetails_fragment.viewMatrix * vec4(pointLightDetails_fragment[lightIndex].lightPosition, 1.0);
 			// Calculate the direction of the light from the source to the fragment in view-space.
-			vec3 pointLightDirection_viewSpace = normalize((lightPosition_viewSpace - fragmentPosition_viewSpace).xyz);
+			vec3 pointLightDirection_viewSpace = normalize((pointLightPosition_viewSpace[lightIndex] - fragmentPosition_viewSpace).xyz);
 
 			// Define variable for storing the visibility of the fragment to the current light source.
 			float visibility;
@@ -454,17 +398,15 @@ void main()
 				visibility = 1.0;
 			}
 
-			// Get the color value from the light after being increased based on the intensity of the light.
-			vec3 lightColorIntensity = pointLightDetails_fragment[lightIndex].lightColor * pointLightDetails_fragment[lightIndex].lightIntensity;
 			// Calculate the distance of the fragment from the light source.
-			float distanceFromLight = distance(fragmentPosition_worldSpace.xyz, pointLightDetails_fragment[lightIndex].lightPosition);
+  		float distanceFromLight = distance(fragmentPosition_viewSpace.xyz, pointLightPosition_viewSpace[lightIndex].xyz);
 
 			// Calculate and add the light diffuse lighting value to the final color output, factored against the color of the surface
 			//   and the visibility of the fragment to the light source.
-			color += visibility * surfaceColor * getPointLightDiffuseLighting(lightColorIntensity, distanceFromLight, pointLightDirection_viewSpace);
+			color += visibility * surfaceColor * getLightDiffuseLighting(pointLightDetails_fragment[lightIndex].lightColorIntensity, distanceFromLight, pointLightDirection_viewSpace);
 			// Calculate and add the light specular lighting value to the final color output, factored against the visibility of the
 			//   fragment to the light source.
-			color += visibility * getPointLightSpecularLighting(fragmentPosition_viewSpace, lightColorIntensity, distanceFromLight, pointLightDirection_viewSpace);
+			color += visibility * getLightSpecularLighting(fragmentPosition_viewSpace, pointLightDetails_fragment[lightIndex].lightColorIntensity, distanceFromLight, pointLightDirection_viewSpace);
 		}
 	}
 }

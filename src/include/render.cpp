@@ -461,17 +461,11 @@ public:
           const auto lightVpMatrixFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
           glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
 
-          // Get the uniform ID of the light color variable and set it.
-          const auto lightColorVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
-          glUniform3f(lightColorVertexId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-          const auto lightColorFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
-          glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-
-          // Get the uniform ID of the light intensity variable and set it.
-          const auto lightIntensityVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_vertex[" + std::to_string(i) + "].lightIntensity").c_str());
-          glUniform1f(lightIntensityVertexId, lightDetails.lightIntensity);
-          const auto lightIntensityFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
-          glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
+          // Get the uniform ID of the light color-intensity variable and set it.
+          const auto lightColorIntensityVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_vertex[" + std::to_string(i) + "].lightColorIntensity").c_str());
+          glUniform3f(lightColorIntensityVertexId, lightDetails.lightColor.r * lightDetails.lightIntensity, lightDetails.lightColor.g * lightDetails.lightIntensity, lightDetails.lightColor.b * lightDetails.lightIntensity);
+          const auto lightColorIntensityFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_fragment[" + std::to_string(i) + "].lightColorIntensity").c_str());
+          glUniform3f(lightColorIntensityFragmentId, lightDetails.lightColor.r * lightDetails.lightIntensity, lightDetails.lightColor.g * lightDetails.lightIntensity, lightDetails.lightColor.b * lightDetails.lightIntensity);
 
           // Get the uniform ID of the near plane of the light variable and set it.
           const auto lightNearPlaneVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("coneLightDetails_vertex[" + std::to_string(i) + "].nearPlane").c_str());
@@ -510,17 +504,11 @@ public:
           const auto lightVpMatrixFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_fragment[" + std::to_string(i) + "].lightVpMatrix").c_str());
           glUniformMatrix4fv(lightVpMatrixFragmentId, 1, GL_FALSE, &lightDetails.lightVpMatrix[0][0]);
 
-          // Get the uniform ID of the light color variable and set it.
-          const auto lightColorVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_vertex[" + std::to_string(i) + "].lightColor").c_str());
-          glUniform3f(lightColorVertexId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-          const auto lightColorFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_fragment[" + std::to_string(i) + "].lightColor").c_str());
-          glUniform3f(lightColorFragmentId, lightDetails.lightColor.r, lightDetails.lightColor.g, lightDetails.lightColor.b);
-
-          // Get the uniform ID of the light intensity variable and set it.
-          const auto lightIntensityVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_vertex[" + std::to_string(i) + "].lightIntensity").c_str());
-          glUniform1f(lightIntensityVertexId, lightDetails.lightIntensity);
-          const auto lightIntensityFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_fragment[" + std::to_string(i) + "].lightIntensity").c_str());
-          glUniform1f(lightIntensityFragmentId, lightDetails.lightIntensity);
+          // Get the uniform ID of the light color-intensity variable and set it.
+          const auto lightColorIntensityVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_vertex[" + std::to_string(i) + "].lightColorIntensity").c_str());
+          glUniform3f(lightColorIntensityVertexId, lightDetails.lightColor.r * lightDetails.lightIntensity, lightDetails.lightColor.g * lightDetails.lightIntensity, lightDetails.lightColor.b * lightDetails.lightIntensity);
+          const auto lightColorIntensityFragmentId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_fragment[" + std::to_string(i) + "].lightColorIntensity").c_str());
+          glUniform3f(lightColorIntensityFragmentId, lightDetails.lightColor.r * lightDetails.lightIntensity, lightDetails.lightColor.g * lightDetails.lightIntensity, lightDetails.lightColor.b * lightDetails.lightIntensity);
 
           // Get the uniform ID of the near plane of the light variable and set it.
           const auto lightNearPlaneVertexId = glGetUniformLocation(model.second->getShaderDetails()->getShaderId(), ("pointLightDetails_vertex[" + std::to_string(i) + "].nearPlane").c_str());
