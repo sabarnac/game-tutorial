@@ -18,19 +18,19 @@ class CursorPosition
 {
 private:
   // The x-coordinate of the cursor.
-  const double x;
+  const double_t x;
   // The y-coordinate of the cursor.
-  const double y;
+  const double_t y;
 
 public:
-  CursorPosition(const double &x, const double &y) : x(x), y(y) {}
+  CursorPosition(const double_t &x, const double_t &y) : x(x), y(y) {}
 
   /**
    * Returns the x-coordinate of the vector.
    * 
    * @return The x-coordinate.
    */
-  const double &getX() const
+  const double_t &getX() const
   {
     return x;
   }
@@ -40,7 +40,7 @@ public:
    * 
    * @return The y-coordinate.
    */
-  const double &getY() const
+  const double_t &getY() const
   {
     return y;
   }
@@ -53,9 +53,9 @@ class ControlManager
 {
 private:
   // The width of the window.
-  const static int width;
+  const static int32_t width;
   // The height of the window.
-  const static int height;
+  const static int32_t height;
 
   // Singleton instance of the control manager.
   static ControlManager instance;
@@ -77,7 +77,7 @@ public:
   const std::shared_ptr<CursorPosition> getCursorPosition() const
   {
     // Define variables for the x,y-coordinates of the cursor.
-    double x, y;
+    double_t x, y;
     // Get the cursor position in the window from GLFW.
     glfwGetCursorPos(windowManager.getWindow(), &x, &y);
     // The cursor position is based on the size of the window, so normalize accordingly and return it.
@@ -103,7 +103,7 @@ public:
    * 
    * @return Whether the key has been pressed or not.
    */
-  bool isKeyPressed(const int &key) const
+  bool isKeyPressed(const int32_t &key) const
   {
     // Query GLFW to see the status of the key and return true if it is being pressed.
     return glfwGetKey(windowManager.getWindow(), key) == GLFW_PRESS;
@@ -129,9 +129,9 @@ public:
 };
 
 // Initialize the window width to the WINDOW_WIDTH constant.
-const int ControlManager::width = WINDOW_WIDTH;
+const int32_t ControlManager::width = WINDOW_WIDTH;
 // Initialize the window height to the WINDOW_HEIGHT constant.
-const int ControlManager::height = WINDOW_HEIGHT;
+const int32_t ControlManager::height = WINDOW_HEIGHT;
 // Initialize the control manager singleton instance static variable.
 ControlManager ControlManager::instance;
 

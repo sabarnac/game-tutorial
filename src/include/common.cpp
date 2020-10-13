@@ -25,7 +25,7 @@ private:
   // The ID of the buffer the attribute is linked to.
   const GLuint bufferId;
   // The size of the elements in the buffer.
-  const unsigned int bufferElementSize;
+  const uint32_t bufferElementSize;
   // The type of the attribute data
   const GLenum attributeType;
 
@@ -58,7 +58,7 @@ public:
   // Preventing copying the vertex attribute array, making sure only one instance can exist.
   VertexAttributeArray(const VertexAttributeArray &) = delete;
 
-  VertexAttributeArray(const std::string &attributeName, const GLuint &bufferId, const unsigned int &bufferElementSize, const GLenum &attributeType = GL_FLOAT)
+  VertexAttributeArray(const std::string &attributeName, const GLuint &bufferId, const uint32_t &bufferElementSize, const GLenum &attributeType = GL_FLOAT)
       : attributeId(createAttributeId()),
         attributeName(attributeName),
         bufferId(bufferId),

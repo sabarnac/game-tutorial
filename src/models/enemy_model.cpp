@@ -21,16 +21,16 @@ class EnemyModel : public ModelBase
 {
 private:
   static std::mt19937 mtGenerator;
-  static std::uniform_real_distribution<double> mtInitialRotationDistribution;
-  static std::uniform_real_distribution<double> mtRotationSpeedDistribution;
+  static std::uniform_real_distribution<double_t> mtInitialRotationDistribution;
+  static std::uniform_real_distribution<double_t> mtRotationSpeedDistribution;
 
   ModelManager &modelManager;
 
-  double rotationSpeedX;
-  double rotationSpeedY;
-  double rotationSpeedZ;
+  double_t rotationSpeedX;
+  double_t rotationSpeedY;
+  double_t rotationSpeedZ;
 
-  double lastTime;
+  double_t lastTime;
 
 public:
   EnemyModel(const std::string &modelId)
@@ -65,7 +65,7 @@ public:
 };
 
 std::mt19937 EnemyModel::mtGenerator = std::mt19937(std::clock());
-std::uniform_real_distribution<double> EnemyModel::mtInitialRotationDistribution = std::uniform_real_distribution<double>(0.0, 359.0);
-std::uniform_real_distribution<double> EnemyModel::mtRotationSpeedDistribution = std::uniform_real_distribution<double>(0.0, 5.0);
+std::uniform_real_distribution<double_t> EnemyModel::mtInitialRotationDistribution = std::uniform_real_distribution<double_t>(0.0, 359.0);
+std::uniform_real_distribution<double_t> EnemyModel::mtRotationSpeedDistribution = std::uniform_real_distribution<double_t>(0.0, 5.0);
 
 #endif

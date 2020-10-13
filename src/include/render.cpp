@@ -28,15 +28,15 @@ struct LightDetails
   // The color of the light.
   const glm::vec3 lightColor;
   // The intensity of the light.
-  const double lightIntensity;
+  const double_t lightIntensity;
   // The width of the shadowmap of the light.
-  const int mapWidth;
+  const int32_t mapWidth;
   // The height of the shadowmap of the light.
-  const int mapHeight;
+  const int32_t mapHeight;
   // The closest distance from which the shadowmap captures objects.
-  const double nearPlane;
+  const double_t nearPlane;
   // The farthest distance till which the shadowmap captures objects.
-  const double farPlane;
+  const double_t farPlane;
   // The ID of the layer of the shadowmap texture array the shadowmap is stored in.
   const GLuint textureArrayLayerId;
 };
@@ -51,11 +51,11 @@ class RenderManager
 
 private:
   // The ambient lighting factor of the scene.
-  const static double ambientFactor;
+  const static double_t ambientFactor;
 
   // The flags for disabling shadows and lighting.
-  const static int DISABLE_SHADOW;
-  const static int DISABLE_LIGHT;
+  const static int32_t DISABLE_SHADOW;
+  const static int32_t DISABLE_LIGHT;
 
   // Singleton instance of the render manager.
   static RenderManager instance;
@@ -79,14 +79,14 @@ private:
   std::map<const std::string, const std::shared_ptr<const CameraBase>> registeredCameras;
 
   // The timestamp when the render manager was loaded.
-  const double startTime;
+  const double_t startTime;
   // The timestamp of the start of the last render.
-  double lastTime;
+  double_t lastTime;
 
   // A mask defining what features to disable (shadows/lighting).
-  int disableFeatureMask;
+  int32_t disableFeatureMask;
   // The timestamp of the last time the mask for disabling features was modifed.
-  double lastDisableFeatureMaskChange;
+  double_t lastDisableFeatureMaskChange;
 
   RenderManager()
       : windowManager(WindowManager::getInstance()),
@@ -620,10 +620,10 @@ public:
 // Initialize the render manager singleton instance static variable.
 RenderManager RenderManager::instance;
 // Initialize the ambient lighting factor static variable.
-const double RenderManager::ambientFactor = 0.25;
+const double_t RenderManager::ambientFactor = 0.25;
 // Initialize the mask value for disabling shadows static variable.
-const int RenderManager::DISABLE_SHADOW = 1;
+const int32_t RenderManager::DISABLE_SHADOW = 1;
 // Initialize the mask value for disabling lighting static variable.
-const int RenderManager::DISABLE_LIGHT = 2;
+const int32_t RenderManager::DISABLE_LIGHT = 2;
 
 #endif

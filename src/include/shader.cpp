@@ -73,7 +73,7 @@ private:
 	// A map of created shaders.
 	std::map<const std::string, const std::shared_ptr<const ShaderDetails>> namedShaders;
 	// A map counting the references to the created shaders.
-	std::map<const std::string, int> namedShaderReferences;
+	std::map<const std::string, int32_t> namedShaderReferences;
 
 	/**
 	 * Read the shader code from the given shader file.
@@ -123,7 +123,7 @@ private:
 
 		// Define variables for capturing the compilation result information.
 		auto result = GL_FALSE;
-		int infoLogLength;
+		int32_t infoLogLength;
 		// Read the compilation result information for the shader.
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &result);
 		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
@@ -161,7 +161,7 @@ private:
 
 		// Define variables for capturing the compilation result information.
 		auto result = GL_FALSE;
-		int infoLogLength;
+		int32_t infoLogLength;
 		// Read the compilation result information for the shader program.
 		glGetProgramiv(programId, GL_LINK_STATUS, &result);
 		glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);

@@ -38,7 +38,7 @@ private:
 	// The ID of the array buffer containing the vertex normal vector data of the object.
 	const GLuint normalBufferId;
 	// The size of the buffer/number of vertices of the object.
-	const unsigned int bufferSize;
+	const uint32_t bufferSize;
 
 public:
 	ObjectDetails(
@@ -48,7 +48,7 @@ public:
 			const GLuint &vertexBufferId,
 			const GLuint &uvBufferId,
 			const GLuint &normalBufferId,
-			const unsigned int &bufferCount)
+			const uint32_t &bufferCount)
 			: objectName(objectName),
 				objectFilePath(objectFilePath),
 				vertices(vertices),
@@ -112,7 +112,7 @@ public:
    * 
    * @return The number of vertices.
    */
-	const unsigned int &getBufferSize() const
+	const uint32_t &getBufferSize() const
 	{
 		return bufferSize;
 	}
@@ -130,7 +130,7 @@ private:
 	// A map of created objects.
 	std::map<const std::string, const std::shared_ptr<const ObjectDetails>> namedObjects;
 	// A map counting the references to the created objects.
-	std::map<const std::string, int> namedObjectReferences;
+	std::map<const std::string, int32_t> namedObjectReferences;
 
 	/**
 	 * Create a array buffer of the given vector type, and store data as static draw use.
@@ -165,10 +165,10 @@ private:
 	 * 
 	 * @return The number of vertices in the object.
 	 */
-	unsigned int loadObjObject(const std::string &objectName, const std::string &objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *const vertexBufferId, GLuint *const uvBufferId, GLuint *const normalBufferId)
+	uint32_t loadObjObject(const std::string &objectName, const std::string &objectFilePath, std::vector<glm::vec3> &outVertices, GLuint *const vertexBufferId, GLuint *const uvBufferId, GLuint *const normalBufferId)
 	{
 		// Define vectors for storing the indices to the vertex information.
-		std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+		std::vector<uint32_t> vertexIndices, uvIndices, normalIndices;
 		// Define temporary vectors for storing the vertex information stored in the OBJ file.
 		std::vector<glm::vec3> tempVertices;
 		std::vector<glm::vec2> tempUvs;
@@ -195,7 +195,7 @@ private:
 			// Define a variable for storing the first string in a line
 			char lineHeader[128];
 			// Read a string from the file.
-			int res = fscanf(file, "%s", lineHeader);
+			int32_t res = fscanf(file, "%s", lineHeader);
 			// Check if we hit the end of the file.
 			if (res == EOF)
 			{
@@ -241,9 +241,9 @@ private:
 			{
 				// Line defines the indexes of the vertex information that describes a single face/polygon of the object.
 				// Define a variable for storing the indices to the vertex information stored in the temp vectors.
-				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				uint32_t vertexIndex[3], uvIndex[3], normalIndex[3];
 				// Read the indices to the vertex information.
-				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+				int32_t matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 				if (matches != 9)
 				{
 					// If we don't manage to read all nine coordinates, then this OBJ file is formatted in a way that we can't support. Close the file and time to crash.
@@ -280,7 +280,7 @@ private:
 		fclose(file);
 
 		// Loop through the vertex indices of the faces/polygons that we read.
-		for (unsigned int i = 0; i < vertexIndices.size(); i++)
+		for (uint32_t i = 0; i < vertexIndices.size(); i++)
 		{
 			// Grab the indices of the vertex information that represent the face/polygon.
 			auto vertexIndex = vertexIndices[i];
@@ -342,7 +342,7 @@ public:
 		GLuint normalBufferId;
 
 		// Load the OBJ object file and store its details.
-		const unsigned int bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
+		const uint32_t bufferSize = loadObjObject(objectName, objectFilePath, vertices, &vertexBufferId, &uvBufferId, &normalBufferId);
 
 		// Create a new object details with the captured data.
 		const auto newObject = std::make_shared<ObjectDetails>(objectName, objectFilePath, vertices, vertexBufferId, uvBufferId, normalBufferId, bufferSize);

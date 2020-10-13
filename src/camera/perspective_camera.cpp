@@ -17,32 +17,32 @@ class PerspectiveCamera : public CameraBase
 {
 private:
   // The speed of movement with key inputs.
-  const static float keyboardSpeed;
+  const static float_t keyboardSpeed;
   // The speed of movement with mouse inputs.
-  const static float mouseSpeed;
+  const static float_t mouseSpeed;
 
   // The control manager responsible for managing controls and inputs of the window.
   ControlManager &controlManager;
 
   // The FoV of the camera.
-  const double fieldOfView;
+  const double_t fieldOfView;
   // The aspect ratio of the camera.
-  const double aspectRatio;
+  const double_t aspectRatio;
   // The closest distance the camera can capture from.
-  const double nearPlane;
+  const double_t nearPlane;
   // The farthest distance the camera can capture till.
-  const double farPlane;
+  const double_t farPlane;
 
   // The timestamp of the last time the update for the camera was started.
-  double lastTime;
+  double_t lastTime;
   // The horizontal angle of the camera.
-  double horizontalAngle;
+  double_t horizontalAngle;
   // The vertical angle of the camera.
-  double verticalAngle;
+  double_t verticalAngle;
   // Whether to accept input or not.
   bool acceptInput;
   // The last time the ability to accept input was changed.
-  double lastAcceptInputChange;
+  double_t lastAcceptInputChange;
 
   /**
    * Update the camera.
@@ -53,9 +53,9 @@ private:
   {
     // Calculate the vector pointing to the right of the camera.
     auto right = glm::vec3(
-        sin(horizontalAngle - glm::pi<double>() / 2.0),
+        sin(horizontalAngle - glm::pi<double_t>() / 2.0),
         0,
-        cos(horizontalAngle - glm::pi<double>() / 2.0));
+        cos(horizontalAngle - glm::pi<double_t>() / 2.0));
 
     // Calculate the vector pointing upward of the camera.
     auto up = glm::cross(right, newDirection);
@@ -94,7 +94,7 @@ public:
     // Get the current time for the start of the update.
     const auto currentTime = glfwGetTime();
     // Get the time difference since the start of the last update.
-    const auto deltaTime = float(currentTime - lastTime);
+    const auto deltaTime = float_t(currentTime - lastTime);
 
     // Check if the M key was pressed after 500ms since the last accept input change.
     if (controlManager.isKeyPressed(GLFW_KEY_M) && (currentTime - lastAcceptInputChange) > 0.5)
@@ -105,7 +105,7 @@ public:
       {
         // If input is no longer being accepted, reset the camera back to the base position.
         setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
-        setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.1));
+        setCameraAngles(glm::pi<double_t>(), -(glm::pi<double_t>() / 4.1));
       }
       // Update the timestamp for the last time accept input flag was changed.
       lastAcceptInputChange = currentTime;
@@ -139,9 +139,9 @@ public:
 
     // Calculate the right vector of he camera.
     const auto right = glm::vec3(
-        sin(horizontalAngle - glm::pi<double>() / 2.0),
+        sin(horizontalAngle - glm::pi<double_t>() / 2.0),
         0,
-        cos(horizontalAngle - glm::pi<double>() / 2.0));
+        cos(horizontalAngle - glm::pi<double_t>() / 2.0));
 
     // Get the position of the camera.
     auto newPosition = getCameraPosition();
@@ -178,7 +178,7 @@ public:
    * 
    * @return The camera horizontal angle.
    */
-  const double &getHorizontalAngle() const
+  const double_t &getHorizontalAngle() const
   {
     return horizontalAngle;
   }
@@ -188,7 +188,7 @@ public:
    * 
    * @return The camera vertical angle.
    */
-  const double &getVerticalAngle() const
+  const double_t &getVerticalAngle() const
   {
     return verticalAngle;
   }
@@ -199,7 +199,7 @@ public:
    * @param newHorizontalAngle  The camera horizontal angle.
    * @param newVerticalAngle    The camera vertical angle.
    */
-  void setCameraAngles(const double &newHorizontalAngle, const double &newVerticalAngle)
+  void setCameraAngles(const double_t &newHorizontalAngle, const double_t &newVerticalAngle)
   {
     // Set the camera angles.
     horizontalAngle = newHorizontalAngle;
@@ -235,7 +235,7 @@ public:
 };
 
 // Initialize the mouse speed static variable.
-const float PerspectiveCamera::mouseSpeed = 5.0f;
+const float_t PerspectiveCamera::mouseSpeed = 5.0f;
 // Initialize the keyboard speed static variable.
-const float PerspectiveCamera::keyboardSpeed = 20.0f;
+const float_t PerspectiveCamera::keyboardSpeed = 20.0f;
 #endif

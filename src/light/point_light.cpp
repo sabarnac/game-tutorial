@@ -40,7 +40,7 @@ private:
    * 
    * @return The list of projection matrices for the point light.
    */
-  std::vector<glm::mat4> createProjectionMatrices(const double &nearPlane, const double &farPlane)
+  std::vector<glm::mat4> createProjectionMatrices(const double_t &nearPlane, const double_t &farPlane)
   {
     return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
                                    glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
@@ -72,7 +72,7 @@ public:
     setViewMatrices(createViewMatrices());
   }
 
-  void setLightNearPlane(const double &newNearPlane) override
+  void setLightNearPlane(const double_t &newNearPlane) override
   {
     // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
@@ -80,7 +80,7 @@ public:
     setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
-  void setLightFarPlane(const double &newFarPlane) override
+  void setLightFarPlane(const double_t &newFarPlane) override
   {
     // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);

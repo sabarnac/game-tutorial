@@ -28,19 +28,19 @@ class TextCharacter
 
 private:
   const unsigned char character;
-  const unsigned int characterSetLayerId;
+  const uint32_t characterSetLayerId;
   const glm::vec2 size;
   const glm::vec2 bearing;
-  const float advance;
+  const float_t advance;
   const glm::vec2 maxUv;
 
 public:
   TextCharacter(const unsigned char &character,
                 const glm::vec2 &size,
                 const glm::vec2 &bearing,
-                const float &advance,
+                const float_t &advance,
                 const glm::vec2 &maxUv,
-                const unsigned int &characterSetLayerId)
+                const uint32_t &characterSetLayerId)
       : character(character),
         characterSetLayerId(characterSetLayerId),
         size(size),
@@ -102,8 +102,8 @@ private:
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    float maxWidth = 0;
-    float maxRows = 0;
+    float_t maxWidth = 0;
+    float_t maxRows = 0;
     for (unsigned char character = 0; character < std::numeric_limits<unsigned char>::max(); character++)
     {
       if (FT_Load_Char(fontFace, character, FT_LOAD_RENDER))
@@ -113,8 +113,8 @@ private:
         continue;
       }
 
-      maxWidth = glm::max(maxWidth, static_cast<float>(fontFace->glyph->bitmap.width));
-      maxRows = glm::max(maxRows, static_cast<float>(fontFace->glyph->bitmap.rows));
+      maxWidth = glm::max(maxWidth, static_cast<float_t>(fontFace->glyph->bitmap.width));
+      maxRows = glm::max(maxRows, static_cast<float_t>(fontFace->glyph->bitmap.rows));
     }
 
     std::vector<uint8_t> clearData(maxWidth * maxRows, 0);
@@ -129,16 +129,16 @@ private:
         continue;
       }
 
-      glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, static_cast<unsigned int>(character), maxWidth, maxRows, 1, GL_RED, GL_UNSIGNED_BYTE, &clearData[0]);
-      glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, static_cast<unsigned int>(character), fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, 1, GL_RED, GL_UNSIGNED_BYTE, fontFace->glyph->bitmap.buffer);
+      glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, static_cast<uint32_t>(character), maxWidth, maxRows, 1, GL_RED, GL_UNSIGNED_BYTE, &clearData[0]);
+      glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, static_cast<uint32_t>(character), fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, 1, GL_RED, GL_UNSIGNED_BYTE, fontFace->glyph->bitmap.buffer);
 
       const TextCharacter textCharacter(
           character,
-          glm::vec2(static_cast<float>(fontFace->glyph->bitmap.width), static_cast<float>(fontFace->glyph->bitmap.rows)),
-          glm::vec2(static_cast<float>(fontFace->glyph->bitmap_left), static_cast<float>(fontFace->glyph->bitmap_top)),
-          static_cast<float>(fontFace->glyph->advance.x) / 64.0f,
-          glm::vec2(static_cast<float>(fontFace->glyph->bitmap.width) / maxWidth, static_cast<float>(fontFace->glyph->bitmap.rows) / maxRows),
-          (unsigned int)character);
+          glm::vec2(static_cast<float_t>(fontFace->glyph->bitmap.width), static_cast<float_t>(fontFace->glyph->bitmap.rows)),
+          glm::vec2(static_cast<float_t>(fontFace->glyph->bitmap_left), static_cast<float_t>(fontFace->glyph->bitmap_top)),
+          static_cast<float_t>(fontFace->glyph->advance.x) / 64.0f,
+          glm::vec2(static_cast<float_t>(fontFace->glyph->bitmap.width) / maxWidth, static_cast<float_t>(fontFace->glyph->bitmap.rows) / maxRows),
+          (uint32_t)character);
       characterMap.insert(std::pair<const unsigned char, const TextCharacter>(character, textCharacter));
     }
 
@@ -180,13 +180,13 @@ private:
   // The position of the text, with the origin being the bottom-left of the screen.
   const glm::vec2 position;
   // The normalized scale of the text, where a value of 1.0 is 100% the default size of the text.
-  const float scale;
+  const float_t scale;
 
 public:
   TextDetails(
       const std::string &content,
       const glm::vec2 &position,
-      const float &scale)
+      const float_t &scale)
       : content(content),
         position(position),
         scale(scale) {}
@@ -216,7 +216,7 @@ public:
    * 
    * @return The text scale.
    */
-  const float &getScale() const
+  const float_t &getScale() const
   {
     return scale;
   }
@@ -254,7 +254,7 @@ private:
     glGenBuffers(1, &newBufferId);
 
     glBindBuffer(GL_ARRAY_BUFFER, newBufferId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float_t) * 6 * 2 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -267,7 +267,7 @@ private:
     glGenBuffers(1, &newBufferId);
 
     glBindBuffer(GL_ARRAY_BUFFER, newBufferId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float_t) * 6 * 2 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -280,7 +280,7 @@ private:
     glGenBuffers(1, &newBufferId);
 
     glBindBuffer(GL_ARRAY_BUFFER, newBufferId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 1 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float_t) * 6 * 1 * MAX_TEXT_CHARS, NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -307,9 +307,9 @@ public:
 
   void render()
   {
-    std::vector<float> characterVertices({});
-    std::vector<float> characterUvs({});
-    std::vector<float> characterUvLayers({});
+    std::vector<float_t> characterVertices({});
+    std::vector<float_t> characterUvs({});
+    std::vector<float_t> characterUvLayers({});
     for (auto &textLine : textToRenderMap)
     {
       auto bufferExhaused = false;
@@ -326,11 +326,11 @@ public:
         const auto textCharacter = characterSet.getCharacter(ch);
 
         {
-          float xPos = startX + (textCharacter.bearing.x * textLine->getScale());
-          float yPos = (textLine->getPosition().y * TEXT_HEIGHT) - ((textCharacter.size.y - textCharacter.bearing.y) * textLine->getScale());
+          const auto xPos = startX + (textCharacter.bearing.x * textLine->getScale());
+          const auto yPos = (textLine->getPosition().y * TEXT_HEIGHT) - ((textCharacter.size.y - textCharacter.bearing.y) * textLine->getScale());
 
-          float width = textCharacter.size.x * textLine->getScale();
-          float height = textCharacter.size.y * textLine->getScale();
+          const auto width = textCharacter.size.x * textLine->getScale();
+          const auto height = textCharacter.size.y * textLine->getScale();
 
           characterVertices.push_back(xPos);
           characterVertices.push_back(yPos + height);
@@ -364,12 +364,12 @@ public:
         }
 
         {
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
-          characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
+          characterUvLayers.push_back(static_cast<float_t>(textCharacter.characterSetLayerId));
         }
 
         startX += textCharacter.advance * textLine->getScale();
@@ -401,13 +401,13 @@ public:
     glUniformMatrix4fv(projectionId, 1, GL_FALSE, &textProjectionMatrix[0][0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, textVertexBufferId);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * characterVertices.size(), &characterVertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float_t) * characterVertices.size(), &characterVertices[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, textUvBufferId);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * characterUvs.size(), &characterUvs[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float_t) * characterUvs.size(), &characterUvs[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, textUvLayerBufferId);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * characterUvLayers.size(), &characterUvLayers[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float_t) * characterUvLayers.size(), &characterUvLayers[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -429,7 +429,7 @@ public:
     clearTextToRenderMap();
   }
 
-  void addText(const std::string &content, const glm::vec2 &position, const float &scale)
+  void addText(const std::string &content, const glm::vec2 &position, const float_t &scale)
   {
     textToRenderMap.push_back(std::make_shared<const TextDetails>(content, position, scale));
   }

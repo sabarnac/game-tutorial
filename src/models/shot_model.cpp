@@ -27,7 +27,7 @@ private:
   // Whether to show the light or not.
   static bool isShotLightPresent;
   // The timestamp for the last time the shot light was toggled.
-  static double lastShotLightChange;
+  static double_t lastShotLightChange;
 
   // The model manager responsible for managing the models in the scene.
   ModelManager &modelManager;
@@ -37,7 +37,7 @@ private:
   const ControlManager &controlManager;
 
   // The timestamp of the last time the update for the camera was started.
-  double lastTime;
+  double_t lastTime;
 
   // The instance of the point light for the shot.
   std::shared_ptr<PointLight> shotLight;
@@ -208,6 +208,6 @@ public:
 // Initialize the shot light toggle static variable.
 bool ShotModel::isShotLightPresent = true;
 // Initialize the last time the shot light toggle was changed static variable.
-double ShotModel::lastShotLightChange = -1;
+double_t ShotModel::lastShotLightChange = -1;
 
 #endif

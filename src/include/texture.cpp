@@ -65,7 +65,7 @@ private:
 	// A map of created textures.
 	std::map<const std::string, const std::shared_ptr<const TextureDetails>> namedTextures;
 	// A map counting the references to the created textures.
-	std::map<const std::string, int> namedTextureReferences;
+	std::map<const std::string, int32_t> namedTextureReferences;
 
 	/**
 	 * Create a 2D texture of the given width and height, and store the data of the texture.
@@ -77,7 +77,7 @@ private:
 	 * 
 	 * @return The ID of the texture.
 	 */
-	GLuint create2dTexture(const unsigned char *const textureData, const unsigned int &width, const unsigned int &height)
+	GLuint create2dTexture(const unsigned char *const textureData, const uint32_t &width, const uint32_t &height)
 	{
 		// Define a variable for storing the texture ID.
 		GLuint textureId;
@@ -117,9 +117,9 @@ private:
 	{
 		// Define vectors for storing the BMP metadata information.
 		unsigned char header[54];
-		unsigned int dataPos;
-		unsigned int imageSize;
-		unsigned int width, height;
+		uint32_t dataPos;
+		uint32_t imageSize;
+		uint32_t width, height;
 
 		// Open the BMP file.
 		const auto file = fopen(textureFilePath.c_str(), "rb");
@@ -153,7 +153,7 @@ private:
 			exit(1);
 		}
 		// Check if number of bits per pixel is 24 (1 byte per color channel).
-		if (*(int *)&(header[0x1C]) != 24)
+		if (*(int32_t *)&(header[0x1C]) != 24)
 		{
 			// Cannot support color format. Time to crash.
 			fclose(file);
@@ -162,7 +162,7 @@ private:
 			exit(1);
 		}
 		// Check if compression is enabled.
-		if (*(int *)&(header[0x1E]) != 0)
+		if (*(int32_t *)&(header[0x1E]) != 0)
 		{
 			// Cannot support compressed BMPs. Time to crash.
 			fclose(file);
@@ -172,10 +172,10 @@ private:
 		}
 
 		// Grab the BMP metadata information
-		dataPos = *(int *)&(header[0x0A]);
-		imageSize = *(int *)&(header[0x22]);
-		width = *(int *)&(header[0x12]);
-		height = *(int *)&(header[0x16]);
+		dataPos = *(int32_t *)&(header[0x0A]);
+		imageSize = *(int32_t *)&(header[0x22]);
+		width = *(int32_t *)&(header[0x12]);
+		height = *(int32_t *)&(header[0x16]);
 
 		// Some BMP files can be misformatted, so guess missing information.
 		if (imageSize == 0)

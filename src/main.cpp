@@ -42,7 +42,7 @@ int main(void)
 	const auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
 	cameraManager.registerCamera(perspectiveCamera);
 	perspectiveCamera->setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
-	perspectiveCamera->setCameraAngles(glm::pi<double>(), -(glm::pi<double>() / 4.3));
+	perspectiveCamera->setCameraAngles(glm::pi<double_t>(), -(glm::pi<double_t>() / 4.3));
 
 	// Create 45 enemy models stacked in a grid format (5 x 3 x 3), and set their properties.
 	for (auto i = -2; i <= 2; i++)

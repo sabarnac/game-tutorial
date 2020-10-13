@@ -16,8 +16,8 @@
 class ConeLight : public LightBase
 {
 private:
-  double horizontalAngle;
-  double verticalAngle;
+  double_t horizontalAngle;
+  double_t verticalAngle;
 
   /**
    * Create the view matrices for the cone light.
@@ -27,7 +27,7 @@ private:
    * 
    * @return The list of view matrices for the cone light.
    */
-  std::vector<glm::mat4> createViewMatrices(const double &horizontalAngle, const double &verticalAngle)
+  std::vector<glm::mat4> createViewMatrices(const double_t &horizontalAngle, const double_t &verticalAngle)
   {
     // Calculate the direction of the light.
     const auto direction = glm::vec3(
@@ -37,9 +37,9 @@ private:
 
     // Calculate the right vector of the light.
     const auto right = glm::vec3(
-        sin(horizontalAngle - glm::pi<double>() / 2.0),
+        sin(horizontalAngle - glm::pi<double_t>() / 2.0),
         0,
-        cos(horizontalAngle - glm::pi<double>() / 2.0));
+        cos(horizontalAngle - glm::pi<double_t>() / 2.0));
 
     // Calculate the up vector of the light.
     const auto up = glm::cross(right, direction);
@@ -59,7 +59,7 @@ private:
    * 
    * @return The list of projection matrices for the cone light.
    */
-  std::vector<glm::mat4> createProjectionMatrices(const double &nearPlane, const double &farPlane)
+  std::vector<glm::mat4> createProjectionMatrices(const double_t &nearPlane, const double_t &farPlane)
   {
     return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane)});
   }
@@ -88,7 +88,7 @@ public:
     setViewMatrices(createViewMatrices(horizontalAngle, verticalAngle));
   }
 
-  void setLightAngles(const double &newHorizontalAngle, const double &newVerticalAngle)
+  void setLightAngles(const double_t &newHorizontalAngle, const double_t &newVerticalAngle)
   {
     // Update the light angles.
     horizontalAngle = newHorizontalAngle;
@@ -97,7 +97,7 @@ public:
     setViewMatrices(createViewMatrices(newHorizontalAngle, newVerticalAngle));
   }
 
-  void setLightNearPlane(const double &newNearPlane) override
+  void setLightNearPlane(const double_t &newNearPlane) override
   {
     // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
@@ -105,7 +105,7 @@ public:
     setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
-  void setLightFarPlane(const double &newFarPlane) override
+  void setLightFarPlane(const double_t &newFarPlane) override
   {
     // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);

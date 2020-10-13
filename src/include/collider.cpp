@@ -354,7 +354,7 @@ class SphereColliderShape : public ColliderShape
 {
 private:
   // The radius of the collider sphere.
-  double radius;
+  double_t radius;
 
   /**
    * Creates the colliders' base AABB using the radius of the sphere.
@@ -363,7 +363,7 @@ private:
    * 
    * @return The collider base AABB.
    */
-  const std::shared_ptr<const AxisAlignedBoundingBox> createBaseBox(const double radius)
+  const std::shared_ptr<const AxisAlignedBoundingBox> createBaseBox(const double_t radius)
   {
     // Generates the base AABB by using the negative and positive values of the radius to get the min/max-corners of the AABB.
     return std::make_shared<AxisAlignedBoundingBox>(glm::vec3(-radius, -radius, -radius), glm::vec3(radius, radius, radius));
@@ -376,7 +376,7 @@ private:
    * 
    * @return The radius of the sphere.
    */
-  double createRadius(const std::vector<glm::vec3> &vertices)
+  double_t createRadius(const std::vector<glm::vec3> &vertices)
   {
     // Set the farthest vertex distance from the center of the model as the length of the vertex.
     // Since the position of the vertex is relative to the center of the model, just calculating the length of the position
@@ -406,7 +406,7 @@ public:
       const glm::vec3 &position,
       const glm::vec3 &rotation,
       const glm::vec3 &scale,
-      const double &radius)
+      const double_t &radius)
       : ColliderShape(
             ColliderShapeType::SPHERE,
             position,
@@ -433,7 +433,7 @@ public:
    * 
    * @return The sphere radius.
    */
-  const double &getRadius() const
+  const double_t &getRadius() const
   {
     return radius;
   }
@@ -465,7 +465,7 @@ public:
    * 
    * @param newRadius  The new radius of the sphere.
    */
-  void update(const double &newRadius)
+  void update(const double_t &newRadius)
   {
     // Update the collider sphere radius.
     radius = newRadius;

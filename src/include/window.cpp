@@ -73,11 +73,11 @@ private:
     // Set the newly created window as the current context in GLFW.
     glfwMakeContextCurrent(newWindow);
 
-    // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is double).
+    // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is double_t).
     glfwGetFramebufferSize(newWindow, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
-    // Define the framebuffer width as double the viewport width.
+    // Define the framebuffer width as double_t the viewport width.
     FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
-    // Define the framebuffer height as double the viewport width (so that framebuffer is a square).
+    // Define the framebuffer height as double_t the viewport width (so that framebuffer is a square).
     FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
     // Define the text height as 1/21 of the viewport height (so we can fit approx 20 lines in the screen).
     TEXT_HEIGHT = VIEWPORT_HEIGHT / 21;
@@ -114,10 +114,10 @@ private:
       exit(1);
     }
 
-    int numberOfExtensions;
+    int32_t numberOfExtensions;
     glGetIntegerv(GL_NUM_EXTENSIONS, &numberOfExtensions);
     std::set<std::string> supportedExtensions;
-    for (int i = 0; i < numberOfExtensions; i++)
+    for (int32_t i = 0; i < numberOfExtensions; i++)
     {
       const auto extensionName = (const char *)glGetStringi(GL_EXTENSIONS, i);
       supportedExtensions.insert(std::string(extensionName));
