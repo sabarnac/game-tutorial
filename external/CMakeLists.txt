@@ -57,8 +57,4 @@ target_link_libraries(GLEW_1130
 
 ### FreeType ###
 
-add_subdirectory (freetype-2.10.2)
-
-include_directories(
-	freetype-2.10.2/include/
-)
+add_subdirectory(freetype-2.10.2)
