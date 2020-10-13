@@ -325,14 +325,6 @@ public:
 
         const auto textCharacter = characterSet.getCharacter(ch);
 
-        std::cout << startX
-                  << " | " << textCharacter.character
-                  << " " << textCharacter.size.x << ":" << textCharacter.size.y
-                  << " " << textCharacter.maxUv.x << ":" << textCharacter.maxUv.y
-                  << " " << textCharacter.bearing.x << ":" << textCharacter.bearing.y
-                  << " " << textCharacter.advance
-                  << " " << textCharacter.characterSetLayerId << std::endl;
-
         {
           float xPos = startX + (textCharacter.bearing.x * textLine->getScale());
           float yPos = (textLine->getPosition().y * TEXT_HEIGHT) - ((textCharacter.size.y - textCharacter.bearing.y) * textLine->getScale());
@@ -393,8 +385,6 @@ public:
     {
       return;
     }
-
-    std::cout << (characterUvLayers.size() / 6) << std::endl;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
