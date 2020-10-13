@@ -13,9 +13,9 @@
 #include FT_FREETYPE_H
 
 #include "constants.cpp"
+#include "common.cpp"
 #include "window.cpp"
 #include "shader.cpp"
-#include "render.cpp"
 
 /**
  * Class containing information about a text character.
@@ -372,7 +372,7 @@ public:
           characterUvLayers.push_back(static_cast<float>(textCharacter.characterSetLayerId));
         }
 
-        startX += textCharacter.advance;
+        startX += textCharacter.advance * textLine->getScale();
       }
 
       if (bufferExhaused)

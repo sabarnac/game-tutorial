@@ -6,10 +6,12 @@
 
 #include <GL/glew.h>
 
+#include "common.cpp"
 #include "constants.cpp"
 #include "window.cpp"
 #include "control.cpp"
 #include "shadowbuffer.cpp"
+#include "text.cpp"
 #include "../light/light_base.cpp"
 #include "../camera/camera_base.cpp"
 #include "../models/model_base.cpp"
@@ -40,88 +42,6 @@ struct LightDetails
 };
 
 /**
- * Class for storing the vertex attribute array information.
- */
-class VertexAttributeArray
-{
-private:
-  // The set of attribute IDs already in use.
-  static std::set<GLuint> attributeIds;
-
-  // The ID of the attribute.
-  const GLuint attributeId;
-  // The name of the attribute.
-  const std::string attributeName;
-  // The ID of the buffer the attribute is linked to.
-  const GLuint bufferId;
-  // The size of the elements in the buffer.
-  const unsigned int bufferElementSize;
-  // The type of the attribute data
-  const GLenum attributeType;
-
-  /**
-   * Creates a new attribute ID for the current attribute to use.
-   * 
-   * @return The attribute ID.
-   */
-  GLuint createAttributeId()
-  {
-    // Get the maximum possible attribute ID that can be used.
-    const GLuint maxId = std::numeric_limits<GLuint>::max();
-    // Iterate through all possible attribute IDs that can be used.
-    for (GLuint i = 0; i < maxId; i++)
-    {
-      // Check if the atribute ID is being used.
-      if (attributeIds.find(i) == attributeIds.end())
-      {
-        // The attribute ID is available. Return it for use.
-        return i;
-      }
-    }
-
-    // Could not get an available attribute ID. Time to crash.
-    std::cout << "Failed at render" << std::endl;
-    exit(1);
-  }
-
-public:
-  // Preventing copying the vertex attribute array, making sure only one instance can exist.
-  VertexAttributeArray(const VertexAttributeArray &) = delete;
-
-  VertexAttributeArray(const std::string &attributeName, const GLuint &bufferId, const unsigned int &bufferElementSize, const GLenum &attributeType = GL_FLOAT)
-      : attributeId(createAttributeId()),
-        attributeName(attributeName),
-        bufferId(bufferId),
-        bufferElementSize(bufferElementSize),
-        attributeType(attributeType)
-  {
-    // Insert it to the set of attribute IDs being used.
-    attributeIds.insert(attributeId);
-  }
-
-  ~VertexAttributeArray()
-  {
-    // Delete the attribute ID from the set of used IDs.
-    attributeIds.erase(attributeId);
-    // Disable the vertex attribute array from being used by the GPU.
-    glDisableVertexAttribArray(attributeId);
-  }
-
-  void enableAttribute()
-  {
-    // Enable the vertex attribute array for being used by the GPU.
-    glEnableVertexAttribArray(attributeId);
-    // Bind the buffer as the array buffer the vertex attribute will link with.
-    glBindBuffer(GL_ARRAY_BUFFER, bufferId);
-    // Define the details regarding the vertex attribute list stored in the array buffer.
-    glVertexAttribPointer(attributeId, bufferElementSize, attributeType, GL_FALSE, 0, (void *)0);
-  }
-};
-
-// Initialize the set of used attribute IDs to an empty set.
-std::set<GLuint> VertexAttributeArray::attributeIds = std::set<GLuint>({});
-
-/**
  * A manager class for managing rendering of models.
  */
 class RenderManager
@@ -142,6 +62,8 @@ private:
 
   // The window manager responsible for the window.
   WindowManager &windowManager;
+  // The text manager responsible for rendering text.
+  TextManager &textManager;
   // The control manager responsible for managing controls and inputs of the window.
   const ControlManager &controlManager;
   // The shadow buffer manager responsible for creating shadow buffers for lights.
@@ -168,6 +90,7 @@ private:
 
   RenderManager()
       : windowManager(WindowManager::getInstance()),
+        textManager(TextManager::getInstance()),
         controlManager(ControlManager::getInstance()),
         shadowBufferManager(ShadowBufferManager::getInstance()),
         registeredLights({}),
@@ -653,6 +576,7 @@ public:
   {
     // Get the time at the start of the frame.
     const auto currentTime = glfwGetTime();
+    auto updateStartTime = currentTime, updateEndTime = currentTime;
 
     // Check if the "L" has been pressed 500ms after the last time the disable feature mask was changed.
     if (controlManager.isKeyPressed(GLFW_KEY_L) && (currentTime - lastDisableFeatureMaskChange) > 0.5)
@@ -679,9 +603,16 @@ public:
     }
 
     // Render the light shadowmaps.
+    updateStartTime = glfwGetTime();
     const auto categorizedLights = renderLights();
+    updateEndTime = glfwGetTime();
+    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 21), 0.5);
+
     // Render the models.
+    updateStartTime = glfwGetTime();
     renderModels(categorizedLights);
+    updateEndTime = glfwGetTime();
+    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20.5), 0.5);
 
     // Update the last start time of the latest rendered frame to the start time of the current frame.
     lastTime = currentTime;

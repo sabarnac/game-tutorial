@@ -6,63 +6,12 @@
 
 #include <GL/glew.h>
 
+#include "common.cpp"
 #include "window.cpp"
 #include "shader.cpp"
 #include "object.cpp"
 #include "render.cpp"
-
-class DebugVertexAttributeArray
-{
-
-private:
-  static std::set<GLuint> attributeIds;
-
-  const GLuint attributeId;
-  const std::string attributeName;
-  const GLuint bufferId;
-  const unsigned int bufferElementSize;
-
-  GLuint createAttributeId()
-  {
-    const GLuint maxId = std::numeric_limits<GLuint>::max();
-    for (GLuint i = 0; i < maxId; i++)
-    {
-      if (attributeIds.find(i) == attributeIds.end())
-      {
-        return i;
-      }
-    }
-    std::cout << "Failed at debug render" << std::endl;
-    exit(1);
-  }
-
-public:
-  DebugVertexAttributeArray(const DebugVertexAttributeArray &) = delete;
-
-  DebugVertexAttributeArray(const std::string &attributeName, const GLuint &bufferId, const unsigned int &bufferElementSize)
-      : attributeId(createAttributeId()),
-        attributeName(attributeName),
-        bufferId(bufferId),
-        bufferElementSize(bufferElementSize)
-  {
-    attributeIds.insert(attributeId);
-  }
-
-  ~DebugVertexAttributeArray()
-  {
-    attributeIds.erase(attributeId);
-    glDisableVertexAttribArray(attributeId);
-  }
-
-  void enableAttribute()
-  {
-    glEnableVertexAttribArray(attributeId);
-    glBindBuffer(GL_ARRAY_BUFFER, bufferId);
-    glVertexAttribPointer(attributeId, bufferElementSize, GL_FLOAT, GL_FALSE, 0, (void *)0);
-  }
-};
-
-std::set<GLuint> DebugVertexAttributeArray::attributeIds = std::set<GLuint>({});
+#include "text.cpp"
 
 class DebugRenderManager
 {
@@ -76,6 +25,7 @@ private:
   const WindowManager &windowManager;
   ObjectManager &objectManager;
   ShaderManager &shaderManager;
+  TextManager &textManager;
   const RenderManager &renderManager;
 
   const std::shared_ptr<const ObjectDetails> sphereDetails;
@@ -95,6 +45,7 @@ private:
       : windowManager(WindowManager::getInstance()),
         objectManager(ObjectManager::getInstance()),
         shaderManager(ShaderManager::getInstance()),
+        textManager(TextManager::getInstance()),
         renderManager(RenderManager::getInstance()),
         sphereDetails(objectManager.createObject("DebugSphere", "assets/objects/sphere.obj")),
         debugAabbShader(shaderManager.createShaderProgram("DebugAabbShader", "assets/shaders/vertex/debug_aabb.glsl", "assets/shaders/fragment/debug.glsl")),
@@ -154,7 +105,7 @@ public:
       glUniform1f(radiusId, 0.5);
       glUniform4f(lineColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
 
-      DebugVertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
+      VertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
       vertexArray.enableAttribute();
 
       glDrawArrays(GL_TRIANGLES, 0, sphereDetails->getBufferSize());
@@ -187,7 +138,7 @@ public:
         glUniform1f(radiusId, std::dynamic_pointer_cast<SphereColliderShape>(model.second->getColliderDetails()->getColliderShape())->getRadius());
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
-        DebugVertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
+        VertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
         vertexArray.enableAttribute();
 
         glDrawArrays(GL_TRIANGLES, 0, sphereDetails->getBufferSize());
@@ -212,7 +163,7 @@ public:
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        DebugVertexAttributeArray vertexArray("VertexArray", debugModelBufferId, 3);
+        VertexAttributeArray vertexArray("VertexArray", debugModelBufferId, 3);
         vertexArray.enableAttribute();
 
         glDrawArrays(GL_LINES, 0, debugModelBuffer.size());
@@ -232,7 +183,7 @@ public:
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform4f(lineColorId, debugColor2.r, debugColor2.g, debugColor2.b, debugColor2.a);
 
-        DebugVertexAttributeArray vertexArray("VertexArray", model.second->getObjectDetails()->getVertexBufferId(), 3);
+        VertexAttributeArray vertexArray("VertexArray", model.second->getObjectDetails()->getVertexBufferId(), 3);
         vertexArray.enableAttribute();
 
         glDrawArrays(GL_TRIANGLES, 0, model.second->getObjectDetails()->getBufferSize());
@@ -258,7 +209,7 @@ public:
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        DebugVertexAttributeArray vertexArray("VertexArray", debugModelBufferId, 3);
+        VertexAttributeArray vertexArray("VertexArray", debugModelBufferId, 3);
         vertexArray.enableAttribute();
 
         glDrawArrays(GL_LINES, 0, debugModelBuffer.size());
@@ -268,10 +219,20 @@ public:
 
   void render() const
   {
+    const auto currentTime = glfwGetTime();
+    auto updateStartTime = currentTime, updateEndTime = currentTime;
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    updateStartTime = glfwGetTime();
     renderLights();
+    updateEndTime = glfwGetTime();
+    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20), 0.5);
+
+    updateStartTime = glfwGetTime();
     renderModels();
+    updateEndTime = glfwGetTime();
+    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19.5), 0.5);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }

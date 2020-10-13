@@ -67,11 +67,19 @@ int main(void)
 	// Set the timestamp for when debug mode toggle was changed to 10 seconds in the past.
 	auto lastDebugEnabledChange = glfwGetTime() - 10;
 
+	// Set debug text to initially false.
+	auto textEnabled = false;
+	// Set the timestamp for when debug text toggle was changed to 10 seconds in the past.
+	auto lastTextEnabledChange = glfwGetTime() - 10;
+
 	// Start the game loop.
+	auto textRenderTimeLast = 0.0;
+	auto frameTimeLast = 0.0;
 	do
 	{
 		// Get the time at the start of the loop.
 		const auto currentTime = glfwGetTime();
+		auto updateStartTime = currentTime, updateEndTime = currentTime;
 
 		// Check if "B" key was pressed beyond 500ms since the last debug mode toggle.
 		if (controlManager.isKeyPressed(GLFW_KEY_B) && (currentTime - lastDebugEnabledChange) > 0.5)
@@ -81,23 +89,63 @@ int main(void)
 			lastDebugEnabledChange = currentTime;
 		}
 
-		// Update the lights, cameras, models.
+		// Check if "T" key was pressed beyond 500ms since the last debug text toggle.
+		if (controlManager.isKeyPressed(GLFW_KEY_T) && (currentTime - lastTextEnabledChange) > 0.5)
+		{
+			// "T" key was pressed. Toggle debug text and update the last change timestamp.
+			textEnabled = !textEnabled;
+			lastTextEnabledChange = currentTime;
+		}
+
+		// Update the lights.
+		updateStartTime = glfwGetTime();
 		lightManager.updateAllLights();
+		updateEndTime = glfwGetTime();
+		textManager.addText("Light Update: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 0.5), 0.5);
+
+		// Update the cameras.
+		updateStartTime = glfwGetTime();
 		modelManager.updateAllModels();
+		updateEndTime = glfwGetTime();
+		textManager.addText("Model Update: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 1), 0.5);
+
+		// Update the models.
+		updateStartTime = glfwGetTime();
 		cameraManager.updateAllCameras();
+		updateEndTime = glfwGetTime();
+		textManager.addText("Camera Update: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 1.5), 0.5);
 
 		// Render the scene.
+		updateStartTime = glfwGetTime();
 		renderManager.render();
+		updateEndTime = glfwGetTime();
+		textManager.addText("Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 2), 0.5);
+
 		// Check if debug mode is enabled.
 		if (debugEnabled)
 		{
 			// Render the debug models fo the main models and lights.
+			updateStartTime = glfwGetTime();
 			debugRenderManager.render();
+			updateEndTime = glfwGetTime();
+			textManager.addText("Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 2.5), 0.5);
 		}
 
 		// Render text
-		textManager.addText("Hello World!", glm::vec2(1, 1), 1.0);
-		textManager.render();
+		textManager.addText("Text Render (Last Frame): " + std::to_string(textRenderTimeLast) + "ms", glm::vec2(1, 3), 0.5);
+
+		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 4), 0.5);
+		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 4.5), 0.5);
+
+		// Check if debug text is enabled.
+		updateStartTime = glfwGetTime();
+		if (textEnabled)
+		{
+			textManager.render();
+		}
+		updateEndTime = glfwGetTime();
+		textRenderTimeLast = (updateEndTime - updateStartTime) * 1000;
+		frameTimeLast = (updateEndTime - currentTime) * 1000;
 
 		// Swap the window framebuffers.
 		windowManager.swapBuffers();
