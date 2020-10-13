@@ -5,8 +5,8 @@
  * A bunch of constants that's required to be known globally.
  */
 
-const int32_t WINDOW_WIDTH = 640;
-const int32_t WINDOW_HEIGHT = 480;
+const int32_t WINDOW_WIDTH = 1024;
+const int32_t WINDOW_HEIGHT = 768;
 const int32_t MAX_CONE_LIGHTS = 2;
 const int32_t MAX_POINT_LIGHTS = 6;
 const int32_t MAX_TEXT_LENGTH = 80;
