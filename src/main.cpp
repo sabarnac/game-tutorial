@@ -81,17 +81,17 @@ int main(void)
 	uint32_t textCharsRenderedLast = 0;
 	do
 	{
-		textManager.addText("Window Dimensions: " + std::to_string(WINDOW_WIDTH) + "x" + std::to_string(WINDOW_HEIGHT) + "px", glm::vec2(1, 15), 0.5);
-		textManager.addText("Viewport Dimensions: " + std::to_string(VIEWPORT_WIDTH) + "x" + std::to_string(VIEWPORT_HEIGHT) + "px", glm::vec2(1, 14.5), 0.5);
-		textManager.addText("Framebuffer Dimensions: " + std::to_string(FRAMEBUFFER_WIDTH) + "x" + std::to_string(FRAMEBUFFER_HEIGHT) + "px", glm::vec2(1, 14), 0.5);
-		textManager.addText("Text Dimensions: " + std::to_string(TEXT_WIDTH) + "x" + std::to_string(TEXT_HEIGHT) + "px", glm::vec2(1, 13.5), 0.5);
-		textManager.addText("Max Lights:", glm::vec2(1, 13), 0.5);
-		textManager.addText(std::to_string(MAX_CONE_LIGHTS) + " Cone Lights", glm::vec2(3, 12.5), 0.5);
-		textManager.addText(std::to_string(MAX_POINT_LIGHTS) + " Point Lights", glm::vec2(3, 12), 0.5);
-		textManager.addText("Max Text Characters: " + std::to_string(MAX_TEXT_CHARS) + " chars", glm::vec2(1, 11.5), 0.5);
+		textManager.addText("Window Dimensions: " + std::to_string(WINDOW_WIDTH) + "x" + std::to_string(WINDOW_HEIGHT) + "px", glm::vec2(1, 12), 0.5);
+		textManager.addText("Viewport Dimensions: " + std::to_string(VIEWPORT_WIDTH) + "x" + std::to_string(VIEWPORT_HEIGHT) + "px", glm::vec2(1, 11.5), 0.5);
+		textManager.addText("Framebuffer Dimensions: " + std::to_string(FRAMEBUFFER_WIDTH) + "x" + std::to_string(FRAMEBUFFER_HEIGHT) + "px", glm::vec2(1, 11), 0.5);
+		textManager.addText("Text Dimensions: " + std::to_string(TEXT_WIDTH) + "x" + std::to_string(TEXT_HEIGHT) + "px", glm::vec2(1, 10.5), 0.5);
+		textManager.addText("Max Lights:", glm::vec2(1, 10), 0.5);
+		textManager.addText(std::to_string(MAX_CONE_LIGHTS) + " Cone Lights", glm::vec2(3, 9.5), 0.5);
+		textManager.addText(std::to_string(MAX_POINT_LIGHTS) + " Point Lights", glm::vec2(3, 9), 0.5);
+		textManager.addText("Max Text Characters: " + std::to_string(MAX_TEXT_CHARS) + " chars", glm::vec2(1, 8.5), 0.5);
 
 		auto isSwapEnabledStr = SWAP_INTERVAL == 0 ? std::string("False") : SWAP_INTERVAL == 1 ? std::string("True (Single-Sync)") : std::string("True (Double-Sync)");
-		textManager.addText("VSync Enabled: " + isSwapEnabledStr, glm::vec2(1, 11), 0.5);
+		textManager.addText("VSync Enabled: " + isSwapEnabledStr, glm::vec2(1, 8), 0.5);
 
 		// Get the time at the start of the loop.
 		const auto currentTime = glfwGetTime();

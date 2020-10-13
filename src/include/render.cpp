@@ -389,6 +389,8 @@ public:
     // Get the projection matrix of the camera.
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
+    auto modelNamesCount = std::map<const std::string, int>({});
+
     // Iterate through all the models in the scene.
     for (const auto &model : registeredModels)
     {
@@ -398,6 +400,15 @@ public:
         // If not, set it as the currently used shader and use it.
         currentShaderId = model.second->getShaderDetails()->getShaderId();
         glUseProgram(currentShaderId);
+      }
+
+      if (modelNamesCount.find(model.second->getModelName()) != modelNamesCount.end())
+      {
+        modelNamesCount[model.second->getModelName()]++;
+      }
+      else
+      {
+        modelNamesCount[model.second->getModelName()] = 1;
       }
 
       // Get the model matrix of the model.
@@ -554,6 +565,13 @@ public:
 
       // Draw the triangles of the model.
       glDrawArrays(GL_TRIANGLES, 0, model.second->getObjectDetails()->getBufferSize());
+    }
+
+    auto height = 17.5;
+    for (const auto &modelCounts : modelNamesCount)
+    {
+      textManager.addText(modelCounts.first + " Model Instances: " + std::to_string(modelCounts.second), glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 

@@ -177,7 +177,7 @@ public:
     }
 
     // Update the shot position.
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 100.0 * deltaTime));
+    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 80.0 * deltaTime));
     // Update the shot light.
     updateShotLight();
 
