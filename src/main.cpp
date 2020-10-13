@@ -90,7 +90,7 @@ int main(void)
 		textManager.addText(std::to_string(MAX_POINT_LIGHTS) + " Point Lights", glm::vec2(3, 12), 0.5);
 		textManager.addText("Max Text Characters: " + std::to_string(MAX_TEXT_CHARS) + " chars", glm::vec2(1, 11.5), 0.5);
 
-		auto isSwapEnabledStr = SWAP_INTERVAL == 0 ? std::string("False") : std::string("True");
+		auto isSwapEnabledStr = SWAP_INTERVAL == 0 ? std::string("False") : SWAP_INTERVAL == 1 ? std::string("True (Single-Sync)") : std::string("True (Double-Sync)");
 		textManager.addText("VSync Enabled: " + isSwapEnabledStr, glm::vec2(1, 11), 0.5);
 
 		// Get the time at the start of the loop.

@@ -193,12 +193,14 @@ public:
   }
 
   /**
-   * Toggle what the interval is for swapping buffers. A value of zero means the swap should be immediate.
-   * A value of 1 means that a single screen refresh should occur before swapping buffers.
+   * Toggle what the interval is for swapping buffers.
+   * * A value of 0 means the swap should be immediate.
+   * * A value of 1 means that a single screen refresh should occur before swapping buffers. 
+   * * A value of 2 means that two screen refreshes should occur before swapping buffers. 
    */
   void toggleVsync()
   {
-    SWAP_INTERVAL = SWAP_INTERVAL == 0 ? 1 : 0;
+    SWAP_INTERVAL = SWAP_INTERVAL == 0 ? 2 : SWAP_INTERVAL == 2 ? 1 : 0;
     glfwSwapInterval(SWAP_INTERVAL);
   }
 
