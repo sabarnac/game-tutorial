@@ -4,6 +4,8 @@ syntax: glob
 *.exe
 build/*
 bin-*/*
+.vs
+.vscode
 distrib/build_*/*
 *.bak
 *.orig

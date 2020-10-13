@@ -72,11 +72,27 @@ int main(void)
 	// Set the timestamp for when debug text toggle was changed to 10 seconds in the past.
 	auto lastTextEnabledChange = glfwGetTime() - 10;
 
+	// Set the timestamp for when debug text toggle was changed to 10 seconds in the past.
+	auto lastVsyncToggledChange = glfwGetTime() - 10;
+
 	// Start the game loop.
 	auto textRenderTimeLast = 0.0;
 	auto frameTimeLast = 0.0;
+	uint32_t textCharsRenderedLast = 0;
 	do
 	{
+		textManager.addText("Window Dimensions: " + std::to_string(WINDOW_WIDTH) + "x" + std::to_string(WINDOW_HEIGHT) + "px", glm::vec2(61, 20.5), 0.5);
+		textManager.addText("Viewport Dimensions: " + std::to_string(VIEWPORT_WIDTH) + "x" + std::to_string(VIEWPORT_HEIGHT) + "px", glm::vec2(61, 20), 0.5);
+		textManager.addText("Framebuffer Dimensions: " + std::to_string(FRAMEBUFFER_WIDTH) + "x" + std::to_string(FRAMEBUFFER_HEIGHT) + "px", glm::vec2(61, 19.5), 0.5);
+		textManager.addText("Text Dimensions: " + std::to_string(TEXT_WIDTH) + "x" + std::to_string(TEXT_HEIGHT) + "px", glm::vec2(61, 19), 0.5);
+		textManager.addText("Max Lights:", glm::vec2(61, 18.5), 0.5);
+		textManager.addText(std::to_string(MAX_CONE_LIGHTS) + " Cone Lights", glm::vec2(67, 18.5), 0.5);
+		textManager.addText(std::to_string(MAX_POINT_LIGHTS) + " Point Lights", glm::vec2(67, 18), 0.5);
+		textManager.addText("Max Text Characters: " + std::to_string(MAX_TEXT_CHARS) + " chars", glm::vec2(61, 17.5), 0.5);
+
+		auto isSwapEnabledStr = SWAP_INTERVAL == 0 ? std::string("False") : std::string("True");
+		textManager.addText("VSync Enabled: " + isSwapEnabledStr, glm::vec2(61, 17), 0.5);
+
 		// Get the time at the start of the loop.
 		const auto currentTime = glfwGetTime();
 		auto updateStartTime = currentTime, updateEndTime = currentTime;
@@ -95,6 +111,14 @@ int main(void)
 			// "T" key was pressed. Toggle debug text and update the last change timestamp.
 			textEnabled = !textEnabled;
 			lastTextEnabledChange = currentTime;
+		}
+
+		// Check if "V" key was pressed beyond 500ms since the last vsync toggle.
+		if (controlManager.isKeyPressed(GLFW_KEY_V) && (currentTime - lastVsyncToggledChange) > 0.5)
+		{
+			// "V" key was pressed. Toggle vsync and update the last change timestamp.
+			windowManager.toggleVsync();
+			lastVsyncToggledChange = currentTime;
 		}
 
 		// Update the lights.
@@ -133,15 +157,16 @@ int main(void)
 
 		// Render text
 		textManager.addText("Text Render (Last Frame): " + std::to_string(textRenderTimeLast) + "ms", glm::vec2(1, 3), 0.5);
+		textManager.addText("Text Characters Rendered (Last Frame): " + std::to_string(textCharsRenderedLast) + " chars", glm::vec2(1, 3.5), 0.5);
 
-		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 4), 0.5);
-		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 4.5), 0.5);
+		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 4.5), 0.5);
+		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 5), 0.5);
 
 		// Check if debug text is enabled.
 		updateStartTime = glfwGetTime();
 		if (textEnabled)
 		{
-			textManager.render();
+			textCharsRenderedLast = textManager.render();
 		}
 		updateEndTime = glfwGetTime();
 		textRenderTimeLast = (updateEndTime - updateStartTime) * 1000;

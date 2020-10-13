@@ -16,7 +16,7 @@
 //   because there is no structure to change. Either the entire
 //   variable is kept as is, or completely removed.
 
-#define MAX_SIMPLE_LIGHTS 4
+#define MAX_SIMPLE_LIGHTS 3
 #define MAX_CUBE_LIGHTS 6
 
 // The UV coordinates of the diffuse color of the fragment in the standard object texture.
@@ -25,6 +25,8 @@ in vec2 fragmentUv;
 // The coordinates of the fragment in the standard object model in world-space.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
 in vec4 fragmentPosition_worldSpace;
+// The coordinates of the fragment in the standard object model in view-space.
+// This is interpolated by the GPU for the fragment when passed from the vertex shader.
 in vec4 fragmentPosition_viewSpace;
 // The normal vector of the fragment in the standard object model in view-space.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
@@ -32,8 +34,12 @@ in vec3 fragmentNormal_viewSpace;
 
 // The shadow map coordinates of the current fragment w.r.t all the active cone lights.
 in vec4 coneLightShadowMapCoord[MAX_SIMPLE_LIGHTS];
-in vec4 coneLightPosition_viewSpace[MAX_SIMPLE_LIGHTS];
 
+// The coordinates of the positions of the cone light sources in view-space.
+// Since this value would be the same for all vertices, interpolation won't affect anything.
+in vec4 coneLightPosition_viewSpace[MAX_SIMPLE_LIGHTS];
+// The coordinates of the positions of the point light sources in view-space.
+// Since this value would be the same for all vertices, interpolation won't affect anything.
 in vec4 pointLightPosition_viewSpace[MAX_CUBE_LIGHTS];
 
 

@@ -81,6 +81,8 @@ private:
     FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
     // Define the text height as 1/21 of the viewport height (so we can fit approx 20 lines in the screen).
     TEXT_HEIGHT = VIEWPORT_HEIGHT / 21;
+    // Define the text width as 1/80 of the viewport width (so we can fit approx 80 characters per line in the screen).
+    TEXT_WIDTH = VIEWPORT_WIDTH / 80;
 
     // Set the option for sticky keys on the window to true. This means keys will remain in the pressed state until they're processed.
     // This allows us to catch key presses that may be missed if we didn't poll in time.
@@ -91,7 +93,7 @@ private:
 
     // Set what the interval is for swapping buffers. A value of zero means the swap should be immediate.
     // A value of 1 means that a single screen refresh should occur before swapping buffers.
-    glfwSwapInterval(0);
+    glfwSwapInterval(SWAP_INTERVAL);
 
     // Return the newly created window
     return newWindow;
@@ -188,6 +190,16 @@ public:
   void switchToFrameBufferViewport()
   {
     glViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+  }
+
+  /**
+   * Toggle what the interval is for swapping buffers. A value of zero means the swap should be immediate.
+   * A value of 1 means that a single screen refresh should occur before swapping buffers.
+   */
+  void toggleVsync()
+  {
+    SWAP_INTERVAL = SWAP_INTERVAL == 0 ? 1 : 0;
+    glfwSwapInterval(SWAP_INTERVAL);
   }
 
   /**

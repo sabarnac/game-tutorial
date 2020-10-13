@@ -305,7 +305,7 @@ public:
     return instance;
   }
 
-  void render()
+  uint32_t render()
   {
     std::vector<float_t> characterVertices({});
     std::vector<float_t> characterUvs({});
@@ -314,7 +314,7 @@ public:
     {
       auto bufferExhaused = false;
 
-      auto startX = textLine->getPosition().x;
+      auto startX = textLine->getPosition().x * TEXT_WIDTH;
       for (auto &ch : textLine->getContent())
       {
         if (characterVertices.size() / (6 * 2) >= MAX_TEXT_CHARS)
@@ -383,7 +383,7 @@ public:
 
     if (characterVertices.empty())
     {
-      return;
+      return 0;
     }
 
     glEnable(GL_BLEND);
@@ -427,6 +427,8 @@ public:
     glDisable(GL_BLEND);
 
     clearTextToRenderMap();
+
+    return characterUvLayers.size() / 6;
   }
 
   void addText(const std::string &content, const glm::vec2 &position, const float_t &scale)

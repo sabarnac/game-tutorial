@@ -594,13 +594,13 @@ public:
     updateStartTime = glfwGetTime();
     const auto categorizedLights = renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 21), 0.5);
+    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20.5), 0.5);
 
     // Render the models.
     updateStartTime = glfwGetTime();
     renderModels(categorizedLights);
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20.5), 0.5);
+    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20), 0.5);
 
     // Update the last start time of the latest rendered frame to the start time of the current frame.
     lastTime = currentTime;

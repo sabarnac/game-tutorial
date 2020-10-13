@@ -227,12 +227,12 @@ public:
     updateStartTime = glfwGetTime();
     renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20), 0.5);
+    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19.5), 0.5);
 
     updateStartTime = glfwGetTime();
     renderModels();
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19.5), 0.5);
+    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19), 0.5);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
