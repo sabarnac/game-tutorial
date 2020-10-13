@@ -48,3 +48,4 @@
 - Press `L` to toggle disabling/enabling shadows and lighting.
 - Press `J` to disable lighting and shadows from the player models' eyes.
 - Press `H` to disable lighting and shadows from the shot models.
+- Press `V` to toggle VSynv (disabled, enabled single-sync, enabled double-sync).
