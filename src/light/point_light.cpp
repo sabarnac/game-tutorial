@@ -54,7 +54,7 @@ public:
   PointLight(const std::string &lightId)
       : LightBase(
             lightId,
-            "PointLight",
+            "Point",
             glm::vec3(1.0), 100.0,
             "assets/shaders/vertex/light_base.glsl", "assets/shaders/geometry/light_base.glsl", "assets/shaders/fragment/point_light.glsl",
             glm::vec3(0.0),

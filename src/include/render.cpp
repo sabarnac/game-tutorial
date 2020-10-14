@@ -244,9 +244,20 @@ public:
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    auto lightNamesCount = std::map<const std::string, int>({});
+
     // Iterate through all the lights in the scene.
     for (const auto &light : registeredLights)
     {
+      if (lightNamesCount.find(light.second->getLightName()) != lightNamesCount.end())
+      {
+        lightNamesCount[light.second->getLightName()]++;
+      }
+      else
+      {
+        lightNamesCount[light.second->getLightName()] = 1;
+      }
+
       // Get the type of the shadow.
       const auto shadowType = light.second->getShadowBufferDetails()->getShadowBufferType();
       // Generate a structure detailing information about the light.
@@ -359,6 +370,13 @@ public:
 
       // Bind the window framebuffer as the active framebuffer.
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    auto height = 15.5;
+    for (const auto &lightCounts : lightNamesCount)
+    {
+      textManager.addText(lightCounts.first + " Light Instances: " + std::to_string(lightCounts.second), glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
 
     // Return the map of the categorized lights.

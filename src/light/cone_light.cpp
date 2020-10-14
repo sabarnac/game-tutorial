@@ -68,7 +68,7 @@ public:
   ConeLight(const std::string &lightId)
       : LightBase(
             lightId,
-            "ConeLight",
+            "Cone",
             glm::vec3(1.0), 100.0,
             "assets/shaders/vertex/light_base.glsl", "assets/shaders/geometry/light_base.glsl", "assets/shaders/fragment/cone_light.glsl",
             glm::vec3(0.0),
