@@ -161,8 +161,9 @@ int main(void)
 		textManager.addText("Text Characters Rendered (Last Frame): " + std::to_string(textCharsRenderedLast) + " chars", glm::vec2(1, 3.5), 0.5);
 
 		textManager.addText("Process Time (Last Frame): " + std::to_string(processTimeLast) + "ms", glm::vec2(1, 4.5), 0.5);
-		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 5), 0.5);
-		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 5.5), 0.5);
+		textManager.addText("Process Rate (Last Frame): " + std::to_string(1000 / processTimeLast) + "fps", glm::vec2(1, 5), 0.5);
+		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 5.5), 0.5);
+		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 6), 0.5);
 
 		// Check if debug text is enabled.
 		updateStartTime = glfwGetTime();
