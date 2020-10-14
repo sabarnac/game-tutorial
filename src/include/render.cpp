@@ -245,6 +245,7 @@ public:
     }
 
     auto lightNamesCount = std::map<const std::string, int>({});
+    auto lightNamesProcessTime = std::map<const std::string, double>({});
 
     // Iterate through all the lights in the scene.
     for (const auto &light : registeredLights)
@@ -256,6 +257,7 @@ public:
       else
       {
         lightNamesCount[light.second->getLightName()] = 1;
+        lightNamesProcessTime[light.second->getLightName()] = 0.0;
       }
 
       // Get the type of the shadow.
@@ -279,6 +281,8 @@ public:
       {
         continue;
       }
+
+      const auto startTime = glfwGetTime();
 
       // Bind the shadowmap framebuffer of the light as the active framebuffer.
       glBindFramebuffer(GL_FRAMEBUFFER, light.second->getShadowBufferDetails()->getShadowBufferId());
@@ -370,12 +374,17 @@ public:
 
       // Bind the window framebuffer as the active framebuffer.
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      const auto endTime = glfwGetTime();
+
+      lightNamesProcessTime[light.second->getLightName()] += (endTime - startTime) * 1000;
     }
 
     auto height = 15.5;
     for (const auto &lightCounts : lightNamesCount)
     {
-      textManager.addText(lightCounts.first + " Light Instances: " + std::to_string(lightCounts.second), glm::vec2(1, height), 0.5);
+      const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
+      textManager.addText(lightCounts.first + " Light Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
       height -= 0.5;
     }
 
@@ -408,6 +417,7 @@ public:
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
     auto modelNamesCount = std::map<const std::string, int>({});
+    auto modelNamesProcessTime = std::map<const std::string, double>({});
 
     // Iterate through all the models in the scene.
     for (const auto &model : registeredModels)
@@ -427,7 +437,10 @@ public:
       else
       {
         modelNamesCount[model.second->getModelName()] = 1;
+        modelNamesProcessTime[model.second->getModelName()] = 0.0;
       }
+
+      const auto startTime = glfwGetTime();
 
       // Get the model matrix of the model.
       const auto modelMatrix = model.second->getModelMatrix();
@@ -583,12 +596,17 @@ public:
 
       // Draw the triangles of the model.
       glDrawArrays(GL_TRIANGLES, 0, model.second->getObjectDetails()->getBufferSize());
+
+      const auto endTime = glfwGetTime();
+
+      modelNamesProcessTime[model.second->getModelName()] += (endTime - startTime) * 1000;
     }
 
     auto height = 17.5;
     for (const auto &modelCounts : modelNamesCount)
     {
-      textManager.addText(modelCounts.first + " Model Instances: " + std::to_string(modelCounts.second), glm::vec2(1, height), 0.5);
+      const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
+      textManager.addText(modelCounts.first + " Model Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
       height -= 0.5;
     }
   }
