@@ -78,6 +78,7 @@ int main(void)
 	// Start the game loop.
 	auto textRenderTimeLast = 0.0;
 	auto frameTimeLast = 0.0;
+	auto processTimeLast = 0.0;
 	uint32_t textCharsRenderedLast = 0;
 	do
 	{
@@ -159,8 +160,9 @@ int main(void)
 		textManager.addText("Text Render (Last Frame): " + std::to_string(textRenderTimeLast) + "ms", glm::vec2(1, 3), 0.5);
 		textManager.addText("Text Characters Rendered (Last Frame): " + std::to_string(textCharsRenderedLast) + " chars", glm::vec2(1, 3.5), 0.5);
 
-		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 4.5), 0.5);
-		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 5), 0.5);
+		textManager.addText("Process Time (Last Frame): " + std::to_string(processTimeLast) + "ms", glm::vec2(1, 4.5), 0.5);
+		textManager.addText("Frame Time (Last Frame): " + std::to_string(frameTimeLast) + "ms", glm::vec2(1, 5), 0.5);
+		textManager.addText("Frame Rate (Last Frame): " + std::to_string(1000 / frameTimeLast) + "fps", glm::vec2(1, 5.5), 0.5);
 
 		// Check if debug text is enabled.
 		updateStartTime = glfwGetTime();
@@ -170,6 +172,7 @@ int main(void)
 		}
 		updateEndTime = glfwGetTime();
 		textRenderTimeLast = (updateEndTime - updateStartTime) * 1000;
+		processTimeLast = (updateEndTime - currentTime) * 1000;
 
 		// Swap the window framebuffers.
 		windowManager.swapBuffers();
