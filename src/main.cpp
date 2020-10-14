@@ -170,10 +170,13 @@ int main(void)
 		}
 		updateEndTime = glfwGetTime();
 		textRenderTimeLast = (updateEndTime - updateStartTime) * 1000;
-		frameTimeLast = (updateEndTime - currentTime) * 1000;
 
 		// Swap the window framebuffers.
 		windowManager.swapBuffers();
+
+		updateEndTime = glfwGetTime();
+		frameTimeLast = (updateEndTime - currentTime) * 1000;
+
 		// Poll for window events.
 		controlManager.pollEvents();
 
