@@ -87,6 +87,9 @@ public:
     const auto viewMatrix = activeCamera->getViewMatrix();
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
+    auto lightNamesCount = std::map<const std::string, int>({});
+    auto lightNamesProcessTime = std::map<const std::string, double>({});
+
     GLuint shaderId = -1;
     for (const auto &light : renderManager.registeredLights)
     {
@@ -95,6 +98,18 @@ public:
         shaderId = debugSphereShader->getShaderId();
         glUseProgram(shaderId);
       }
+
+      if (lightNamesCount.find(light.second->getLightName()) != lightNamesCount.end())
+      {
+        lightNamesCount[light.second->getLightName()]++;
+      }
+      else
+      {
+        lightNamesCount[light.second->getLightName()] = 1;
+        lightNamesProcessTime[light.second->getLightName()] = 0.0;
+      }
+
+      const auto startTime = glfwGetTime();
 
       const auto mvpMatrixId = glGetUniformLocation(debugSphereShader->getShaderId(), "mvpMatrix");
       const auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
@@ -109,6 +124,18 @@ public:
       vertexArray.enableAttribute();
 
       glDrawArrays(GL_TRIANGLES, 0, sphereDetails->getBufferSize());
+
+      const auto endTime = glfwGetTime();
+
+      lightNamesProcessTime[light.second->getLightName()] += (endTime - startTime) * 1000;
+    }
+
+    auto height = 18.5;
+    for (const auto &lightCounts : lightNamesCount)
+    {
+      const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
+      textManager.addText(lightCounts.first + " Debug Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 
@@ -118,9 +145,24 @@ public:
     const auto viewMatrix = activeCamera->getViewMatrix();
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
+    auto modelNamesCount = std::map<const std::string, int>({});
+    auto modelNamesProcessTime = std::map<const std::string, double>({});
+
     GLuint shaderId = -1;
     for (const auto &model : renderManager.registeredModels)
     {
+      if (modelNamesCount.find(model.second->getModelName()) != modelNamesCount.end())
+      {
+        modelNamesCount[model.second->getModelName()]++;
+      }
+      else
+      {
+        modelNamesCount[model.second->getModelName()] = 1;
+        modelNamesProcessTime[model.second->getModelName()] = 0.0;
+      }
+
+      const auto startTime = glfwGetTime();
+
       if (model.second->getColliderDetails()->getColliderShape()->getType() == ColliderShapeType::SPHERE)
       {
         if (shaderId != debugSphereShader->getShaderId())
@@ -214,6 +256,18 @@ public:
 
         glDrawArrays(GL_LINES, 0, debugModelBuffer.size());
       }
+
+      const auto endTime = glfwGetTime();
+
+      modelNamesProcessTime[model.second->getModelName()] += (endTime - startTime) * 1000;
+    }
+
+    auto height = 20.0;
+    for (const auto &modelCounts : modelNamesCount)
+    {
+      const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
+      textManager.addText(modelCounts.first + " Debug Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 
@@ -227,12 +281,12 @@ public:
     updateStartTime = glfwGetTime();
     renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19.5), 0.5);
+    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24.5), 0.5);
 
     updateStartTime = glfwGetTime();
     renderModels();
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 19), 0.5);
+    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24), 0.5);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }

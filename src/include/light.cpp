@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "render.cpp"
+#include "text.cpp"
 #include "../light/light_base.cpp"
 
 /**
@@ -20,12 +21,14 @@ private:
 
   // The render manager responsible for rendering objects.
   RenderManager &renderManager;
+  TextManager &textManager;
 
   // The map of registered lights.
   std::map<const std::string, std::shared_ptr<LightBase>> registeredLights;
 
   LightManager()
       : renderManager(RenderManager::getInstance()),
+        textManager(TextManager::getInstance()),
         registeredLights({}) {}
 
 public:
@@ -120,6 +123,9 @@ public:
       registeredLightIds.push_back(light.first);
     }
 
+    auto lightNamesCount = std::map<const std::string, int>({});
+    auto lightNamesProcessTime = std::map<const std::string, double>({});
+
     // Iterate through the list of light IDs.
     for (const auto &lightId : registeredLightIds)
     {
@@ -128,9 +134,30 @@ public:
       // Check if the light still exists in the registration map.
       if (result != registeredLights.end())
       {
+        if (lightNamesCount.find(result->second->getLightName()) != lightNamesCount.end())
+        {
+          lightNamesCount[result->second->getLightName()]++;
+        }
+        else
+        {
+          lightNamesCount[result->second->getLightName()] = 1;
+          lightNamesProcessTime[result->second->getLightName()] = 0.0;
+        }
+
         // If it does, tell the light to perform an update on itself.
+        const auto startTime = glfwGetTime();
         result->second->update();
+        const auto endTime = glfwGetTime();
+        lightNamesProcessTime[result->second->getLightName()] += (endTime - startTime) * 1000;
       }
+    }
+
+    auto height = 15.0;
+    for (const auto &lightCounts : lightNamesCount)
+    {
+      const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
+      textManager.addText(lightCounts.first + " Light Object Instances: " + std::to_string(lightCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 

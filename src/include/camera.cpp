@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "render.cpp"
+#include "text.cpp"
 #include "../camera/camera_base.cpp"
 
 /**
@@ -20,12 +21,14 @@ private:
 
   // The render manager responsible for rendering objects.
   RenderManager &renderManager;
+  TextManager &textManager;
 
   // The map of registered cameras.
   std::map<const std::string, const std::shared_ptr<CameraBase>> registeredCameras;
 
   CameraManager()
       : renderManager(RenderManager::getInstance()),
+        textManager(TextManager::getInstance()),
         registeredCameras({}) {}
 
 public:
@@ -122,6 +125,9 @@ public:
       registeredCameraIds.push_back(camera.first);
     }
 
+    auto cameraNamesCount = std::map<const std::string, int>({});
+    auto cameraNamesProcessTime = std::map<const std::string, double>({});
+
     // Iterate through the list of camera IDs.
     for (const auto &cameraId : registeredCameraIds)
     {
@@ -130,9 +136,30 @@ public:
       // Check if the camera still exists in the registration map.
       if (result != registeredCameras.end())
       {
+        if (cameraNamesCount.find(result->second->getCameraName()) != cameraNamesCount.end())
+        {
+          cameraNamesCount[result->second->getCameraName()]++;
+        }
+        else
+        {
+          cameraNamesCount[result->second->getCameraName()] = 1;
+          cameraNamesProcessTime[result->second->getCameraName()] = 0.0;
+        }
+
         // If it does, tell the camera to perform an update on itself.
+        const auto startTime = glfwGetTime();
         result->second->update();
+        const auto endTime = glfwGetTime();
+        cameraNamesProcessTime[result->second->getCameraName()] += (endTime - startTime) * 1000;
       }
+    }
+
+    auto height = 13.5;
+    for (const auto &cameraCounts : cameraNamesCount)
+    {
+      const auto avgRenderTime = cameraNamesProcessTime[cameraCounts.first] / cameraCounts.second;
+      textManager.addText(cameraCounts.first + " Camera Object Instances: " + std::to_string(cameraCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 

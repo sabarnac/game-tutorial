@@ -73,7 +73,7 @@ public:
   PerspectiveCamera(const std::string &cameraId)
       : CameraBase(
             cameraId,
-            "PerspectiveCamera",
+            "Perspective",
             glm::vec3(0.0),
             glm::vec3(0.0),
             glm::vec3(0.0, 1.0, 0.0),

@@ -79,8 +79,8 @@ private:
     FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
     // Define the framebuffer height as double_t the viewport width (so that framebuffer is a square).
     FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
-    // Define the text height as 1/21 of the viewport height (so we can fit approx 20 lines in the screen).
-    TEXT_HEIGHT = VIEWPORT_HEIGHT / 21;
+    // Define the text height as 1/26 of the viewport height (so we can fit approx 20 lines in the screen).
+    TEXT_HEIGHT = VIEWPORT_HEIGHT / 26;
     // Define the text width as 1/80 of the viewport width (so we can fit approx 80 characters per line in the screen).
     TEXT_WIDTH = VIEWPORT_WIDTH / 80;
 

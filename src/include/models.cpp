@@ -19,6 +19,7 @@
 #include "shader.cpp"
 #include "collider.cpp"
 #include "render.cpp"
+#include "text.cpp"
 #include "../models/model_base.cpp"
 
 /**
@@ -32,12 +33,14 @@ private:
 
   // The render manager responsible for rendering objects.
   RenderManager &renderManager;
+  TextManager &textManager;
 
   // The map of registered models.
   std::map<const std::string, std::shared_ptr<ModelBase>> registeredModels;
 
   ModelManager()
       : renderManager(RenderManager::getInstance()),
+        textManager(TextManager::getInstance()),
         registeredModels({}) {}
 
 public:
@@ -132,6 +135,9 @@ public:
       registeredModelIds.push_back(model.first);
     }
 
+    auto modelNamesCount = std::map<const std::string, int>({});
+    auto modelNamesProcessTime = std::map<const std::string, double>({});
+
     // Iterate through the list of model IDs.
     for (const auto &modelId : registeredModelIds)
     {
@@ -140,9 +146,30 @@ public:
       // Check if the model still exists in the registration map.
       if (result != registeredModels.end())
       {
+        if (modelNamesCount.find(result->second->getModelName()) != modelNamesCount.end())
+        {
+          modelNamesCount[result->second->getModelName()]++;
+        }
+        else
+        {
+          modelNamesCount[result->second->getModelName()] = 1;
+          modelNamesProcessTime[result->second->getModelName()] = 0.0;
+        }
+
         // If it does, tell the model to perform an update on itself.
+        const auto startTime = glfwGetTime();
         result->second->update();
+        const auto endTime = glfwGetTime();
+        modelNamesProcessTime[result->second->getModelName()] += (endTime - startTime) * 1000;
       }
+    }
+
+    auto height = 17.0;
+    for (const auto &modelCounts : modelNamesCount)
+    {
+      const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
+      textManager.addText(modelCounts.first + " Model Object Instances: " + std::to_string(modelCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      height -= 0.5;
     }
   }
 

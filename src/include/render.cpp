@@ -380,11 +380,11 @@ public:
       lightNamesProcessTime[light.second->getLightName()] += (endTime - startTime) * 1000;
     }
 
-    auto height = 15.5;
+    auto height = 21.5;
     for (const auto &lightCounts : lightNamesCount)
     {
       const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
-      textManager.addText(lightCounts.first + " Light Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      textManager.addText(lightCounts.first + " Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
       height -= 0.5;
     }
 
@@ -602,11 +602,11 @@ public:
       modelNamesProcessTime[model.second->getModelName()] += (endTime - startTime) * 1000;
     }
 
-    auto height = 17.5;
+    auto height = 23.0;
     for (const auto &modelCounts : modelNamesCount)
     {
       const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
-      textManager.addText(modelCounts.first + " Model Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      textManager.addText(modelCounts.first + " Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
       height -= 0.5;
     }
   }
@@ -648,13 +648,13 @@ public:
     updateStartTime = glfwGetTime();
     const auto categorizedLights = renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20.5), 0.5);
+    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25.5), 0.5);
 
     // Render the models.
     updateStartTime = glfwGetTime();
     renderModels(categorizedLights);
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 20), 0.5);
+    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25), 0.5);
 
     // Update the last start time of the latest rendered frame to the start time of the current frame.
     lastTime = currentTime;
