@@ -49,3 +49,7 @@
 - Press `J` to disable lighting and shadows from the player models' eyes.
 - Press `H` to disable lighting and shadows from the shot models.
 - Press `V` to toggle V-Sync (disabled, enabled single-sync, enabled double-sync).
+
+## Credits
+
+Thanks to [@Enpitsu_hito](https://twitter.com/enpitsu_hito) for contributing the player model and texture.
