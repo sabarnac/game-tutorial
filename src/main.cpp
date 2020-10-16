@@ -41,6 +41,7 @@ int main(void)
 	// Create a perspective camera, and set its properties.
 	const auto perspectiveCamera = PerspectiveCamera::create("MainCamera");
 	cameraManager.registerCamera(perspectiveCamera);
+	renderManager.registerActiveCamera(perspectiveCamera->getCameraId());
 	perspectiveCamera->setCameraPosition(glm::vec3(0.0, 20.0, 40.0));
 	perspectiveCamera->setCameraAngles(glm::pi<double_t>(), -(glm::pi<double_t>() / 4.3));
 

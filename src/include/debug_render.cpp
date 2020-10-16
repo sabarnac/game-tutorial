@@ -10,6 +10,9 @@
 #include "window.cpp"
 #include "shader.cpp"
 #include "object.cpp"
+#include "camera.cpp"
+#include "light.cpp"
+#include "models.cpp"
 #include "render.cpp"
 #include "text.cpp"
 
@@ -26,6 +29,13 @@ private:
   ObjectManager &objectManager;
   ShaderManager &shaderManager;
   TextManager &textManager;
+  // The camera manager responsible for managing all the cameras.
+  const CameraManager &cameraManager;
+  // The light manager responsible for managing all the lights.
+  const LightManager &lightManager;
+  // The model manager responsible for managing all the models.
+  const ModelManager &modelManager;
+  // The render manager responsible for rendering to the scene to the window.
   const RenderManager &renderManager;
 
   const std::shared_ptr<const ObjectDetails> sphereDetails;
@@ -46,6 +56,9 @@ private:
         objectManager(ObjectManager::getInstance()),
         shaderManager(ShaderManager::getInstance()),
         textManager(TextManager::getInstance()),
+        cameraManager(CameraManager::getInstance()),
+        lightManager(LightManager::getInstance()),
+        modelManager(ModelManager::getInstance()),
         renderManager(RenderManager::getInstance()),
         sphereDetails(objectManager.createObject("DebugSphere", "assets/objects/sphere.obj")),
         debugAabbShader(shaderManager.createShaderProgram("DebugAabbShader", "assets/shaders/vertex/debug_aabb.glsl", "assets/shaders/fragment/debug.glsl")),
@@ -83,7 +96,7 @@ public:
 
   void renderLights() const
   {
-    const auto activeCamera = renderManager.registeredCameras.at(renderManager.activeCameraId);
+    const auto activeCamera = cameraManager.getCamera(renderManager.activeCameraId);
     const auto viewMatrix = activeCamera->getViewMatrix();
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
@@ -91,7 +104,7 @@ public:
     auto lightNamesProcessTime = std::map<const std::string, double>({});
 
     GLuint shaderId = -1;
-    for (const auto &light : renderManager.registeredLights)
+    for (const auto &light : lightManager.getAllLights())
     {
       if (shaderId != debugSphereShader->getShaderId())
       {
@@ -99,14 +112,14 @@ public:
         glUseProgram(shaderId);
       }
 
-      if (lightNamesCount.find(light.second->getLightName()) != lightNamesCount.end())
+      if (lightNamesCount.find(light->getLightName()) != lightNamesCount.end())
       {
-        lightNamesCount[light.second->getLightName()]++;
+        lightNamesCount[light->getLightName()]++;
       }
       else
       {
-        lightNamesCount[light.second->getLightName()] = 1;
-        lightNamesProcessTime[light.second->getLightName()] = 0.0;
+        lightNamesCount[light->getLightName()] = 1;
+        lightNamesProcessTime[light->getLightName()] = 0.0;
       }
 
       const auto startTime = glfwGetTime();
@@ -115,7 +128,7 @@ public:
       const auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
       const auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
-      const auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light.second->getLightPosition()) * glm::mat4();
+      const auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light->getLightPosition()) * glm::mat4();
       glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
       glUniform1f(radiusId, 0.5);
       glUniform4f(lineColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
@@ -127,7 +140,7 @@ public:
 
       const auto endTime = glfwGetTime();
 
-      lightNamesProcessTime[light.second->getLightName()] += (endTime - startTime) * 1000;
+      lightNamesProcessTime[light->getLightName()] += (endTime - startTime) * 1000;
     }
 
     auto height = 18.5;
@@ -141,7 +154,7 @@ public:
 
   void renderModels() const
   {
-    const auto activeCamera = renderManager.registeredCameras.at(renderManager.activeCameraId);
+    const auto activeCamera = cameraManager.getCamera(renderManager.activeCameraId);
     const auto viewMatrix = activeCamera->getViewMatrix();
     const auto projectionMatrix = activeCamera->getProjectionMatrix();
 
@@ -149,21 +162,21 @@ public:
     auto modelNamesProcessTime = std::map<const std::string, double>({});
 
     GLuint shaderId = -1;
-    for (const auto &model : renderManager.registeredModels)
+    for (const auto &model : modelManager.getAllModels())
     {
-      if (modelNamesCount.find(model.second->getModelName()) != modelNamesCount.end())
+      if (modelNamesCount.find(model->getModelName()) != modelNamesCount.end())
       {
-        modelNamesCount[model.second->getModelName()]++;
+        modelNamesCount[model->getModelName()]++;
       }
       else
       {
-        modelNamesCount[model.second->getModelName()] = 1;
-        modelNamesProcessTime[model.second->getModelName()] = 0.0;
+        modelNamesCount[model->getModelName()] = 1;
+        modelNamesProcessTime[model->getModelName()] = 0.0;
       }
 
       const auto startTime = glfwGetTime();
 
-      if (model.second->getColliderDetails()->getColliderShape()->getType() == ColliderShapeType::SPHERE)
+      if (model->getColliderDetails()->getColliderShape()->getType() == ColliderShapeType::SPHERE)
       {
         if (shaderId != debugSphereShader->getShaderId())
         {
@@ -175,9 +188,9 @@ public:
         const auto radiusId = glGetUniformLocation(debugSphereShader->getShaderId(), "radius");
         const auto lineColorId = glGetUniformLocation(debugSphereShader->getShaderId(), "lineColor");
 
-        const auto mvpMatrix = projectionMatrix * viewMatrix * model.second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
-        glUniform1f(radiusId, std::dynamic_pointer_cast<SphereColliderShape>(model.second->getColliderDetails()->getColliderShape())->getRadius());
+        glUniform1f(radiusId, std::dynamic_pointer_cast<SphereColliderShape>(model->getColliderDetails()->getColliderShape())->getRadius());
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
         VertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);
@@ -185,7 +198,7 @@ public:
 
         glDrawArrays(GL_TRIANGLES, 0, sphereDetails->getBufferSize());
       }
-      else if (model.second->getColliderDetails()->getColliderShape()->getType() == ColliderShapeType::BOX)
+      else if (model->getColliderDetails()->getColliderShape()->getType() == ColliderShapeType::BOX)
       {
         if (shaderId != debugBoxShader->getShaderId())
         {
@@ -196,11 +209,11 @@ public:
         const auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
         const auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
-        const auto mvpMatrix = projectionMatrix * viewMatrix * model.second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
-        const auto debugModelBuffer = getLineVertices(model.second->getColliderDetails()->getColliderShape()->getBaseBox()->getCorners());
+        const auto debugModelBuffer = getLineVertices(model->getColliderDetails()->getColliderShape()->getBaseBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -221,14 +234,14 @@ public:
         const auto mvpMatrixId = glGetUniformLocation(debugBoxShader->getShaderId(), "mvpMatrix");
         const auto lineColorId = glGetUniformLocation(debugBoxShader->getShaderId(), "lineColor");
 
-        const auto mvpMatrix = projectionMatrix * viewMatrix * model.second->getModelMatrix() * glm::mat4();
+        const auto mvpMatrix = projectionMatrix * viewMatrix * model->getModelMatrix() * glm::mat4();
         glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
         glUniform4f(lineColorId, debugColor2.r, debugColor2.g, debugColor2.b, debugColor2.a);
 
-        VertexAttributeArray vertexArray("VertexArray", model.second->getObjectDetails()->getVertexBufferId(), 3);
+        VertexAttributeArray vertexArray("VertexArray", model->getObjectDetails()->getVertexBufferId(), 3);
         vertexArray.enableAttribute();
 
-        glDrawArrays(GL_TRIANGLES, 0, model.second->getObjectDetails()->getBufferSize());
+        glDrawArrays(GL_TRIANGLES, 0, model->getObjectDetails()->getBufferSize());
       }
 
       {
@@ -246,7 +259,7 @@ public:
         glUniformMatrix4fv(projectionMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
         glUniform4f(lineColorId, debugColor1.r, debugColor1.g, debugColor1.b, debugColor1.a);
 
-        const auto debugModelBuffer = getLineVertices(model.second->getColliderDetails()->getColliderShape()->getTransformedBox()->getCorners());
+        const auto debugModelBuffer = getLineVertices(model->getColliderDetails()->getColliderShape()->getTransformedBox()->getCorners());
         glBindBuffer(GL_ARRAY_BUFFER, debugModelBufferId);
         glBufferData(GL_ARRAY_BUFFER, debugModelBuffer.size() * sizeof(glm::vec3), &debugModelBuffer[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -259,7 +272,7 @@ public:
 
       const auto endTime = glfwGetTime();
 
-      modelNamesProcessTime[model.second->getModelName()] += (endTime - startTime) * 1000;
+      modelNamesProcessTime[model->getModelName()] += (endTime - startTime) * 1000;
     }
 
     auto height = 20.0;

@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "render.cpp"
 #include "text.cpp"
 #include "../light/light_base.cpp"
 
@@ -19,16 +18,14 @@ private:
   // Singleton instance of the light manager.
   static LightManager instance;
 
-  // The render manager responsible for rendering objects.
-  RenderManager &renderManager;
+  // The text manager responsible for rendering text.
   TextManager &textManager;
 
   // The map of registered lights.
   std::map<const std::string, std::shared_ptr<LightBase>> registeredLights;
 
   LightManager()
-      : renderManager(RenderManager::getInstance()),
-        textManager(TextManager::getInstance()),
+      : textManager(TextManager::getInstance()),
         registeredLights({}) {}
 
 public:
@@ -40,14 +37,12 @@ public:
    * 
    * @param light  The light to register.
    */
-  void registerLight(const std::shared_ptr<LightBase> &light)
+  void registerLight(const std::shared_ptr<LightBase> &&light)
   {
     // Let the light initialize itself.
     light->init();
     // Insert the light to the map of registered lights.
-    registeredLights.insert(std::pair<const std::string, std::shared_ptr<LightBase>>(light->getLightId(), light));
-    // Register the light with the render manager as well so that it can be used for rendering.
-    renderManager.registerLight(light);
+    registeredLights.emplace(light->getLightId(), std::move(light));
   }
 
   /**
@@ -72,8 +67,6 @@ public:
   {
     // Remove the light from the map of registered lights.
     registeredLights.erase(light->getLightId());
-    // De-register the light from the render manager as well.
-    renderManager.deregisterLight(light);
     // Let the light de-initialize itself.
     light->deinit();
   }

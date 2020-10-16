@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "render.cpp"
 #include "text.cpp"
 #include "../camera/camera_base.cpp"
 
@@ -19,16 +18,14 @@ private:
   // Singleton instance of the camera manager.
   static CameraManager instance;
 
-  // The render manager responsible for rendering objects.
-  RenderManager &renderManager;
+  // The text manager responsible for rendering text.
   TextManager &textManager;
 
   // The map of registered cameras.
   std::map<const std::string, const std::shared_ptr<CameraBase>> registeredCameras;
 
   CameraManager()
-      : renderManager(RenderManager::getInstance()),
-        textManager(TextManager::getInstance()),
+      : textManager(TextManager::getInstance()),
         registeredCameras({}) {}
 
 public:
@@ -40,16 +37,12 @@ public:
    * 
    * @param camera  The camera to register.
    */
-  void registerCamera(const std::shared_ptr<CameraBase> camera)
+  void registerCamera(const std::shared_ptr<CameraBase> &&camera)
   {
     // Let the camera initialize itself.
     camera->init();
     // Insert the camera to the map of registered cameras.
-    registeredCameras.insert(std::pair<const std::string, const std::shared_ptr<CameraBase>>(camera->getCameraId(), camera));
-    // Register the camera with the render manager as well so that it can be used for rendering.
-    renderManager.registerCamera(camera);
-    // Set the camera as the active camera so that it's used to render to the window.
-    renderManager.registerActiveCamera(camera);
+    registeredCameras.emplace(camera->getCameraId(), std::move(camera));
   }
 
   /**
@@ -74,8 +67,6 @@ public:
   {
     // Remove the camera from the map of registered cameras.
     registeredCameras.erase(camera->getCameraId());
-    // De-register the camera from the render manager as well.
-    renderManager.deregisterCamera(camera);
     // Let the camera de-initialize itself.
     camera->deinit();
   }

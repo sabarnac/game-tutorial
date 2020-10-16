@@ -18,7 +18,6 @@
 #include "texture.cpp"
 #include "shader.cpp"
 #include "collider.cpp"
-#include "render.cpp"
 #include "text.cpp"
 #include "../models/model_base.cpp"
 
@@ -31,16 +30,14 @@ private:
   // Singleton instance of the model manager.
   static ModelManager instance;
 
-  // The render manager responsible for rendering objects.
-  RenderManager &renderManager;
+  // The text manager responsible for rendering text.
   TextManager &textManager;
 
   // The map of registered models.
   std::map<const std::string, std::shared_ptr<ModelBase>> registeredModels;
 
   ModelManager()
-      : renderManager(RenderManager::getInstance()),
-        textManager(TextManager::getInstance()),
+      : textManager(TextManager::getInstance()),
         registeredModels({}) {}
 
 public:
@@ -52,14 +49,12 @@ public:
    * 
    * @param model  The model to register.
    */
-  void registerModel(const std::shared_ptr<ModelBase> &model)
+  void registerModel(const std::shared_ptr<ModelBase> &&model)
   {
     // Let the model initialize itself.
     model->init();
     // Insert the model to the map of registered models.
-    registeredModels.insert(std::pair<const std::string, std::shared_ptr<ModelBase>>(model->getModelId(), model));
-    // Register the model with the render manager as well so that it can be used for rendering.
-    renderManager.registerModel(model);
+    registeredModels.emplace(model->getModelId(), std::move(model));
   }
 
   /**
@@ -84,8 +79,6 @@ public:
   {
     // Remove the model from the map of registered models.
     registeredModels.erase(model->getModelId());
-    // De-register the model from the render manager as well.
-    renderManager.deregisterModel(model);
     // Let the model de-initialize itself.
     model->deinit();
   }
