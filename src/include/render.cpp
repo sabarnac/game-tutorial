@@ -129,7 +129,7 @@ public:
     windowManager.switchToFrameBufferViewport();
 
     // Create a map of the categorized lights.
-    std::map<const ShadowBufferType, std::vector<LightDetails>> categorizedLights({{ShadowBufferType::CONE, {}}, {ShadowBufferType::POINT, {}}});
+    std::map<const ShadowBufferType, std::vector<LightDetails>> categorizedLightDetails({{ShadowBufferType::CONE, {}}, {ShadowBufferType::POINT, {}}});
 
     // Set the current active shader ID to 0.
     GLuint currentShaderId = 0;
@@ -150,111 +150,133 @@ public:
     auto lightNamesCount = std::map<const std::string, int>({});
     auto lightNamesProcessTime = std::map<const std::string, double>({});
 
-    // Iterate through all the lights in the scene.
+    std::map<const ShadowBufferType, std::vector<std::shared_ptr<LightBase>>> categorizedLights({{ShadowBufferType::CONE, {}}, {ShadowBufferType::POINT, {}}});
     for (const auto &light : lightManager.getAllLights())
     {
-      if (lightNamesCount.find(light->getLightName()) != lightNamesCount.end())
-      {
-        lightNamesCount[light->getLightName()]++;
-      }
-      else
-      {
-        lightNamesCount[light->getLightName()] = 1;
-        lightNamesProcessTime[light->getLightName()] = 0.0;
-      }
+      categorizedLights.at(light->getShadowBufferDetails()->getShadowBufferType()).push_back(light);
+    }
 
-      // Get the type of the shadow.
-      const auto shadowType = light->getShadowBufferDetails()->getShadowBufferType();
-      // Generate a structure detailing information about the light.
-      const LightDetails lightDetails = {
-          light->getLightPosition(),
-          light->getProjectionMatrices()[0] * light->getViewMatrices()[0] * glm::mat4(),
-          light->getLightColor(),
-          light->getLightIntensity(),
-          FRAMEBUFFER_WIDTH,
-          FRAMEBUFFER_WIDTH,
-          light->getLightNearPlane(),
-          light->getLightFarPlane(),
-          light->getShadowBufferDetails()->getShadowBufferTextureArrayLayerId()};
-      // Store the light details in the categorized map.
-      categorizedLights.at(shadowType).push_back(lightDetails);
-
-      // If shadows are disabled, skip the shadowmap render step.
-      if (disableFeatureMask >= DISABLE_SHADOW)
+    for (const auto &lights : categorizedLights)
+    {
+      if (lights.second.empty())
       {
         continue;
       }
 
       const auto startTime = glfwGetTime();
 
+      const auto firstLight = lights.second.front();
+
       // Bind the shadowmap framebuffer of the light as the active framebuffer.
-      glBindFramebuffer(GL_FRAMEBUFFER, light->getShadowBufferDetails()->getShadowBufferId());
+      glBindFramebuffer(GL_FRAMEBUFFER, firstLight->getShadowBufferDetails()->getShadowBufferId());
 
       // Check if the shader of the light is the same as the currently used shader.
-      if (currentShaderId != light->getShaderDetails()->getShaderId())
+      if (currentShaderId != firstLight->getShaderDetails()->getShaderId())
       {
         // If not, set it as the currently used shader and use it.
-        currentShaderId = light->getShaderDetails()->getShaderId();
+        currentShaderId = firstLight->getShaderDetails()->getShaderId();
         glUseProgram(currentShaderId);
       }
 
-      // Get the view and projection matrices of the light.
-      const auto viewMatrices = light->getViewMatrices();
-      const auto projectionMatrices = light->getProjectionMatrices();
-
-      // Get the uniform ID of the count of the projection-view matrix variable and set it.
-      const auto vpMatrixCountVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_vertex.vpMatrixCount");
-      glUniform1i(vpMatrixCountVertexId, viewMatrices.size());
-      const auto vpMatrixCountGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_geometry.vpMatrixCount");
-      glUniform1i(vpMatrixCountGeometryId, viewMatrices.size());
-      const auto vpMatrixCountFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_fragment.vpMatrixCount");
-      glUniform1i(vpMatrixCountFragmentId, viewMatrices.size());
-
-      // Get the uniform ID of the light position variable and set it.
-      const auto lightPositionVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_vertex.lightPosition");
-      glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-      const auto lightPositionGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_geometry.lightPosition");
-      glUniform3f(lightPositionGeometryId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-      const auto lightPositionFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_fragment.lightPosition");
-      glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
-
-      // Get the uniform ID of the lights' shadow map layer ID variable and set it.
-      const auto layerIdVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_vertex.layerId");
-      glUniform1i(layerIdVertexId, lightDetails.textureArrayLayerId);
-      const auto layerIdGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_geometry.layerId");
-      glUniform1i(layerIdGeometryId, lightDetails.textureArrayLayerId);
-      const auto layerIdFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "lightDetails_fragment.layerId");
-      glUniform1i(layerIdFragmentId, lightDetails.textureArrayLayerId);
-
-      // Get the uniform ID of the near plane of the light variable and set it.
-      const auto nearPlaneVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_vertex.nearPlane");
-      glUniform1f(nearPlaneVertexId, lightDetails.nearPlane);
-      const auto nearPlaneGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_geometry.nearPlane");
-      glUniform1f(nearPlaneGeometryId, lightDetails.nearPlane);
-      const auto nearPlaneFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_fragment.nearPlane");
-      glUniform1f(nearPlaneFragmentId, lightDetails.nearPlane);
-
-      // Get the uniform ID of the far plane of the light variable and set it.
-      const auto farPlaneVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_vertex.farPlane");
-      glUniform1f(farPlaneVertexId, lightDetails.farPlane);
-      const auto farPlaneGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_geometry.farPlane");
-      glUniform1f(farPlaneGeometryId, lightDetails.farPlane);
-      const auto farPlaneFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "projectionDetails_fragment.farPlane");
-      glUniform1f(farPlaneFragmentId, lightDetails.farPlane);
-
-      // Iterate through the view matrices of the light.
-      for (unsigned long i = 0; i < viewMatrices.size(); i++)
+      // Iterate through all the lights in the scene.
+      for (unsigned long i = 0; i < lights.second.size(); i++)
       {
-        // Calculate the projection-view matrix.
-        const auto vpMatrix = projectionMatrices[i] * viewMatrices[i];
-        // Get the uniform ID of the projection-view matrix of the light variable and set it.
-        const auto vpMatrixVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_vertex.vpMatrices[" + std::to_string(i) + "]").c_str());
-        glUniformMatrix4fv(vpMatrixVertexId, 1, GL_FALSE, &vpMatrix[0][0]);
-        const auto vpMatrixGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_geometry.vpMatrices[" + std::to_string(i) + "]").c_str());
-        glUniformMatrix4fv(vpMatrixGeometryId, 1, GL_FALSE, &vpMatrix[0][0]);
-        const auto vpMatrixFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_fragment.vpMatrices[" + std::to_string(i) + "]").c_str());
-        glUniformMatrix4fv(vpMatrixFragmentId, 1, GL_FALSE, &vpMatrix[0][0]);
+        const auto &light = lights.second.at(i);
+
+        if (lightNamesCount.find(light->getLightName()) != lightNamesCount.end())
+        {
+          lightNamesCount[light->getLightName()]++;
+        }
+        else
+        {
+          lightNamesCount[light->getLightName()] = 1;
+          lightNamesProcessTime[light->getLightName()] = 0.0;
+        }
+
+        // Get the type of the shadow.
+        const auto shadowType = light->getShadowBufferDetails()->getShadowBufferType();
+        // Generate a structure detailing information about the light.
+        const LightDetails lightDetails = {
+            light->getLightPosition(),
+            light->getProjectionMatrices()[0] * light->getViewMatrices()[0] * glm::mat4(),
+            light->getLightColor(),
+            light->getLightIntensity(),
+            FRAMEBUFFER_WIDTH,
+            FRAMEBUFFER_WIDTH,
+            light->getLightNearPlane(),
+            light->getLightFarPlane(),
+            light->getShadowBufferDetails()->getShadowBufferTextureArrayLayerId()};
+        // Store the light details in the categorized map.
+        categorizedLightDetails.at(shadowType).push_back(lightDetails);
+
+        // If shadows are disabled, skip the shadowmap render step.
+        if (disableFeatureMask >= DISABLE_SHADOW)
+        {
+          continue;
+        }
+
+        // Get the view and projection matrices of the light.
+        const auto viewMatrices = light->getViewMatrices();
+        const auto projectionMatrices = light->getProjectionMatrices();
+
+        // Get the uniform ID of the count of the projection-view matrix variable and set it.
+        const auto vpMatrixCountVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_vertex[" + std::to_string(i) + "].vpMatrixCount").c_str());
+        glUniform1i(vpMatrixCountVertexId, viewMatrices.size());
+        const auto vpMatrixCountGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_geometry[" + std::to_string(i) + "].vpMatrixCount").c_str());
+        glUniform1i(vpMatrixCountGeometryId, viewMatrices.size());
+        const auto vpMatrixCountFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_fragment[" + std::to_string(i) + "].vpMatrixCount").c_str());
+        glUniform1i(vpMatrixCountFragmentId, viewMatrices.size());
+
+        // Get the uniform ID of the light position variable and set it.
+        const auto lightPositionVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_vertex[" + std::to_string(i) + "].lightPosition").c_str());
+        glUniform3f(lightPositionVertexId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+        const auto lightPositionGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_geometry[" + std::to_string(i) + "].lightPosition").c_str());
+        glUniform3f(lightPositionGeometryId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+        const auto lightPositionFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_fragment[" + std::to_string(i) + "].lightPosition").c_str());
+        glUniform3f(lightPositionFragmentId, lightDetails.lightPosition.x, lightDetails.lightPosition.y, lightDetails.lightPosition.z);
+
+        // Get the uniform ID of the lights' shadow map layer ID variable and set it.
+        const auto layerIdVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_vertex[" + std::to_string(i) + "].layerId").c_str());
+        glUniform1i(layerIdVertexId, lightDetails.textureArrayLayerId);
+        const auto layerIdGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_geometry[" + std::to_string(i) + "].layerId").c_str());
+        glUniform1i(layerIdGeometryId, lightDetails.textureArrayLayerId);
+        const auto layerIdFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_fragment[" + std::to_string(i) + "].layerId").c_str());
+        glUniform1i(layerIdFragmentId, lightDetails.textureArrayLayerId);
+
+        // Get the uniform ID of the near plane of the light variable and set it.
+        const auto nearPlaneVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_vertex[" + std::to_string(i) + "].nearPlane").c_str());
+        glUniform1f(nearPlaneVertexId, lightDetails.nearPlane);
+        const auto nearPlaneGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_geometry[" + std::to_string(i) + "].nearPlane").c_str());
+        glUniform1f(nearPlaneGeometryId, lightDetails.nearPlane);
+        const auto nearPlaneFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_fragment[" + std::to_string(i) + "].nearPlane").c_str());
+        glUniform1f(nearPlaneFragmentId, lightDetails.nearPlane);
+
+        // Get the uniform ID of the far plane of the light variable and set it.
+        const auto farPlaneVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_vertex[" + std::to_string(i) + "].farPlane").c_str());
+        glUniform1f(farPlaneVertexId, lightDetails.farPlane);
+        const auto farPlaneGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_geometry[" + std::to_string(i) + "].farPlane").c_str());
+        glUniform1f(farPlaneGeometryId, lightDetails.farPlane);
+        const auto farPlaneFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("projectionDetails_fragment[" + std::to_string(i) + "].farPlane").c_str());
+        glUniform1f(farPlaneFragmentId, lightDetails.farPlane);
+
+        // Iterate through the view matrices of the light.
+        for (unsigned long j = 0; j < viewMatrices.size(); j++)
+        {
+          // Calculate the projection-view matrix.
+          const auto vpMatrix = projectionMatrices[j] * viewMatrices[j];
+          // Get the uniform ID of the projection-view matrix of the light variable and set it.
+          const auto vpMatrixVertexId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_vertex[" + std::to_string(i) + "].vpMatrices[" + std::to_string(j) + "]").c_str());
+          glUniformMatrix4fv(vpMatrixVertexId, 1, GL_FALSE, &vpMatrix[0][0]);
+          const auto vpMatrixGeometryId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_geometry[" + std::to_string(i) + "].vpMatrices[" + std::to_string(j) + "]").c_str());
+          glUniformMatrix4fv(vpMatrixGeometryId, 1, GL_FALSE, &vpMatrix[0][0]);
+          const auto vpMatrixFragmentId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), ("lightDetails_fragment[" + std::to_string(i) + "].vpMatrices[" + std::to_string(j) + "]").c_str());
+          glUniformMatrix4fv(vpMatrixFragmentId, 1, GL_FALSE, &vpMatrix[0][0]);
+        }
       }
+
+      // Get the uniform ID of the lights count variable and set it.
+      const auto lightsCountVertexId = glGetUniformLocation(firstLight->getShaderDetails()->getShaderId(), "lightsCount");
+      glUniform1i(lightsCountVertexId, lights.second.size());
 
       // Iterate through the models in the scene.
       for (const auto &model : modelManager.getAllModels())
@@ -262,7 +284,7 @@ public:
         // Get the model matrix of the model.
         const auto modelMatrix = model->getModelMatrix();
         // Get the uniform ID of the model matrix variable and set it.
-        const auto modelMatrixId = glGetUniformLocation(light->getShaderDetails()->getShaderId(), "modelMatrix");
+        const auto modelMatrixId = glGetUniformLocation(firstLight->getShaderDetails()->getShaderId(), "modelMatrix");
         glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &modelMatrix[0][0]);
 
         // Define a vertex attribute array that contains the vertex position data of the model.
@@ -280,7 +302,7 @@ public:
 
       const auto endTime = glfwGetTime();
 
-      lightNamesProcessTime[light->getLightName()] += (endTime - startTime) * 1000;
+      lightNamesProcessTime[firstLight->getLightName()] += (endTime - startTime) * 1000;
     }
 
     auto height = 21.5;
@@ -292,7 +314,7 @@ public:
     }
 
     // Return the map of the categorized lights.
-    return categorizedLights;
+    return categorizedLightDetails;
   }
 
   /**

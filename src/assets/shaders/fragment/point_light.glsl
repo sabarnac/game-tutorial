@@ -11,16 +11,19 @@
 //   fails to link the two shader components together because their
 //   structures are now different.
 
+#define MAX_LIGHTS 8
+
 // The position of the fragment as interpolated by the GPU from the geometry shader.
 in vec4 fragmentPosition;
+in float lightIndex;
 
 // The structure defining the details regarding the point light.
 struct LightDetails_Fragment
 {
   int layerId;
-	vec3 lightPosition;
-	mat4 vpMatrices[6];
-	int vpMatrixCount;
+  vec3 lightPosition;
+  mat4 vpMatrices[6];
+  int vpMatrixCount;
 };
 
 // The structure defining the details regarding the projection of
@@ -32,20 +35,22 @@ struct ProjectionDetails_Fragment
 };
 
 // The details of the current point light.
-uniform LightDetails_Fragment lightDetails_fragment;
+uniform LightDetails_Fragment lightDetails_fragment[MAX_LIGHTS];
 // The details of the current point light.
-uniform ProjectionDetails_Fragment projectionDetails_fragment;
+uniform ProjectionDetails_Fragment projectionDetails_fragment[MAX_LIGHTS];
 
 void main()
 {
+  int lightIndex_int = int(lightIndex);
+
   // Calculate the distance of the fragment from the light source.
-  float lightDistance = length(fragmentPosition.xyz - lightDetails_fragment.lightPosition);
+  float lightDistance = length(fragmentPosition.xyz - lightDetails_fragment[lightIndex_int].lightPosition);
   
   // Normalize the light distance against the farthest distance the
   //   light can go till (as defined by the far plane).
   // This makes the light distance a percentage value against the max
   //   distance the light can travel.
-  lightDistance = lightDistance / projectionDetails_fragment.farPlane;
+  lightDistance = lightDistance / projectionDetails_fragment[lightIndex_int].farPlane;
   
   // Set the fragment depth to the normalized light distance. This
   //   makes it easier to process the shadow map.
