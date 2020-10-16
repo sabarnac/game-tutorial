@@ -181,14 +181,19 @@ public:
     // Update the shot light.
     updateShotLight();
 
-    // Get the list of registered models.
-    const auto models = modelManager.getAllModels();
-    // Iterate over the list of registered models.
-    for (const auto &model : models)
+    if (currentPosition.z < 0.6)
     {
-      // Check if the current model is an enemy model.
-      if (model->getModelName() == "Enemy")
+      // Get the list of registered models.
+      const auto models = modelManager.getAllModels();
+      // Iterate over the list of registered models.
+      for (const auto &model : models)
       {
+        // Check if the current model is an enemy model.
+        if (model->getModelName() != "Enemy")
+        {
+          continue;
+        }
+
         // Check if collided with the enemy model.
         if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
         {
