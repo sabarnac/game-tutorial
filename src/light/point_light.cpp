@@ -94,7 +94,7 @@ public:
   const static std::shared_ptr<PointLight> create(const std::string &lightId)
   {
     return std::make_shared<PointLight>(lightId);
-  };
+  }
 };
 
 #endif

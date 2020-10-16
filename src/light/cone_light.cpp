@@ -119,7 +119,7 @@ public:
   const static std::shared_ptr<ConeLight> create(const std::string &lightId)
   {
     return std::make_shared<ConeLight>(lightId);
-  };
+  }
 };
 
 #endif

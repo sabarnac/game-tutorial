@@ -60,7 +60,7 @@ private:
   {
     // Create first eye light and set its properties.
     eyeLight1 = ConeLight::create(getModelId() + "::EyeLight1");
-    eyeLight1->setLightPosition(glm::vec3(position.x - 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight1->setLightPosition(glm::vec3(position.x + 2.12, position.y - 0.089, position.z - 2.5));
     eyeLight1->setLightAngles(glm::pi<double_t>(), 0.0);
     eyeLight1->setLightIntensity(350.0);
     // Register the first eye light.
@@ -68,7 +68,7 @@ private:
 
     // Create first eye light and set its properties.
     eyeLight2 = ConeLight::create(getModelId() + "::EyeLight2");
-    eyeLight2->setLightPosition(glm::vec3(position.x + 0.35, position.y + 0.25, position.z - 1.0));
+    eyeLight1->setLightPosition(glm::vec3(position.x - 2.12, position.y - 0.089, position.z - 2.5));
     eyeLight2->setLightAngles(glm::pi<double_t>(), 0.0);
     eyeLight2->setLightIntensity(350.0);
     // Register the first eye light.
@@ -99,8 +99,8 @@ private:
     if (isEyeLightPresent)
     {
       // Update the eye lights.
-      eyeLight1->setLightPosition(glm::vec3(newPosition.x - 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
-      eyeLight2->setLightPosition(glm::vec3(newPosition.x + 0.35, newPosition.y + 0.25, newPosition.z - 1.0));
+      eyeLight1->setLightPosition(glm::vec3(newPosition.x - 2.12, newPosition.y - 0.089, newPosition.z - 2.5));
+      eyeLight2->setLightPosition(glm::vec3(newPosition.x + 2.12, newPosition.y - 0.089, newPosition.z - 2.5));
     }
   }
 
@@ -110,10 +110,10 @@ public:
             modelId,
             "Player",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-            "assets/objects/monkey.obj",
-            "assets/textures/player.bmp",
+            "assets/objects/spaceship.obj",
+            "assets/textures/spaceship.bmp",
             "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
-            ColliderShapeType::SPHERE),
+            ColliderShapeType::BOX),
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
@@ -127,13 +127,12 @@ public:
   const static std::shared_ptr<PlayerModel> create(const std::string &modelId)
   {
     return std::make_shared<PlayerModel>(modelId);
-  };
+  }
 
   void init() override
   {
     // Set the rotation of the model.
     setModelPosition(glm::vec3(0.0, 0.0, 30.0));
-    setModelRotation(glm::vec3(glm::pi<double_t>() / 2, glm::pi<double_t>(), 0));
 
     // Check if eye light toggle is enabled.
     if (isEyeLightPresent)
@@ -195,11 +194,11 @@ public:
     updateEyeLight(newPosition);
 
     // Check if "Space" key was pressed after 500ms since the last shot creation.
-    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.25)
+    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.17)
     {
       // "Space" was pressed. Create a new shot and set its properties.
       const auto newShot = ShotModel::create("Shot" + std::to_string(shotId));
-      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y, newPosition.z - 1.0));
+      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y - 0.05, newPosition.z - 2.225));
       // Register the shot model.
       modelManager.registerModel(newShot);
 

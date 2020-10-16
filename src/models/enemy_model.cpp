@@ -51,7 +51,7 @@ public:
   const static std::shared_ptr<EnemyModel> create(const std::string &modelId)
   {
     return std::make_shared<EnemyModel>(modelId);
-  };
+  }
 
   void update() override
   {

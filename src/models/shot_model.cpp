@@ -124,12 +124,12 @@ public:
   const static std::shared_ptr<ShotModel> create(const std::string &modelId)
   {
     return std::make_shared<ShotModel>(modelId);
-  };
+  }
 
   void init() override
   {
     // Set the scale of the model.
-    setModelScale(glm::vec3(0.5));
+    setModelScale(glm::vec3(0.25));
 
     // Check if shot light toggle is enabled.
     if (isShotLightPresent)
@@ -177,7 +177,7 @@ public:
     }
 
     // Update the shot position.
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 80.0 * deltaTime));
+    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 120.0 * deltaTime));
     // Update the shot light.
     updateShotLight();
 
@@ -190,6 +190,11 @@ public:
       {
         // Check if the current model is an enemy model.
         if (model->getModelName() != "Enemy")
+        {
+          continue;
+        }
+
+        if (glm::distance(model->getModelPosition(), currentPosition) > 1.5)
         {
           continue;
         }

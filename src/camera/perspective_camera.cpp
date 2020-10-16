@@ -221,7 +221,7 @@ public:
   const static std::shared_ptr<PerspectiveCamera> create(const std::string &cameraId)
   {
     return std::make_shared<PerspectiveCamera>(cameraId);
-  };
+  }
 
   /**
    * Calculates and returns the projection matrix of the camera.
