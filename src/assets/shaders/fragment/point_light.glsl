@@ -11,7 +11,7 @@
 //   fails to link the two shader components together because their
 //   structures are now different.
 
-#define MAX_LIGHTS 8
+#define MAX_LIGHTS 6
 
 // The position of the fragment as interpolated by the GPU from the geometry shader.
 in vec4 fragmentPosition;

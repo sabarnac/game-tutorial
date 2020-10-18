@@ -17,7 +17,7 @@
 //   variable is kept as is, or completely removed.
 
 #define MAX_SIMPLE_LIGHTS 2
-#define MAX_CUBE_LIGHTS 6
+#define MAX_CUBE_LIGHTS 4
 
 // The UV coordinates of the diffuse color of the fragment in the standard object texture.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.
@@ -101,7 +101,7 @@ float pointLightAcneBias = 0.05;
 // The specular values to use that define specular reflectivity and the lobe size.
 // This could also be passed using a specular map, which would also allow to define
 //   these values at a per-fragment level.
-float specularReflectivity = 1.25;
+float specularReflectivity = 0.5;
 float specularLobeFactor = 3.5;
 
 // The mask flags for disabling shadows and lighting.
