@@ -62,6 +62,6 @@ public:
 
 std::mt19937 EnemyModel::mtGenerator = std::mt19937(std::clock());
 std::uniform_real_distribution<double_t> EnemyModel::mtInitialRotationDistribution = std::uniform_real_distribution<double_t>(0.0, 359.0);
-std::uniform_real_distribution<double_t> EnemyModel::mtRotationSpeedDistribution = std::uniform_real_distribution<double_t>(0.0, 5.0);
+std::uniform_real_distribution<double_t> EnemyModel::mtRotationSpeedDistribution = std::uniform_real_distribution<double_t>(1.0, 5.0);
 
 #endif
