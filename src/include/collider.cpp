@@ -15,6 +15,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -199,7 +200,9 @@ public:
 enum ColliderShapeType
 {
   SPHERE = 0,
-  BOX = 1 // This box is NOT axis-aligned.
+  BOX = 1, // This box is NOT axis-aligned.
+  CYLINDER = 2,
+  PILL = 3
 };
 
 /**
@@ -603,7 +606,7 @@ public:
   }
 
   /**
-   * Update the corners of the collider boxusing the given opposite corners for the new box.
+   * Update the corners of the collider box using the given opposite corners for the new box.
    * 
    * @param newOppositeCorner1  The first corner among the opposite corner pair.
    * @param newOppositeCorner2  The second corner among the opposite corner pair.
@@ -627,6 +630,178 @@ public:
     corners = createCorners(newVertices);
     // Generate the new base AABB of the collider.
     updateBaseBox(createBaseBox(corners));
+  }
+};
+
+/**
+ * A collider that has the shape of a sphere.
+ */
+class CylinderColliderShape : public ColliderShape
+{
+private:
+  // The radius of the collider.
+  double_t radius;
+  // The half-height of the collider.
+  double_t halfHeight;
+
+  /**
+   * Creates the colliders' base AABB using the radius and half-height of the cylinder.
+   * 
+   * @param radius  The radius of the cylinder.
+   * @param radius  The half-height of the cylinder.
+   * 
+   * @return The collider base AABB.
+   */
+  const std::shared_ptr<const AxisAlignedBoundingBox> createBaseBox(const double_t radius, const double_t halfHeight)
+  {
+    // Generates the base AABB by using the negative and positive values of the radius and half-height to get the min/max-corners of the AABB.
+    return std::make_shared<AxisAlignedBoundingBox>(glm::vec3(-radius, -halfHeight, -radius), glm::vec3(radius, halfHeight, radius));
+  }
+
+  /**
+   * Calculates the radius of the collider cylinder using the given vertices of the model.
+   * 
+   * @param vertices  The vertices of the model.
+   * 
+   * @return The radius of the cylinder.
+   */
+  const double_t calculateRadius(const std::vector<glm::vec3> &vertices)
+  {
+    // Set the min-corner to the first vertex in the list.
+    glm::vec3 minCorner = vertices[0];
+    // Set the max-corner to the first vertex in the list.
+    glm::vec3 maxCorner = vertices[0];
+
+    // Iterate through all the vertices.
+    for (const auto &vertex : vertices)
+    {
+      // For each axis of a vertex coordinate...
+      for (auto axis = 0; axis < 3; axis++)
+      {
+        // Store that value if it is the lowest/highest value observed so far.
+        minCorner[axis] = glm::min(minCorner[axis], vertex[axis]);
+        maxCorner[axis] = glm::max(maxCorner[axis], vertex[axis]);
+      }
+    }
+
+    const auto furthestDistances = std::vector<double_t>({std::abs(minCorner.x), std::abs(minCorner.z), std::abs(maxCorner.x), std::abs(maxCorner.z)});
+    auto radius = furthestDistances[0];
+    for (const auto &distance : furthestDistances)
+    {
+      radius = std::max(radius, distance);
+    }
+
+    // Return the radius of the cylinder.
+    return radius;
+  }
+
+  /**
+   * Calculates the half-height of the collider cylinder using the given vertices of the model.
+   * 
+   * @param vertices  The vertices of the model.
+   * 
+   * @return The half-height of the cylinder.
+   */
+  const double_t calculateHalfHeight(const std::vector<glm::vec3> &vertices)
+  {
+    // Set the min-corner to the first vertex in the list.
+    glm::vec3 minCorner = vertices[0];
+    // Set the max-corner to the first vertex in the list.
+    glm::vec3 maxCorner = vertices[0];
+
+    // Iterate through all the vertices.
+    for (const auto &vertex : vertices)
+    {
+      // For each axis of a vertex coordinate...
+      for (auto axis = 0; axis < 3; axis++)
+      {
+        // Store that value if it is the lowest/highest value observed so far.
+        minCorner[axis] = glm::min(minCorner[axis], vertex[axis]);
+        maxCorner[axis] = glm::max(maxCorner[axis], vertex[axis]);
+      }
+    }
+
+    // Return the half-height of the cylinder.
+    return std::max(std::abs(minCorner.y), std::abs(minCorner.y));
+  }
+
+public:
+  CylinderColliderShape(
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const double_t &radius,
+      const double_t &halfHeight)
+      : ColliderShape(
+            ColliderShapeType::CYLINDER,
+            position,
+            rotation,
+            scale,
+            createBaseBox(radius, halfHeight)),
+        radius(radius),
+        halfHeight(halfHeight) {}
+
+  CylinderColliderShape(
+      const glm::vec3 &position,
+      const glm::vec3 &rotation,
+      const glm::vec3 &scale,
+      const std::vector<glm::vec3> &vertices)
+      : radius(calculateRadius(vertices)),
+        halfHeight(calculateHalfHeight(vertices)),
+        ColliderShape(
+            ColliderShapeType::BOX,
+            position,
+            rotation,
+            scale,
+            createBaseBox(calculateRadius(vertices), calculateHalfHeight(vertices))) {}
+
+  /**
+   * Get the radius of the collider cylinder.
+   * 
+   * @return The radius.
+   */
+  const double_t &getRadius() const
+  {
+    return radius;
+  }
+
+  /**
+   * Get the half-height of the collider cylinder.
+   * 
+   * @return The half-height.
+   */
+  const double_t &getHalfHeight() const
+  {
+    return halfHeight;
+  }
+
+  /**
+   * Update the radius and half-height of the collider cylinder using the given radius and half-height of the new cylinder.
+   * 
+   * @param newRadius  The radius of the cylinder.
+   * @param newHalfHeight  The half-height of the cylinder.
+   */
+  void update(const double_t &newRadius, const double_t &newHalfHeight)
+  {
+    radius = newRadius;
+    halfHeight = newHalfHeight;
+    // Generate the new base AABB of the collider.
+    updateBaseBox(createBaseBox(newRadius, newHalfHeight));
+  }
+
+  /**
+   * Update the corners of the collider cylinder using the given list of vertices of the model.
+   * 
+   * @param newVertices  The list vertices of the model to use to calculate the new radius and half-height.
+   */
+  void update(const std::vector<glm::vec3> &newVertices)
+  {
+    // Generate the new radius of the cylinder using the given vertices of the model.
+    radius = calculateRadius(newVertices);
+    // Generate the new half-height of the cylinder using the given vertices of the model.
+    halfHeight = calculateHalfHeight(newVertices);
+    // Generate the new base AABB of the collider.
+    updateBaseBox(createBaseBox(radius, halfHeight));
   }
 };
 
@@ -658,41 +833,16 @@ private:
   }
 
   /**
-   * Check if a box collider and a spehere collider have interesected/collided with each other.
+   * Check if two cylinder colliders have interesected/collided with each other.
    * 
-   * @param box     The box collider.
-   * @param sphere  The sphere collider.
+   * @param cylinder1  The first cylinder collider.
+   * @param cylinder2  The second cylinder collider.
    * 
-   * @return Whether the box and sphere colliders have collided or not.
+   * @return Whether the two cylinder colliders have collided or not.
    */
-  static bool haveBoxSphereCollided(const std::shared_ptr<const BoxColliderShape> &box, const std::shared_ptr<const SphereColliderShape> &sphere)
+  static bool haveCylinderCylinderCollided(const std::shared_ptr<const CylinderColliderShape> &cylinder1, const std::shared_ptr<const CylinderColliderShape> &cylinder2)
   {
-    // Get the transformation matrix of the collider box.
-    const auto boxTransformationMatrix = glm::translate(box->getPosition()) * glm::toMat4(glm::quat(box->getRotation())) * glm::scale(box->getScale()) * glm::mat4();
-    // Calculate the inverse of the boxes' transformation matrix.
-    const auto boxInverseTransformationMatrix = glm::inverse(boxTransformationMatrix);
-    // Create an AABB using the corners of the box (doing this just as a way to get the min/max-corners).
-    const AxisAlignedBoundingBox boxAABB(box->getCorners());
-    // Get the min-corner of the box.
-    const auto boxAABBMinCorners = boxAABB.getMinCorner();
-    // Get the max-corner of the box.
-    const auto boxAABBMaxCorners = boxAABB.getMaxCorner();
-
-    // Calculate the scaled radius of the collider sphere based on the scale of the collider.
-    const auto sphereScaledRadius = sphere->getRadius() * sphere->getScale().x;
-    // Calculate the position of the wphere w.r.t the box using the boxes' inverse transformation matrix.
-    const auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
-    // Calculate the point on the box that is closest to the sphere.
-    const auto boxPointClosesToSphere = glm::vec3(
-        glm::max(boxAABBMinCorners.x, glm::min(spherePositionInBoxSpace.x, boxAABBMaxCorners.x)),
-        glm::max(boxAABBMinCorners.y, glm::min(spherePositionInBoxSpace.y, boxAABBMaxCorners.y)),
-        glm::max(boxAABBMinCorners.z, glm::min(spherePositionInBoxSpace.z, boxAABBMaxCorners.z)));
-    // Calculate the distance between the boxes' closest point and the center of the sphere.
-    const auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
-
-    // If the distance between the closest point on the box and the center of the sphere is greater than the radius of the sphere,
-    //   then the two have not collided.
-    return distanceBetweenClosestBoxPointAndSphereCenter <= sphereScaledRadius;
+    return false;
   }
 
   /**
@@ -782,6 +932,44 @@ private:
 
     // No collision has been detected, so return false.
     return false;
+  }
+
+  /**
+   * Check if a box collider and a spehere collider have interesected/collided with each other.
+   * 
+   * @param box     The box collider.
+   * @param sphere  The sphere collider.
+   * 
+   * @return Whether the box and sphere colliders have collided or not.
+   */
+  static bool haveBoxSphereCollided(const std::shared_ptr<const BoxColliderShape> &box, const std::shared_ptr<const SphereColliderShape> &sphere)
+  {
+    // Get the transformation matrix of the collider box.
+    const auto boxTransformationMatrix = glm::translate(box->getPosition()) * glm::toMat4(glm::quat(box->getRotation())) * glm::scale(box->getScale());
+    // Calculate the inverse of the boxes' transformation matrix.
+    const auto boxInverseTransformationMatrix = glm::inverse(boxTransformationMatrix);
+    // Create an AABB using the corners of the box (doing this just as a way to get the min/max-corners).
+    const AxisAlignedBoundingBox boxAABB(box->getCorners());
+    // Get the min-corner of the box.
+    const auto boxAABBMinCorners = boxAABB.getMinCorner();
+    // Get the max-corner of the box.
+    const auto boxAABBMaxCorners = boxAABB.getMaxCorner();
+
+    // Calculate the scaled radius of the collider sphere based on the scale of the collider.
+    const auto sphereScaledRadius = glm::length(glm::inverse(glm::scale(box->getScale())) * glm::scale(sphere->getScale()) * glm::vec4(glm::vec3(sphere->getRadius()), 1.0));
+    // Calculate the position of the wphere w.r.t the box using the boxes' inverse transformation matrix.
+    const auto spherePositionInBoxSpace = glm::vec3(boxInverseTransformationMatrix * glm::vec4(sphere->getPosition(), 1.0));
+    // Calculate the point on the box that is closest to the sphere.
+    const auto boxPointClosesToSphere = glm::vec3(
+        glm::max(boxAABBMinCorners.x, glm::min(spherePositionInBoxSpace.x, boxAABBMaxCorners.x)),
+        glm::max(boxAABBMinCorners.y, glm::min(spherePositionInBoxSpace.y, boxAABBMaxCorners.y)),
+        glm::max(boxAABBMinCorners.z, glm::min(spherePositionInBoxSpace.z, boxAABBMaxCorners.z)));
+    // Calculate the distance between the boxes' closest point and the center of the sphere.
+    const auto distanceBetweenClosestBoxPointAndSphereCenter = glm::distance(boxPointClosesToSphere, spherePositionInBoxSpace);
+
+    // If the distance between the closest point on the box and the center of the sphere is greater than the radius of the sphere,
+    //   then the two have not collided.
+    return distanceBetweenClosestBoxPointAndSphereCenter <= sphereScaledRadius;
   }
 
 public:

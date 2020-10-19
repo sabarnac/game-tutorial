@@ -130,7 +130,7 @@ public:
 
       const auto mvpMatrix = projectionMatrix * viewMatrix * glm::translate(light->getLightPosition()) * glm::mat4();
       glUniformMatrix4fv(mvpMatrixId, 1, GL_FALSE, &mvpMatrix[0][0]);
-      glUniform1f(radiusId, 0.5);
+      glUniform1f(radiusId, light->getLightNearPlane());
       glUniform4f(lineColorId, debugColor3.r, debugColor3.g, debugColor3.b, debugColor3.a);
 
       VertexAttributeArray vertexArray("VertexArray", sphereDetails->getVertexBufferId(), 3);

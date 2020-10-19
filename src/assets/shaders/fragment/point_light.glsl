@@ -44,15 +44,15 @@ void main()
   int lightIndex_int = int(lightIndex);
 
   // Calculate the distance of the fragment from the light source.
-  float lightDistance = length(fragmentPosition.xyz - lightDetails_fragment[lightIndex_int].lightPosition);
+  float originalLightDistance = length(fragmentPosition.xyz - lightDetails_fragment[lightIndex_int].lightPosition);
   
   // Normalize the light distance against the farthest distance the
   //   light can go till (as defined by the far plane).
   // This makes the light distance a percentage value against the max
   //   distance the light can travel.
-  lightDistance = lightDistance / projectionDetails_fragment[lightIndex_int].farPlane;
+  float lightDistance = originalLightDistance / projectionDetails_fragment[lightIndex_int].farPlane;
   
   // Set the fragment depth to the normalized light distance. This
   //   makes it easier to process the shadow map.
-  gl_FragDepth = lightDistance;
+  gl_FragDepth = (step(originalLightDistance, projectionDetails_fragment[lightIndex_int].nearPlane) * projectionDetails_fragment[lightIndex_int].farPlane) + lightDistance;
 }

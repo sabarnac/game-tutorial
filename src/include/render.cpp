@@ -343,6 +343,8 @@ public:
 
     auto modelNamesCount = std::map<const std::string, int>({});
     auto modelNamesProcessTime = std::map<const std::string, double>({});
+    auto modelNamesPolygonCount = std::map<const std::string, long>({});
+    auto totalPolygons = 0l;
 
     // Iterate through all the models in the scene.
     for (const auto &model : modelManager.getAllModels())
@@ -521,19 +523,21 @@ public:
 
       // Draw the triangles of the model.
       glDrawArrays(GL_TRIANGLES, 0, model->getObjectDetails()->getBufferSize());
-
       const auto endTime = glfwGetTime();
 
       modelNamesProcessTime[model->getModelName()] += (endTime - startTime) * 1000;
+      modelNamesPolygonCount[model->getModelName()] = model->getObjectDetails()->getBufferSize() / 3;
+      totalPolygons += model->getObjectDetails()->getBufferSize() / 3;
     }
 
     auto height = 23.0;
     for (const auto &modelCounts : modelNamesCount)
     {
       const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
-      textManager.addText(modelCounts.first + " Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
+      textManager.addText(modelCounts.first + " Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms | Polygon Count: " + std::to_string(modelNamesPolygonCount[modelCounts.first]), glm::vec2(1, height), 0.5);
       height -= 0.5;
     }
+    textManager.addText("Total Polygons: " + std::to_string(totalPolygons), glm::vec2(1, 12.5), 0.5);
   }
 
   /**

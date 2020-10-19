@@ -38,6 +38,8 @@ private:
   // The control manager responsible for managing controls and inputs of the window.
   const ControlManager &controlManager;
 
+  double_t rotationSpeedZ;
+
   // The timestamp of the last time the update for the camera was started.
   double_t lastTime;
 
@@ -54,7 +56,7 @@ private:
 
     // Create shot light and set its properties.
     shotLight = PointLight::create(getModelId() + "::ShotLight");
-    shotLight->setLightPosition(getModelPosition());
+    shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0, 0.0, 0.75));
 
     // Register the shot light.
     lightManager.registerLight(shotLight);
@@ -94,7 +96,7 @@ private:
         createShotLight();
       }
       // Update the shot light.
-      shotLight->setLightPosition(getModelPosition());
+      shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0, 0.0, 0.75));
     }
     // Check if shot light exists.
     else if (shotLight != nullptr)
@@ -110,13 +112,14 @@ public:
             modelId,
             "Shot",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-            "assets/objects/sphere.obj",
+            "assets/objects/shot.obj",
             "assets/textures/shot.bmp",
             "assets/shaders/vertex/shot.glsl", "assets/shaders/fragment/shot.glsl",
-            ColliderShapeType::SPHERE),
+            ColliderShapeType::BOX),
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
+        rotationSpeedZ(glm::radians(5.0)),
         lastTime(glfwGetTime()),
         shotLight(nullptr) {}
 
@@ -131,7 +134,9 @@ public:
   void init() override
   {
     // Set the scale of the model.
-    setModelScale(glm::vec3(0.25));
+    setModelScale(glm::vec3(0.075));
+    // Set the rotation of the model.
+    setModelRotation(glm::vec3(0.0, glm::radians(180.0), 0.0));
 
     // Check if shot light toggle is enabled.
     if (isShotLightPresent)
@@ -178,41 +183,45 @@ public:
       lastShotLightChange = currentTime;
     }
 
-    const auto timeSlices = 32;
+    const auto timeSlices = 12;
     for (auto i = 0; i < timeSlices; i++)
     {
       // Update the shot position.
       setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, (shotSpeed * deltaTime) / timeSlices));
 
-      if (currentPosition.z < 0.75)
+      if (currentPosition.z > 1.5)
       {
-        // Get the list of registered models.
-        const auto models = modelManager.getAllModels();
-        // Iterate over the list of registered models.
-        for (const auto &model : models)
+        continue;
+      }
+
+      // Get the list of registered models.
+      const auto models = modelManager.getAllModels();
+      // Iterate over the list of registered models.
+      for (const auto &model : models)
+      {
+        // Check if the current model is an enemy model.
+        if (model->getModelName() != "Enemy")
         {
-          // Check if the current model is an enemy model.
-          if (model->getModelName() != "Enemy")
-          {
-            continue;
-          }
+          continue;
+        }
 
-          if (glm::distance(model->getModelPosition(), currentPosition) > 2.0)
-          {
-            continue;
-          }
+        if (glm::distance(model->getModelPosition(), currentPosition) > 3.0)
+        {
+          continue;
+        }
 
-          // Check if collided with the enemy model.
-          if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
-          {
-            // Shot has collided with an enemy. Destroy both.
-            modelManager.deregisterModel(model);
-            modelManager.deregisterModel(this->getModelId());
-            return;
-          }
+        // Check if collided with the enemy model.
+        if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
+        {
+          // Shot has collided with an enemy. Destroy both.
+          modelManager.deregisterModel(model);
+          modelManager.deregisterModel(this->getModelId());
+          return;
         }
       }
     }
+
+    setModelRotation(getModelRotation() - glm::vec3(0.0, 0.0, rotationSpeedZ));
 
     // Update the shot light.
     updateShotLight();
