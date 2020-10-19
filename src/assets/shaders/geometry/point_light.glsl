@@ -14,7 +14,7 @@
 //   because there is no structure to change. Either the entire
 //   variable is kept as is, or completely removed.
 
-#define MAX_LIGHTS 4
+#define MAX_LIGHTS 5
 
 // The type of the primitive being accepted by the geometry shader.
 layout (triangles) in;

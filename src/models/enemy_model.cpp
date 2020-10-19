@@ -26,9 +26,7 @@ private:
 
   ModelManager &modelManager;
 
-  double_t rotationSpeedX;
   double_t rotationSpeedY;
-  double_t rotationSpeedZ;
 
   double_t lastTime;
 
@@ -37,15 +35,13 @@ public:
       : ModelBase(
             modelId,
             "Enemy",
-            glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(mtInitialRotationDistribution(mtGenerator), mtInitialRotationDistribution(mtGenerator), mtInitialRotationDistribution(mtGenerator)), glm::vec3(1.0f, 1.0f, 1.0f),
-            "assets/objects/cube.obj",
-            "assets/textures/cube.bmp",
+            glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, mtInitialRotationDistribution(mtGenerator), 0.0), glm::vec3(1.0f, 1.0f, 1.0f),
+            "assets/objects/sphere-saw.obj",
+            "assets/textures/sphere-saw.bmp",
             "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
-            ColliderShapeType::BOX),
+            ColliderShapeType::SPHERE),
         modelManager(ModelManager::getInstance()),
-        rotationSpeedX(mtRotationSpeedDistribution(mtGenerator)),
         rotationSpeedY(mtRotationSpeedDistribution(mtGenerator)),
-        rotationSpeedZ(mtRotationSpeedDistribution(mtGenerator)),
         lastTime(glfwGetTime()) {}
 
   const static std::shared_ptr<EnemyModel> create(const std::string &modelId)
@@ -58,7 +54,7 @@ public:
     const auto currentTime = glfwGetTime();
     const auto deltaTime = currentTime - lastTime;
 
-    setModelRotation(getModelRotation() - glm::vec3(rotationSpeedX * deltaTime, rotationSpeedY * deltaTime, rotationSpeedZ * deltaTime));
+    setModelRotation(getModelRotation() - glm::vec3(0.0, rotationSpeedY * deltaTime, 0.0));
 
     lastTime = currentTime;
   }

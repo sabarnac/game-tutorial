@@ -178,13 +178,13 @@ public:
       lastShotLightChange = currentTime;
     }
 
-    const auto timeSlices = 16;
-    for (auto i = 1; i <= timeSlices; i++)
+    const auto timeSlices = 32;
+    for (auto i = 0; i < timeSlices; i++)
     {
       // Update the shot position.
       setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, (shotSpeed * deltaTime) / timeSlices));
 
-      if (currentPosition.z < 0.6)
+      if (currentPosition.z < 0.75)
       {
         // Get the list of registered models.
         const auto models = modelManager.getAllModels();
@@ -197,7 +197,7 @@ public:
             continue;
           }
 
-          if (glm::distance(model->getModelPosition(), currentPosition) > 1.5)
+          if (glm::distance(model->getModelPosition(), currentPosition) > 2.0)
           {
             continue;
           }

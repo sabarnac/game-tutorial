@@ -15,7 +15,7 @@
 //   variable is kept as is, or completely removed.
 
 #define MAX_SIMPLE_LIGHTS 2
-#define MAX_CUBE_LIGHTS 4
+#define MAX_CUBE_LIGHTS 5
 
 // The vertex position attribute of the model.
 layout(location = 0) in vec3 vertexPosition;

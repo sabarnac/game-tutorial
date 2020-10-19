@@ -241,10 +241,54 @@ private:
 			{
 				// Line defines the indexes of the vertex information that describes a single face/polygon of the object.
 				// Define a variable for storing the indices to the vertex information stored in the temp vectors.
-				uint32_t vertexIndex[3], uvIndex[3], normalIndex[3];
+				uint32_t vertexIndex[4], uvIndex[4], normalIndex[4];
+
 				// Read the indices to the vertex information.
-				int32_t matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-				if (matches != 9)
+				int32_t matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2], &vertexIndex[3], &uvIndex[3], &normalIndex[3]);
+				if (matches == 12)
+				{
+					// Push the vertex position indices of the face/polygon into the vertex position vector.
+					vertexIndices.push_back(vertexIndex[0]);
+					vertexIndices.push_back(vertexIndex[1]);
+					vertexIndices.push_back(vertexIndex[2]);
+					vertexIndices.push_back(vertexIndex[0]);
+					vertexIndices.push_back(vertexIndex[2]);
+					vertexIndices.push_back(vertexIndex[3]);
+
+					// Push the vertex UV coordinates indices of the face/polygon into the vertex UV coordinates vector.
+					uvIndices.push_back(uvIndex[0]);
+					uvIndices.push_back(uvIndex[1]);
+					uvIndices.push_back(uvIndex[2]);
+					uvIndices.push_back(uvIndex[0]);
+					uvIndices.push_back(uvIndex[2]);
+					uvIndices.push_back(uvIndex[3]);
+
+					// Push the vertex normal vector indices of the face/polygon into the vertex normal vector vector.
+					normalIndices.push_back(normalIndex[0]);
+					normalIndices.push_back(normalIndex[1]);
+					normalIndices.push_back(normalIndex[2]);
+					normalIndices.push_back(normalIndex[0]);
+					normalIndices.push_back(normalIndex[2]);
+					normalIndices.push_back(normalIndex[3]);
+				}
+				else if (matches == 9)
+				{
+					// Push the vertex position indices of the face/polygon into the vertex position vector.
+					vertexIndices.push_back(vertexIndex[0]);
+					vertexIndices.push_back(vertexIndex[1]);
+					vertexIndices.push_back(vertexIndex[2]);
+
+					// Push the vertex UV coordinates indices of the face/polygon into the vertex UV coordinates vector.
+					uvIndices.push_back(uvIndex[0]);
+					uvIndices.push_back(uvIndex[1]);
+					uvIndices.push_back(uvIndex[2]);
+
+					// Push the vertex normal vector indices of the face/polygon into the vertex normal vector vector.
+					normalIndices.push_back(normalIndex[0]);
+					normalIndices.push_back(normalIndex[1]);
+					normalIndices.push_back(normalIndex[2]);
+				}
+				else
 				{
 					// If we don't manage to read all nine coordinates, then this OBJ file is formatted in a way that we can't support. Close the file and time to crash.
 					fclose(file);
@@ -252,21 +296,6 @@ private:
 										<< "Failed at object 2" << std::endl;
 					exit(1);
 				}
-
-				// Push the vertex position indices of the face/polygon into the vertex position vector.
-				vertexIndices.push_back(vertexIndex[0]);
-				vertexIndices.push_back(vertexIndex[1]);
-				vertexIndices.push_back(vertexIndex[2]);
-
-				// Push the vertex UV coordinates indices of the face/polygon into the vertex UV coordinates vector.
-				uvIndices.push_back(uvIndex[0]);
-				uvIndices.push_back(uvIndex[1]);
-				uvIndices.push_back(uvIndex[2]);
-
-				// Push the vertex normal vector indices of the face/polygon into the vertex normal vector vector.
-				normalIndices.push_back(normalIndex[0]);
-				normalIndices.push_back(normalIndex[1]);
-				normalIndices.push_back(normalIndex[2]);
 			}
 			else
 			{

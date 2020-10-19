@@ -17,7 +17,7 @@
 //   variable is kept as is, or completely removed.
 
 #define MAX_SIMPLE_LIGHTS 2
-#define MAX_CUBE_LIGHTS 4
+#define MAX_CUBE_LIGHTS 5
 
 // The UV coordinates of the diffuse color of the fragment in the standard object texture.
 // This is interpolated by the GPU for the fragment when passed from the vertex shader.

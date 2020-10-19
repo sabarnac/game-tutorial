@@ -52,4 +52,4 @@
 
 ## Credits
 
-Thanks to [@Enpitsu_hito](https://twitter.com/enpitsu_hito) for contributing the player model and texture.
+Thanks to [@Enpitsu_hito](https://twitter.com/enpitsu_hito) for creating the player and enemy models.
