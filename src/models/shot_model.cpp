@@ -24,6 +24,8 @@
 class ShotModel : public ModelBase
 {
 private:
+  // The speed of the shot.
+  static double shotSpeed;
   // Whether to show the light or not.
   static bool isShotLightPresent;
   // The timestamp for the last time the shot light was toggled.
@@ -176,45 +178,52 @@ public:
       lastShotLightChange = currentTime;
     }
 
-    // Update the shot position.
-    setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, 120.0 * deltaTime));
-    // Update the shot light.
-    updateShotLight();
-
-    if (currentPosition.z < 0.6)
+    const auto timeSlices = 16;
+    for (auto i = 1; i <= timeSlices; i++)
     {
-      // Get the list of registered models.
-      const auto models = modelManager.getAllModels();
-      // Iterate over the list of registered models.
-      for (const auto &model : models)
+      // Update the shot position.
+      setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, (shotSpeed * deltaTime) / timeSlices));
+
+      if (currentPosition.z < 0.6)
       {
-        // Check if the current model is an enemy model.
-        if (model->getModelName() != "Enemy")
+        // Get the list of registered models.
+        const auto models = modelManager.getAllModels();
+        // Iterate over the list of registered models.
+        for (const auto &model : models)
         {
-          continue;
-        }
+          // Check if the current model is an enemy model.
+          if (model->getModelName() != "Enemy")
+          {
+            continue;
+          }
 
-        if (glm::distance(model->getModelPosition(), currentPosition) > 1.5)
-        {
-          continue;
-        }
+          if (glm::distance(model->getModelPosition(), currentPosition) > 1.5)
+          {
+            continue;
+          }
 
-        // Check if collided with the enemy model.
-        if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
-        {
-          // Shot has collided with an enemy. Destroy both.
-          modelManager.deregisterModel(model);
-          modelManager.deregisterModel(this->getModelId());
-          break;
+          // Check if collided with the enemy model.
+          if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
+          {
+            // Shot has collided with an enemy. Destroy both.
+            modelManager.deregisterModel(model);
+            modelManager.deregisterModel(this->getModelId());
+            return;
+          }
         }
       }
     }
+
+    // Update the shot light.
+    updateShotLight();
 
     // Set the timestamp for the start of the last update to the starting timestamp of the current update.
     lastTime = currentTime;
   }
 };
 
+// Initialize the shot speed static variable.
+double ShotModel::shotSpeed = 120.0;
 // Initialize the shot light toggle static variable.
 bool ShotModel::isShotLightPresent = true;
 // Initialize the last time the shot light toggle was changed static variable.

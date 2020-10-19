@@ -93,12 +93,12 @@ private:
 
   RenderManager()
       : windowManager(WindowManager::getInstance()),
-        textManager(TextManager::getInstance()),
-        controlManager(ControlManager::getInstance()),
-        shadowBufferManager(ShadowBufferManager::getInstance()),
         cameraManager(CameraManager::getInstance()),
         lightManager(LightManager::getInstance()),
         modelManager(ModelManager::getInstance()),
+        textManager(TextManager::getInstance()),
+        controlManager(ControlManager::getInstance()),
+        shadowBufferManager(ShadowBufferManager::getInstance()),
         startTime(glfwGetTime()),
         lastTime(glfwGetTime()),
         disableFeatureMask(0),

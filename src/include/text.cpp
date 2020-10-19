@@ -312,15 +312,12 @@ public:
     std::vector<float_t> characterUvLayers({});
     for (auto &textLine : textToRenderMap)
     {
-      auto bufferExhaused = false;
-
       auto startX = textLine->getPosition().x * TEXT_WIDTH;
       for (auto &ch : textLine->getContent())
       {
         if (characterVertices.size() / (6 * 2) >= MAX_TEXT_CHARS)
         {
-          bufferExhaused = true;
-          break;
+          goto BufferFilled;
         }
 
         const auto textCharacter = characterSet.getCharacter(ch);
@@ -374,12 +371,9 @@ public:
 
         startX += textCharacter.advance * textLine->getScale();
       }
-
-      if (bufferExhaused)
-      {
-        break;
-      }
     }
+
+  BufferFilled:
 
     if (characterVertices.empty())
     {
