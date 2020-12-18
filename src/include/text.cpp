@@ -179,7 +179,7 @@ private:
   const std::string content;
   // The position of the text, with the origin being the bottom-left of the screen.
   const glm::vec2 position;
-  // The normalized scale of the text, where a value of 1.0 is 100% the default size of the text.
+  // The normalized scale of the text, where a value of 1.0f is 100% the default size of the text.
   const float_t scale;
 
 public:
@@ -212,7 +212,7 @@ public:
   }
 
   /**
-   * Get the scale of the text, where a value of 1.0 is 100% the default size of the text.
+   * Get the scale of the text, where a value of 1.0f is 100% the default size of the text.
    * 
    * @return The text scale.
    */
@@ -229,6 +229,7 @@ class TextManager
 {
 private:
   // The shader manager responsible for creating shader programs.
+  WindowManager &windowManager;
   ShaderManager &shaderManager;
 
   static TextManager instance;
@@ -287,12 +288,14 @@ private:
     return newBufferId;
   }
 
-  TextManager() : shaderManager(ShaderManager::getInstance()),
-                  textShader(shaderManager.createShaderProgram("Text", "assets/shaders/vertex/text.glsl", "assets/shaders/fragment/text.glsl")),
-                  textProjectionMatrix(glm::ortho(0.0f, 1.0f * VIEWPORT_WIDTH, 0.0f, 1.0f * VIEWPORT_HEIGHT)),
-                  textVertexBufferId(createTextVertexBuffer()),
-                  textUvBufferId(createTextUvBuffer()),
-                  textUvLayerBufferId(createTextUvLayerBuffer()) {}
+  TextManager()
+      : shaderManager(ShaderManager::getInstance()),
+        windowManager(WindowManager::getInstance()),
+        textShader(shaderManager.createShaderProgram("Text", "assets/shaders/vertex/text.glsl", "assets/shaders/fragment/text.glsl")),
+        textProjectionMatrix(glm::ortho(0.0f, 1.0f * VIEWPORT_WIDTH, 0.0f, 1.0f * VIEWPORT_HEIGHT)),
+        textVertexBufferId(createTextVertexBuffer()),
+        textUvBufferId(createTextUvBuffer()),
+        textUvLayerBufferId(createTextUvLayerBuffer()) {}
 
 public:
   /**
@@ -380,8 +383,7 @@ public:
       return 0;
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    windowManager.enableBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Render text
     glUseProgram(textShader->getShaderId());
@@ -418,7 +420,7 @@ public:
       glDrawArrays(GL_TRIANGLES, 0, characterVertices.size() / 2);
     }
 
-    glDisable(GL_BLEND);
+    windowManager.disableBlending();
 
     clearTextToRenderMap();
 

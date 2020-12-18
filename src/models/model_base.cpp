@@ -19,24 +19,28 @@
 #include "../include/shader.cpp"
 #include "../include/collider.cpp"
 
+#include "model_base_intf.cpp"
+
 /**
  * Base class for creating models.
  */
-class ModelBase
+template <typename T>
+class ModelBase : public ModelBaseIntf
 {
 
 private:
-  // The object manager responsible for creating objects.
-  ObjectManager &objectManager;
-  // The texture manager responsible for creating textures.
-  TextureManager &textureManager;
-  // The shader manager responsible for creating shader programs.
-  ShaderManager &shaderManager;
+  // The name of the model.
+  inline static std::string modelName;
+
+  // The object details of the model.
+  inline static std::shared_ptr<const ObjectDetails> objectDetails;
+  // The texture details of the model.
+  inline static std::shared_ptr<const TextureDetails> textureDetails;
+  // The shader program details of the model.
+  inline static std::shared_ptr<const ShaderDetails> shaderDetails;
 
   // The ID of the model.
   const std::string modelId;
-  // The name of the model.
-  const std::string modelName;
 
   // The position of the model.
   glm::vec3 position;
@@ -47,14 +51,9 @@ private:
 
   // The model matrix of the model.
   glm::mat4 modelMatrix;
-  // The object details of the model.
-  const std::shared_ptr<const ObjectDetails> objectDetails;
-  // The texture details of the model.
-  const std::shared_ptr<const TextureDetails> textureDetails;
-  // The shader program details of the model.
-  const std::shared_ptr<const ShaderDetails> shaderDetails;
+
   // The collider details of the model.
-  const std::shared_ptr<ColliderDetails> colliderDetails;
+  std::shared_ptr<ColliderDetails> colliderDetails;
 
   /**
    * Create the model matrix of the madel.
@@ -85,53 +84,50 @@ private:
 protected:
   ModelBase(
       const std::string &modelId,
-      const std::string &modelName,
       const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-      const std::string &modelObjectFilePath,
-      const std::string &modelTextureFilePath,
-      const std::string &modelVertexShaderFilePath, const std::string &modelFragmentShaderFilePath,
       const std::shared_ptr<ColliderShape> &colliderShape)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
+      : modelId(modelId),
         position(position),
         rotation(rotation),
         scale(scale),
         modelMatrix(createModelMatrix()),
-        objectDetails(objectManager.createObject(modelName + "::Object", modelObjectFilePath)),
-        textureDetails(textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath)),
-        shaderDetails(shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath)),
         colliderDetails(std::make_shared<ColliderDetails>(modelName + "::Collider", colliderShape))
   {
   }
 
   ModelBase(
       const std::string &modelId,
-      const std::string &modelName,
       const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-      const std::string &modelObjectFilePath,
-      const std::string &modelTextureFilePath,
-      const std::string &modelVertexShaderFilePath, const std::string &modelFragmentShaderFilePath,
       const ColliderShapeType &colliderShapeType)
-      : objectManager(ObjectManager::getInstance()),
-        textureManager(TextureManager::getInstance()),
-        shaderManager(ShaderManager::getInstance()),
-        modelId(modelId),
-        modelName(modelName),
+      : modelId(modelId),
         position(position),
         rotation(rotation),
         scale(scale),
         modelMatrix(createModelMatrix()),
-        objectDetails(objectManager.createObject(modelName + "::Object", modelObjectFilePath)),
-        textureDetails(textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath)),
-        shaderDetails(shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath)),
         colliderDetails(createColliderDetails(colliderShapeType))
   {
   }
 
-  virtual ~ModelBase()
+  /**
+   * Initialize the base model dependencies
+   */
+  static void initModelDeps(
+      const std::string &modelName,
+      const std::string &modelObjectFilePath,
+      const std::string &modelTextureFilePath,
+      const std::string &modelVertexShaderFilePath, const std::string &modelFragmentShaderFilePath)
+  {
+    objectDetails = objectManager.createObject(modelName + "::Object", modelObjectFilePath);
+    textureDetails = textureManager.create2dTexture(modelName + "::Texture", modelTextureFilePath);
+    shaderDetails = shaderManager.createShaderProgram(modelName + "::Shader", modelVertexShaderFilePath, modelFragmentShaderFilePath);
+
+    ModelBase::modelName = modelName;
+  }
+
+  /**
+   * De-initialize the model dependencies
+   */
+  static void deinitModelDeps()
   {
     // Destroy the object for the model.
     objectManager.destroyObject(objectDetails);
@@ -157,7 +153,7 @@ public:
    * 
    * @return The model name.
    */
-  const std::string &getModelName() const
+  std::string getModelName() const
   {
     return modelName;
   }
@@ -197,7 +193,7 @@ public:
    * 
    * @return The model object details.
    */
-  const std::shared_ptr<const ObjectDetails> &getObjectDetails() const
+  std::shared_ptr<const ObjectDetails> &getObjectDetails()
   {
     return objectDetails;
   }
@@ -207,7 +203,7 @@ public:
    * 
    * @return The model texture details.
    */
-  const std::shared_ptr<const TextureDetails> &getTextureDetails() const
+  std::shared_ptr<const TextureDetails> &getTextureDetails()
   {
     return textureDetails;
   }
@@ -217,7 +213,7 @@ public:
    * 
    * @return The model shader program details.
    */
-  const std::shared_ptr<const ShaderDetails> &getShaderDetails() const
+  std::shared_ptr<const ShaderDetails> &getShaderDetails()
   {
     return shaderDetails;
   }
@@ -286,21 +282,16 @@ public:
     // Update the model matrix.
     modelMatrix = createModelMatrix();
   }
-
-  /**
-   * Initialize the model once registered.
-   */
-  virtual void init() {}
-
-  /**
-   * De-initialize the model once de-registered.
-   */
-  virtual void deinit() {}
-
-  /**
-   * Update the model during the update step before starting rendering.
-   */
-  virtual void update() {}
 };
+
+template <typename T>
+static std::string modelName;
+
+template <typename T>
+static std::shared_ptr<const ObjectDetails> objectDetails;
+template <typename T>
+static std::shared_ptr<const TextureDetails> textureDetails;
+template <typename T>
+static std::shared_ptr<const ShaderDetails> shaderDetails;
 
 #endif

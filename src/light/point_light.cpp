@@ -24,12 +24,12 @@ private:
   std::vector<glm::mat4> createViewMatrices()
   {
     const auto position = getLightPosition();
-    return std::vector<glm::mat4>({glm::lookAt(position, position + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
-                                   glm::lookAt(position, position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
-                                   glm::lookAt(position, position + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),
-                                   glm::lookAt(position, position + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)),
-                                   glm::lookAt(position, position + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)),
-                                   glm::lookAt(position, position + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0))});
+    return std::vector<glm::mat4>({glm::lookAt(position, position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+                                   glm::lookAt(position, position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+                                   glm::lookAt(position, position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                                   glm::lookAt(position, position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+                                   glm::lookAt(position, position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+                                   glm::lookAt(position, position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))});
   }
 
   /**
@@ -40,14 +40,14 @@ private:
    * 
    * @return The list of projection matrices for the point light.
    */
-  std::vector<glm::mat4> createProjectionMatrices(const double_t &nearPlane, const double_t &farPlane)
+  std::vector<glm::mat4> createProjectionMatrices(const float_t &nearPlane, const float_t &farPlane)
   {
-    return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
-                                   glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
-                                   glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
-                                   glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
-                                   glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane),
-                                   glm::perspective(glm::radians(90.0), 1.0, nearPlane, farPlane)});
+    return std::vector<glm::mat4>({glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane),
+                                   glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane),
+                                   glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane),
+                                   glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane),
+                                   glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane),
+                                   glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane)});
   }
 
 public:
@@ -55,11 +55,11 @@ public:
       : LightBase(
             lightId,
             "Point",
-            glm::vec3(1.0), 100.0,
+            glm::vec3(1.0f), 100.0f,
             "assets/shaders/vertex/light_base.glsl", "assets/shaders/geometry/point_light.glsl", "assets/shaders/fragment/point_light.glsl",
-            glm::vec3(0.0),
-            1.1, 100.0,
-            createViewMatrices(), createProjectionMatrices(0.1, 100.0),
+            glm::vec3(0.0f),
+            1.1f, 100.0f,
+            createViewMatrices(), createProjectionMatrices(0.1f, 100.0f),
             ShadowBufferType::POINT) {}
 
   virtual ~PointLight() {}
@@ -72,7 +72,7 @@ public:
     setViewMatrices(createViewMatrices());
   }
 
-  void setLightNearPlane(const double_t &newNearPlane) override
+  void setLightNearPlane(const float_t &newNearPlane) override
   {
     // Update the light near plane.
     LightBase::setLightNearPlane(newNearPlane);
@@ -80,7 +80,7 @@ public:
     setProjectionMatrices(createProjectionMatrices(newNearPlane, getLightFarPlane()));
   }
 
-  void setLightFarPlane(const double_t &newFarPlane) override
+  void setLightFarPlane(const float_t &newFarPlane) override
   {
     // Update the light far plane.
     LightBase::setLightFarPlane(newFarPlane);

@@ -123,9 +123,10 @@ public:
    * 
    * @param newPosition  The camera position.
    */
-  void setCameraPosition(const glm::vec3 &newPosition)
+  virtual void setCameraPosition(const glm::vec3 &newPosition)
   {
     position = newPosition;
+    CameraBase::update();
   }
 
   /**
@@ -133,9 +134,10 @@ public:
    * 
    * @param newDirection  The camera view direction.
    */
-  void setCameraDirection(const glm::vec3 &newDirection)
+  virtual void setCameraDirection(const glm::vec3 &newDirection)
   {
     direction = newDirection;
+    CameraBase::update();
   }
 
   /**
@@ -143,9 +145,10 @@ public:
    * 
    * @param newUp  The camera up vector.
    */
-  void setCameraUp(const glm::vec3 &newUp)
+  virtual void setCameraUp(const glm::vec3 &newUp)
   {
     up = newUp;
+    CameraBase::update();
   }
 
   /**

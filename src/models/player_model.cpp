@@ -22,7 +22,7 @@
 /**
  * Class that represents a player model.
  */
-class PlayerModel : public ModelBase
+class PlayerModel : public ModelBase<PlayerModel>
 {
 private:
   // The speed of movement with key inputs.
@@ -36,16 +36,16 @@ private:
   const ControlManager &controlManager;
 
   // The timestamp of the last time the update for the camera was started.
-  double_t lastTime;
+  float_t lastTime;
   // The timestamp of the last time a shot was created.
-  double_t lastShot;
+  float_t lastShot;
   // The ID of the last created shot.
   uint32_t shotId;
 
   // Whether to show the eye light or not.
   static bool isEyeLightPresent;
   // The timestamp for the last time the eye light was toggled.
-  static double_t lastEyeLightChange;
+  static float_t lastEyeLightChange;
   // The instance of the first eye light for the player.
   std::shared_ptr<ConeLight> eyeLight1;
   // The instance of the second eye light for the player.
@@ -60,18 +60,20 @@ private:
   {
     // Create first eye light and set its properties.
     eyeLight1 = ConeLight::create(getModelId() + "::EyeLight1");
-    eyeLight1->setLightPosition(glm::vec3(position.x + 2.12, position.y - 0.089, position.z - 2.5));
-    eyeLight1->setLightAngles(glm::pi<double_t>(), 0.0);
-    eyeLight1->setLightIntensity(350.0);
+    eyeLight1->setLightPosition(glm::vec3(position.x + 2.12f, position.y - 0.089f, position.z - 2.5f));
+    eyeLight1->setLightAngles(glm::pi<float_t>(), 0.0f);
+    eyeLight1->setLightIntensity(350.0f);
     // Register the first eye light.
+    eyeLight1->init();
     lightManager.registerLight(eyeLight1);
 
     // Create first eye light and set its properties.
     eyeLight2 = ConeLight::create(getModelId() + "::EyeLight2");
-    eyeLight1->setLightPosition(glm::vec3(position.x - 2.12, position.y - 0.089, position.z - 2.5));
-    eyeLight2->setLightAngles(glm::pi<double_t>(), 0.0);
-    eyeLight2->setLightIntensity(350.0);
+    eyeLight1->setLightPosition(glm::vec3(position.x - 2.12f, position.y - 0.089f, position.z - 2.5f));
+    eyeLight2->setLightAngles(glm::pi<float_t>(), 0.0f);
+    eyeLight2->setLightIntensity(350.0f);
     // Register the first eye light.
+    eyeLight2->init();
     lightManager.registerLight(eyeLight2);
 
     // Update the eye light toggle.
@@ -84,7 +86,9 @@ private:
   void destroyEyeLight()
   {
     // Destroy the eye lights.
+    eyeLight1->deinit();
     lightManager.deregisterLight(eyeLight1);
+    eyeLight2->deinit();
     lightManager.deregisterLight(eyeLight2);
     // Update the eye light toggle.
     isEyeLightPresent = false;
@@ -99,8 +103,8 @@ private:
     if (isEyeLightPresent)
     {
       // Update the eye lights.
-      eyeLight1->setLightPosition(glm::vec3(newPosition.x - 2.12, newPosition.y - 0.089, newPosition.z - 2.5));
-      eyeLight2->setLightPosition(glm::vec3(newPosition.x + 2.12, newPosition.y - 0.089, newPosition.z - 2.5));
+      eyeLight1->setLightPosition(glm::vec3(newPosition.x - 2.12f, newPosition.y - 0.089f, newPosition.z - 2.5f));
+      eyeLight2->setLightPosition(glm::vec3(newPosition.x + 2.12f, newPosition.y - 0.089f, newPosition.z - 2.5f));
     }
   }
 
@@ -108,18 +112,28 @@ public:
   PlayerModel(const std::string &modelId)
       : ModelBase(
             modelId,
-            "Player",
             glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-            "assets/objects/spaceship.obj",
-            "assets/textures/spaceship.bmp",
-            "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl",
             ColliderShapeType::BOX),
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
         lastTime(glfwGetTime()),
-        lastShot(glfwGetTime() - 10.0),
+        lastShot(glfwGetTime() - 10.0f),
         shotId(0) {}
+
+  static void initModel()
+  {
+    ModelBase::initModelDeps(
+        "Player",
+        "assets/objects/spaceship.obj",
+        "assets/textures/spaceship.bmp",
+        "assets/shaders/vertex/default.glsl", "assets/shaders/fragment/default.glsl");
+  }
+
+  static void deinitModel()
+  {
+    ModelBase::deinitModelDeps();
+  }
 
   /**
    * Creates a new instance of the player model.
@@ -132,7 +146,7 @@ public:
   void init() override
   {
     // Set the rotation of the model.
-    setModelPosition(glm::vec3(0.0, 0.0, 30.0));
+    setModelPosition(glm::vec3(0.0f, 0.0f, 30.0f));
 
     // Check if eye light toggle is enabled.
     if (isEyeLightPresent)
@@ -150,7 +164,7 @@ public:
     auto deltaTime = currentTime - lastTime;
 
     // Check if "J" key was pressed after 500ms since the last eye light toggle.
-    if (controlManager.isKeyPressed(GLFW_KEY_J) && (currentTime - lastEyeLightChange) > 0.5)
+    if (controlManager.isKeyPressed(GLFW_KEY_J) && (currentTime - lastEyeLightChange) > 0.5f)
     {
       // "H" key was pressed. Toggle the eye light and create/destroy it accordingly.
       isEyeLightPresent = !isEyeLightPresent;
@@ -187,19 +201,20 @@ public:
     }
 
     // Clamp the player position within the defined bounds of the player space.
-    newPosition = glm::vec3(glm::clamp<double_t>(newPosition.x, -11.0, 11.0), glm::clamp<double_t>(newPosition.y, -6.0, 6.0), newPosition.z);
+    newPosition = glm::vec3(glm::clamp<float_t>(newPosition.x, -11.0f, 11.0f), glm::clamp<float_t>(newPosition.y, -6.0f, 6.0f), newPosition.z);
     // Update the shot position.
     setModelPosition(newPosition);
     // Update the eye lights.
     updateEyeLight(newPosition);
 
     // Check if "Space" key was pressed after 500ms since the last shot creation.
-    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.17)
+    if (controlManager.isKeyPressed(GLFW_KEY_SPACE) && (currentTime - lastShot) > 0.17f)
     {
       // "Space" was pressed. Create a new shot and set its properties.
       const auto newShot = ShotModel::create("Shot" + std::to_string(shotId));
-      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y - 0.05, newPosition.z - 2.225));
+      newShot->setModelPosition(glm::vec3(newPosition.x, newPosition.y - 0.05f, newPosition.z - 2.225f));
       // Register the shot model.
+      newShot->init();
       modelManager.registerModel(newShot);
 
       // Increment the next usable shot ID.
@@ -218,6 +233,6 @@ float_t PlayerModel::keyboardSpeed = 10.0f;
 // Initialize the eye light toggle static variable.
 bool PlayerModel::isEyeLightPresent = true;
 // Initialize the last time the eye light toggle was changed static variable.
-double_t PlayerModel::lastEyeLightChange = -1;
+float_t PlayerModel::lastEyeLightChange = -1;
 
 #endif

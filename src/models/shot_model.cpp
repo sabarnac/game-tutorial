@@ -21,7 +21,7 @@
 /**
  * Class that represents a shot/bullet model.
  */
-class ShotModel : public ModelBase
+class ShotModel : public ModelBase<ShotModel>
 {
 private:
   // The speed of the shot.
@@ -29,7 +29,7 @@ private:
   // Whether to show the light or not.
   static bool isShotLightPresent;
   // The timestamp for the last time the shot light was toggled.
-  static double_t lastShotLightChange;
+  static float_t lastShotLightChange;
 
   // The model manager responsible for managing the models in the scene.
   ModelManager &modelManager;
@@ -38,10 +38,10 @@ private:
   // The control manager responsible for managing controls and inputs of the window.
   const ControlManager &controlManager;
 
-  double_t rotationSpeedZ;
+  float_t rotationSpeedZ;
 
   // The timestamp of the last time the update for the camera was started.
-  double_t lastTime;
+  float_t lastTime;
 
   // The instance of the point light for the shot.
   std::shared_ptr<PointLight> shotLight;
@@ -56,9 +56,10 @@ private:
 
     // Create shot light and set its properties.
     shotLight = PointLight::create(getModelId() + "::ShotLight");
-    shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0, 0.0, 0.75));
+    shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0f, 0.0f, 0.75f));
 
     // Register the shot light.
+    shotLight->init();
     lightManager.registerLight(shotLight);
 
     // Update the shot light toggle.
@@ -74,6 +75,7 @@ private:
     if (shotLight != nullptr)
     {
       // Destroy the shot light.
+      shotLight->deinit();
       lightManager.deregisterLight(shotLight);
       shotLight = nullptr;
     }
@@ -96,7 +98,7 @@ private:
         createShotLight();
       }
       // Update the shot light.
-      shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0, 0.0, 0.75));
+      shotLight->setLightPosition(getModelPosition() + glm::vec3(0.0f, 0.0f, 0.75f));
     }
     // Check if shot light exists.
     else if (shotLight != nullptr)
@@ -110,18 +112,28 @@ public:
   ShotModel(const std::string &modelId)
       : ModelBase(
             modelId,
-            "Shot",
-            glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f),
-            "assets/objects/shot.obj",
-            "assets/textures/shot.bmp",
-            "assets/shaders/vertex/shot.glsl", "assets/shaders/fragment/shot.glsl",
+            glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.075f),
             ColliderShapeType::BOX),
         modelManager(ModelManager::getInstance()),
         lightManager(LightManager::getInstance()),
         controlManager(ControlManager::getInstance()),
-        rotationSpeedZ(glm::radians(5.0)),
+        rotationSpeedZ(glm::radians(5.0f)),
         lastTime(glfwGetTime()),
         shotLight(nullptr) {}
+
+  static void initModel()
+  {
+    ModelBase::initModelDeps(
+        "Shot",
+        "assets/objects/shot.obj",
+        "assets/textures/shot.bmp",
+        "assets/shaders/vertex/shot.glsl", "assets/shaders/fragment/shot.glsl");
+  }
+
+  static void deinitModel()
+  {
+    ModelBase::deinitModelDeps();
+  }
 
   /**
    * Creates a new instance of the shot model.
@@ -133,10 +145,8 @@ public:
 
   void init() override
   {
-    // Set the scale of the model.
-    setModelScale(glm::vec3(0.075));
     // Set the rotation of the model.
-    setModelRotation(glm::vec3(0.0, glm::radians(180.0), 0.0));
+    setModelRotation(glm::vec3(0.0f, glm::radians(180.0f), 0.0f));
 
     // Check if shot light toggle is enabled.
     if (isShotLightPresent)
@@ -167,15 +177,16 @@ public:
     // Get the position of the shot.
     const auto currentPosition = getModelPosition();
     // Check if the shot has already gone beyond a threshold.
-    if (currentPosition.z < -50.0)
+    if (currentPosition.z < -50.0f)
     {
       // If it has, destroy it.
+      this->deinit();
       modelManager.deregisterModel(this->getModelId());
       return;
     }
 
     // Check if "H" key was pressed after 500ms since the last shot light toggle.
-    if (controlManager.isKeyPressed(GLFW_KEY_H) && (currentTime - lastShotLightChange) > 0.5)
+    if (controlManager.isKeyPressed(GLFW_KEY_H) && (currentTime - lastShotLightChange) > 0.5f)
     {
       // "H" key was pressed. Toggle the shot light.
       isShotLightPresent = !isShotLightPresent;
@@ -187,9 +198,9 @@ public:
     for (auto i = 0; i < timeSlices; i++)
     {
       // Update the shot position.
-      setModelPosition(getModelPosition() - glm::vec3(0.0, 0.0, (shotSpeed * deltaTime) / timeSlices));
+      setModelPosition(getModelPosition() - glm::vec3(0.0f, 0.0f, (shotSpeed * deltaTime) / timeSlices));
 
-      if (currentPosition.z > 1.5)
+      if (currentPosition.z > 1.5f)
       {
         continue;
       }
@@ -205,7 +216,7 @@ public:
           continue;
         }
 
-        if (glm::distance(model->getModelPosition(), currentPosition) > 3.0)
+        if (glm::distance(model->getModelPosition(), currentPosition) > 3.0f)
         {
           continue;
         }
@@ -214,14 +225,17 @@ public:
         if (DeepCollisionValidator::haveShapesCollided(getColliderDetails()->getColliderShape(), model->getColliderDetails()->getColliderShape(), true))
         {
           // Shot has collided with an enemy. Destroy both.
+          model->deinit();
           modelManager.deregisterModel(model);
+
+          this->deinit();
           modelManager.deregisterModel(this->getModelId());
           return;
         }
       }
     }
 
-    setModelRotation(getModelRotation() - glm::vec3(0.0, 0.0, rotationSpeedZ));
+    setModelRotation(getModelRotation() - glm::vec3(0.0f, 0.0f, rotationSpeedZ));
 
     // Update the shot light.
     updateShotLight();
@@ -232,10 +246,10 @@ public:
 };
 
 // Initialize the shot speed static variable.
-double ShotModel::shotSpeed = 120.0;
+double ShotModel::shotSpeed = 120.0f;
 // Initialize the shot light toggle static variable.
 bool ShotModel::isShotLightPresent = true;
 // Initialize the last time the shot light toggle was changed static variable.
-double_t ShotModel::lastShotLightChange = -1;
+float_t ShotModel::lastShotLightChange = -1;
 
 #endif

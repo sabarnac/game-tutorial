@@ -7,6 +7,7 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
+#include <any>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,7 +20,7 @@
 #include "shader.cpp"
 #include "collider.cpp"
 #include "text.cpp"
-#include "../models/model_base.cpp"
+#include "../models/model_base_intf.cpp"
 
 /**
  * A manager class for managing models in a scene.
@@ -34,11 +35,13 @@ private:
   TextManager &textManager;
 
   // The map of registered models.
-  std::map<const std::string, std::shared_ptr<ModelBase>> registeredModels;
+  std::map<const std::string, std::shared_ptr<ModelBaseIntf>> registeredModels;
+  std::vector<std::string> registeredModelsInsertionOrder;
 
   ModelManager()
       : textManager(TextManager::getInstance()),
-        registeredModels({}) {}
+        registeredModels({}),
+        registeredModelsInsertionOrder({}) {}
 
 public:
   // Preventing copying the model manager, making sure only one instance can exist.
@@ -49,12 +52,11 @@ public:
    * 
    * @param model  The model to register.
    */
-  void registerModel(const std::shared_ptr<ModelBase> &&model)
+  void registerModel(const std::shared_ptr<ModelBaseIntf> &&model)
   {
-    // Let the model initialize itself.
-    model->init();
     // Insert the model to the map of registered models.
     registeredModels.emplace(model->getModelId(), std::move(model));
+    registeredModelsInsertionOrder.push_back(model->getModelId());
   }
 
   /**
@@ -64,6 +66,12 @@ public:
    */
   void deregisterModel(const std::string &modelId)
   {
+    // Check if model actually exists. If not, just return since it's not registered.
+    if (std::find(registeredModelsInsertionOrder.begin(), registeredModelsInsertionOrder.end(), modelId) == registeredModelsInsertionOrder.end())
+    {
+      return;
+    }
+
     // Get the model that is registered with the given model ID.
     auto model = registeredModels[modelId];
     // Remove the model from the map of registered models.
@@ -75,12 +83,11 @@ public:
    * 
    * @param model  The model to de-register.
    */
-  void deregisterModel(const std::shared_ptr<ModelBase> &model)
+  void deregisterModel(const std::shared_ptr<ModelBaseIntf> &model)
   {
     // Remove the model from the map of registered models.
     registeredModels.erase(model->getModelId());
-    // Let the model de-initialize itself.
-    model->deinit();
+    registeredModelsInsertionOrder.erase(std::remove(registeredModelsInsertionOrder.begin(), registeredModelsInsertionOrder.end(), model->getModelId()), registeredModelsInsertionOrder.end());
   }
 
   /**
@@ -90,7 +97,7 @@ public:
    * 
    * @return The model registered with the given model ID.
    */
-  const std::shared_ptr<ModelBase> &getModel(const std::string &modelId) const
+  const std::shared_ptr<ModelBaseIntf> &getModel(const std::string &modelId) const
   {
     return registeredModels.at(modelId);
   }
@@ -100,18 +107,55 @@ public:
    * 
    * @return The list of all registered models.
    */
-  const std::vector<std::shared_ptr<ModelBase>> getAllModels() const
+  const std::vector<std::shared_ptr<ModelBaseIntf>> getAllModels() const
   {
     // Define a vector to store the list of registered models.
-    std::vector<std::shared_ptr<ModelBase>> models({});
+    std::vector<std::shared_ptr<ModelBaseIntf>> models({});
     // Iterate through the map of registered models.
-    for (const auto &model : registeredModels)
+    for (const auto &modelId : registeredModelsInsertionOrder)
     {
       // Push each registered model into the models list.
-      models.push_back(model.second);
+      models.push_back(registeredModels.find(modelId)->second);
     }
+
     // Return the list of registered models.
     return models;
+  }
+
+  /**
+   * Run the initialize operation on all the registered models.
+   */
+  void initAllModels()
+  {
+    // Iterate through the list of model IDs.
+    for (const auto &modelId : registeredModelsInsertionOrder)
+    {
+      // Find the model registered with the given model ID.
+      const auto result = registeredModels.find(modelId);
+      // Check if the model still exists in the registration map.
+      if (result != registeredModels.end())
+      {
+        result->second->init();
+      }
+    }
+  }
+
+  /**
+   * Run the de-initialize operation on all the registered models.
+   */
+  void deinitAllModels()
+  {
+    // Iterate through the list of model IDs.
+    for (const auto &modelId : registeredModelsInsertionOrder)
+    {
+      // Find the model registered with the given model ID.
+      const auto result = registeredModels.find(modelId);
+      // Check if the model still exists in the registration map.
+      if (result != registeredModels.end())
+      {
+        result->second->deinit();
+      }
+    }
   }
 
   /**
@@ -119,50 +163,42 @@ public:
    */
   void updateAllModels()
   {
-    // Define a vector to store the IDs of the registered models.
-    std::vector<std::string> registeredModelIds({});
-    // iterate through the map of registered models.
-    for (const auto &model : registeredModels)
-    {
-      // Push the ID of each registered model into the models ID list.
-      registeredModelIds.push_back(model.first);
-    }
-
     auto modelNamesCount = std::map<const std::string, int>({});
     auto modelNamesProcessTime = std::map<const std::string, double>({});
 
     // Iterate through the list of model IDs.
-    for (const auto &modelId : registeredModelIds)
+    for (const auto &modelId : registeredModelsInsertionOrder)
     {
       // Find the model registered with the given model ID.
       const auto result = registeredModels.find(modelId);
       // Check if the model still exists in the registration map.
       if (result != registeredModels.end())
       {
-        if (modelNamesCount.find(result->second->getModelName()) != modelNamesCount.end())
+        const auto model = result->second;
+        if (modelNamesCount.find(model->getModelName()) != modelNamesCount.end())
         {
-          modelNamesCount[result->second->getModelName()]++;
+          modelNamesCount[model->getModelName()]++;
         }
         else
         {
-          modelNamesCount[result->second->getModelName()] = 1;
-          modelNamesProcessTime[result->second->getModelName()] = 0.0;
+          modelNamesCount[model->getModelName()] = 1;
+          modelNamesProcessTime[model->getModelName()] = 0.0f;
         }
 
         // If it does, tell the model to perform an update on itself.
         const auto startTime = glfwGetTime();
-        result->second->update();
+        model->update();
         const auto endTime = glfwGetTime();
-        modelNamesProcessTime[result->second->getModelName()] += (endTime - startTime) * 1000;
+        modelNamesProcessTime[model->getModelName()] += (endTime - startTime) * 1000;
       }
     }
 
-    auto height = 17.0;
+    auto height = 17.0f;
     for (const auto &modelCounts : modelNamesCount)
     {
       const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
-      textManager.addText(modelCounts.first + " Model Object Instances: " + std::to_string(modelCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(modelCounts.first + " Model Object Instances: " + std::to_string(modelCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
   }
 

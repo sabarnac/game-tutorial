@@ -23,10 +23,12 @@ private:
 
   // The map of registered lights.
   std::map<const std::string, std::shared_ptr<LightBase>> registeredLights;
+  std::vector<std::string> registeredLightsInsertionOrder;
 
   LightManager()
       : textManager(TextManager::getInstance()),
-        registeredLights({}) {}
+        registeredLights({}),
+        registeredLightsInsertionOrder({}) {}
 
 public:
   // Preventing copying the light manager, making sure only one instance can exist.
@@ -39,10 +41,9 @@ public:
    */
   void registerLight(const std::shared_ptr<LightBase> &&light)
   {
-    // Let the light initialize itself.
-    light->init();
     // Insert the light to the map of registered lights.
     registeredLights.emplace(light->getLightId(), std::move(light));
+    registeredLightsInsertionOrder.push_back(light->getLightId());
   }
 
   /**
@@ -52,6 +53,12 @@ public:
    */
   void deregisterLight(const std::string &lightId)
   {
+    // Check if light actually exists. If not, just return since it's not registered.
+    if (std::find(registeredLightsInsertionOrder.begin(), registeredLightsInsertionOrder.end(), lightId) == registeredLightsInsertionOrder.end())
+    {
+      return;
+    }
+
     // Get the light that is registered with the given light ID.
     auto light = registeredLights[lightId];
     // Remove the light from the map of registered lights.
@@ -67,8 +74,7 @@ public:
   {
     // Remove the light from the map of registered lights.
     registeredLights.erase(light->getLightId());
-    // Let the light de-initialize itself.
-    light->deinit();
+    registeredLightsInsertionOrder.erase(std::remove(registeredLightsInsertionOrder.begin(), registeredLightsInsertionOrder.end(), light->getLightId()), registeredLightsInsertionOrder.end());
   }
 
   /**
@@ -93,13 +99,49 @@ public:
     // Define a vector to store the list of registered lights.
     std::vector<std::shared_ptr<LightBase>> lights({});
     // Iterate through the map of registered lights.
-    for (const auto &light : registeredLights)
+    for (const auto &lightId : registeredLightsInsertionOrder)
     {
-      // Push each registered light into the lights list.
-      lights.push_back(light.second);
+      // Push each registered model into the models list.
+      lights.push_back(registeredLights.find(lightId)->second);
     }
     // Return the list of registered lights.
     return lights;
+  }
+
+  /**
+   * Run the initialize operation on all the registered lights.
+   */
+  void initAllLights()
+  {
+    // Iterate through the list of light IDs.
+    for (const auto &lightId : registeredLightsInsertionOrder)
+    {
+      // Find the light registered with the given light ID.
+      const auto result = registeredLights.find(lightId);
+      // Check if the light still exists in the registration map.
+      if (result != registeredLights.end())
+      {
+        result->second->init();
+      }
+    }
+  }
+
+  /**
+   * Run the de-initialize operation on all the registered lights.
+   */
+  void deinitAllLights()
+  {
+    // Iterate through the list of light IDs.
+    for (const auto &lightId : registeredLightsInsertionOrder)
+    {
+      // Find the light registered with the given light ID.
+      const auto result = registeredLights.find(lightId);
+      // Check if the light still exists in the registration map.
+      if (result != registeredLights.end())
+      {
+        result->second->deinit();
+      }
+    }
   }
 
   /**
@@ -107,20 +149,11 @@ public:
    */
   void updateAllLights()
   {
-    // Define a vector to store the IDs of the registered lights.
-    std::vector<std::string> registeredLightIds({});
-    // iterate through the map of registered lights.
-    for (const auto &light : registeredLights)
-    {
-      // Push the ID of each registered light into the lights ID list.
-      registeredLightIds.push_back(light.first);
-    }
-
     auto lightNamesCount = std::map<const std::string, int>({});
     auto lightNamesProcessTime = std::map<const std::string, double>({});
 
     // Iterate through the list of light IDs.
-    for (const auto &lightId : registeredLightIds)
+    for (const auto &lightId : registeredLightsInsertionOrder)
     {
       // Find the light registered with the given light ID.
       const auto result = registeredLights.find(lightId);
@@ -134,7 +167,7 @@ public:
         else
         {
           lightNamesCount[result->second->getLightName()] = 1;
-          lightNamesProcessTime[result->second->getLightName()] = 0.0;
+          lightNamesProcessTime[result->second->getLightName()] = 0.0f;
         }
 
         // If it does, tell the light to perform an update on itself.
@@ -145,12 +178,12 @@ public:
       }
     }
 
-    auto height = 15.0;
+    auto height = 15.0f;
     for (const auto &lightCounts : lightNamesCount)
     {
       const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
-      textManager.addText(lightCounts.first + " Light Object Instances: " + std::to_string(lightCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(lightCounts.first + " Light Object Instances: " + std::to_string(lightCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
   }
 

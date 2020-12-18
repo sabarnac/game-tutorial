@@ -256,7 +256,7 @@ private:
     //   are clamped to the border, this will make sure that when the texture is
     //   queried for out-of-bounds coordinates, a black color is returned, which
     //   will mark those coordinates as always being in shadow.
-    GLfloat outsideMapDepth[] = {0.0, 0.0, 0.0};
+    GLfloat outsideMapDepth[] = {0.0f, 0.0f, 0.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, outsideMapDepth);
 
     // Unbind the texture now that we're done.

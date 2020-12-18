@@ -23,10 +23,12 @@ private:
 
   // The map of registered cameras.
   std::map<const std::string, const std::shared_ptr<CameraBase>> registeredCameras;
+  std::vector<std::string> registeredCamerasInsertionOrder;
 
   CameraManager()
       : textManager(TextManager::getInstance()),
-        registeredCameras({}) {}
+        registeredCameras({}),
+        registeredCamerasInsertionOrder({}) {}
 
 public:
   // Preventing copying the camera manager, making sure only one instance can exist.
@@ -39,10 +41,9 @@ public:
    */
   void registerCamera(const std::shared_ptr<CameraBase> &&camera)
   {
-    // Let the camera initialize itself.
-    camera->init();
     // Insert the camera to the map of registered cameras.
     registeredCameras.emplace(camera->getCameraId(), std::move(camera));
+    registeredCamerasInsertionOrder.push_back(camera->getCameraId());
   }
 
   /**
@@ -52,6 +53,12 @@ public:
    */
   void deregisterCamera(const std::string &cameraId)
   {
+    // Check if camera actually exists. If not, just return since it's not registered.
+    if (std::find(registeredCamerasInsertionOrder.begin(), registeredCamerasInsertionOrder.end(), cameraId) == registeredCamerasInsertionOrder.end())
+    {
+      return;
+    }
+
     // Get the camera that is registered with the given camera ID.
     auto camera = registeredCameras[cameraId];
     // Remove the camera from the map of registered cameras.
@@ -67,8 +74,7 @@ public:
   {
     // Remove the camera from the map of registered cameras.
     registeredCameras.erase(camera->getCameraId());
-    // Let the camera de-initialize itself.
-    camera->deinit();
+    registeredCamerasInsertionOrder.erase(std::remove(registeredCamerasInsertionOrder.begin(), registeredCamerasInsertionOrder.end(), camera->getCameraId()), registeredCamerasInsertionOrder.end());
   }
 
   /**
@@ -93,13 +99,49 @@ public:
     // Define a vector to store the list of registered cameras.
     std::vector<std::shared_ptr<CameraBase>> cameras({});
     // Iterate through the map of registered cameras.
-    for (const auto &camera : registeredCameras)
+    for (const auto &cameraId : registeredCamerasInsertionOrder)
     {
-      // Push each registered camera into the cameras list.
-      cameras.push_back(camera.second);
+      // Push each registered model into the models list.
+      cameras.push_back(registeredCameras.find(cameraId)->second);
     }
     // Return the list of registered cameras.
     return cameras;
+  }
+
+  /**
+   * Run the initialize operation on all the registered cameras.
+   */
+  void initAllCameras()
+  {
+    // Iterate through the list of camera IDs.
+    for (const auto &cameraId : registeredCamerasInsertionOrder)
+    {
+      // Find the camera registered with the given camera ID.
+      const auto result = registeredCameras.find(cameraId);
+      // Check if the camera still exists in the registration map.
+      if (result != registeredCameras.end())
+      {
+        result->second->init();
+      }
+    }
+  }
+
+  /**
+   * Run the de-initialize operation on all the registered cameras.
+   */
+  void deinitAllCameras()
+  {
+    // Iterate through the list of camera IDs.
+    for (const auto &cameraId : registeredCamerasInsertionOrder)
+    {
+      // Find the camera registered with the given camera ID.
+      const auto result = registeredCameras.find(cameraId);
+      // Check if the camera still exists in the registration map.
+      if (result != registeredCameras.end())
+      {
+        result->second->deinit();
+      }
+    }
   }
 
   /**
@@ -107,20 +149,11 @@ public:
    */
   void updateAllCameras()
   {
-    // Define a vector to store the IDs of the registered cameras.
-    std::vector<std::string> registeredCameraIds({});
-    // iterate through the map of registered cameras.
-    for (const auto &camera : registeredCameras)
-    {
-      // Push the ID of each registered camera into the cameras ID list.
-      registeredCameraIds.push_back(camera.first);
-    }
-
     auto cameraNamesCount = std::map<const std::string, int>({});
     auto cameraNamesProcessTime = std::map<const std::string, double>({});
 
     // Iterate through the list of camera IDs.
-    for (const auto &cameraId : registeredCameraIds)
+    for (const auto &cameraId : registeredCamerasInsertionOrder)
     {
       // Find the camera registered with the given camera ID.
       const auto result = registeredCameras.find(cameraId);
@@ -134,7 +167,7 @@ public:
         else
         {
           cameraNamesCount[result->second->getCameraName()] = 1;
-          cameraNamesProcessTime[result->second->getCameraName()] = 0.0;
+          cameraNamesProcessTime[result->second->getCameraName()] = 0.0f;
         }
 
         // If it does, tell the camera to perform an update on itself.
@@ -145,12 +178,12 @@ public:
       }
     }
 
-    auto height = 13.5;
+    auto height = 13.5f;
     for (const auto &cameraCounts : cameraNamesCount)
     {
       const auto avgRenderTime = cameraNamesProcessTime[cameraCounts.first] / cameraCounts.second;
-      textManager.addText(cameraCounts.first + " Camera Object Instances: " + std::to_string(cameraCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(cameraCounts.first + " Camera Object Instances: " + std::to_string(cameraCounts.second) + " | Update (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
   }
 

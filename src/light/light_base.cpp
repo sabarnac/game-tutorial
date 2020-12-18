@@ -30,14 +30,14 @@ private:
   // The color of the light.
   glm::vec3 lightColor;
   // The intensity of the light.
-  double_t lightIntensity;
+  float_t lightIntensity;
 
   // The position of the light.
   glm::vec3 position;
   // The closest distance the light can capture from.
-  double_t nearPlane;
+  float_t nearPlane;
   // The farthest distance the light can capture till.
-  double_t farPlane;
+  float_t farPlane;
 
   // The list of view matrices of the light.
   std::vector<glm::mat4> viewMatrices;
@@ -52,10 +52,10 @@ protected:
   LightBase(
       const std::string &lightId,
       const std::string &lightName,
-      const glm::vec3 &lightColor, const double_t &lightIntensity,
+      const glm::vec3 &lightColor, const float_t &lightIntensity,
       const std::string &vertexShaderFilePath, const std::string &fragmentShaderFilePath,
       const glm::vec3 &position,
-      const double_t &nearPlane, const double_t &farPlane,
+      const float_t &nearPlane, const float_t &farPlane,
       const std::vector<glm::mat4> &viewMatrices, const std::vector<glm::mat4> &projectionMatrices,
       const ShadowBufferType &shadowBufferType)
       : shaderManager(ShaderManager::getInstance()),
@@ -77,10 +77,10 @@ protected:
   LightBase(
       const std::string &lightId,
       const std::string &lightName,
-      const glm::vec3 &lightColor, const double_t &lightIntensity,
+      const glm::vec3 &lightColor, const float_t &lightIntensity,
       const std::string &vertexShaderFilePath, const std::string &geometryShaderFilePath, const std::string &fragmentShaderFilePath,
       const glm::vec3 &position,
-      const double_t &nearPlane, const double_t &farPlane,
+      const float_t &nearPlane, const float_t &farPlane,
       const std::vector<glm::mat4> &viewMatrices, const std::vector<glm::mat4> &projectionMatrices,
       const ShadowBufferType &shadowBufferType)
       : shaderManager(ShaderManager::getInstance()),
@@ -153,7 +153,7 @@ public:
    * 
    * @return The light intensity.
    */
-  const double_t &getLightIntensity() const
+  const float_t &getLightIntensity() const
   {
     return lightIntensity;
   }
@@ -163,7 +163,7 @@ public:
    * 
    * @return The light near plane.
    */
-  const double_t &getLightNearPlane() const
+  const float_t &getLightNearPlane() const
   {
     return nearPlane;
   }
@@ -173,7 +173,7 @@ public:
    * 
    * @return The light far plane.
    */
-  const double_t &getLightFarPlane() const
+  const float_t &getLightFarPlane() const
   {
     return farPlane;
   }
@@ -243,7 +243,7 @@ public:
    * 
    * @param newLightIntensity  The light intensity.
    */
-  virtual void setLightIntensity(const double_t &newLightIntensity)
+  virtual void setLightIntensity(const float_t &newLightIntensity)
   {
     lightIntensity = newLightIntensity;
   }
@@ -253,7 +253,7 @@ public:
    * 
    * @param newNearPlane  The light near plane.
    */
-  virtual void setLightNearPlane(const double_t &newNearPlane)
+  virtual void setLightNearPlane(const float_t &newNearPlane)
   {
     nearPlane = newNearPlane;
   }
@@ -263,7 +263,7 @@ public:
    * 
    * @param newFarPlane  The light far plane.
    */
-  virtual void setLightFarPlane(const double_t &newFarPlane)
+  virtual void setLightFarPlane(const float_t &newFarPlane)
   {
     farPlane = newFarPlane;
   }

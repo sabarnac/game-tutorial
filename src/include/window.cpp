@@ -73,11 +73,11 @@ private:
     // Set the newly created window as the current context in GLFW.
     glfwMakeContextCurrent(newWindow);
 
-    // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is double_t).
+    // Get the size of the viewport of the window (this should be the same as the window width, but on MacOS it is float_t).
     glfwGetFramebufferSize(newWindow, &VIEWPORT_WIDTH, &VIEWPORT_HEIGHT);
-    // Define the framebuffer width as double_t the viewport width.
+    // Define the framebuffer width as float_t the viewport width.
     FRAMEBUFFER_WIDTH = VIEWPORT_WIDTH;
-    // Define the framebuffer height as double_t the viewport width (so that framebuffer is a square).
+    // Define the framebuffer height as float_t the viewport width (so that framebuffer is a square).
     FRAMEBUFFER_HEIGHT = VIEWPORT_WIDTH;
     // Define the text height as 1/26 of the viewport height (so we can fit approx 20 lines in the screen).
     TEXT_HEIGHT = VIEWPORT_HEIGHT / 26;
@@ -86,10 +86,8 @@ private:
 
     // Set the option for sticky keys on the window to true. This means keys will remain in the pressed state until they're processed.
     // This allows us to catch key presses that may be missed if we didn't poll in time.
-    glfwSetInputMode(newWindow, GLFW_STICKY_KEYS, GL_TRUE);
-    // Set the option to disable the cursor when the window is active, preventing the user from moving the cursor out of the window,
-    //   and accidentally clicking something else.
-    glfwSetInputMode(newWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(newWindow, GLFW_STICKY_KEYS, true);
+    glfwSetInputMode(newWindow, GLFW_STICKY_MOUSE_BUTTONS, true);
 
     // Set what the interval is for swapping buffers. A value of zero means the swap should be immediate.
     // A value of 1 means that a single screen refresh should occur before swapping buffers.
@@ -146,6 +144,7 @@ private:
 
     // Enable culling of faces/polygons. This means that any face/polygon that is behind another polygon within the same object is dropped.
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     return true;
   }
@@ -222,6 +221,22 @@ public:
   void clearScreen(const GLbitfield &mask)
   {
     glClear(mask);
+  }
+
+  void enableBlending(const GLenum sFactor, const GLenum dFactor)
+  {
+    glDisable(GL_CULL_FACE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(sFactor, dFactor);
+  }
+
+  void disableBlending()
+  {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glDisable(GL_BLEND);
   }
 
   /**

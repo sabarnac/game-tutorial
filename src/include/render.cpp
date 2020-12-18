@@ -31,15 +31,15 @@ struct LightDetails
   // The color of the light.
   const glm::vec3 lightColor;
   // The intensity of the light.
-  const double_t lightIntensity;
+  const float_t lightIntensity;
   // The width of the shadowmap of the light.
   const int32_t mapWidth;
   // The height of the shadowmap of the light.
   const int32_t mapHeight;
   // The closest distance from which the shadowmap captures objects.
-  const double_t nearPlane;
+  const float_t nearPlane;
   // The farthest distance till which the shadowmap captures objects.
-  const double_t farPlane;
+  const float_t farPlane;
   // The ID of the layer of the shadowmap texture array the shadowmap is stored in.
   const GLuint textureArrayLayerId;
 };
@@ -54,7 +54,7 @@ class RenderManager
 
 private:
   // The ambient lighting factor of the scene.
-  const static double_t ambientFactor;
+  const static float_t ambientFactor;
 
   // The flags for disabling shadows and lighting.
   const static int32_t DISABLE_SHADOW;
@@ -82,14 +82,14 @@ private:
   std::string activeCameraId;
 
   // The timestamp when the render manager was loaded.
-  const double_t startTime;
+  const float_t startTime;
   // The timestamp of the start of the last render.
-  double_t lastTime;
+  float_t lastTime;
 
   // A mask defining what features to disable (shadows/lighting).
   int32_t disableFeatureMask;
   // The timestamp of the last time the mask for disabling features was modifed.
-  double_t lastDisableFeatureMaskChange;
+  float_t lastDisableFeatureMaskChange;
 
   RenderManager()
       : windowManager(WindowManager::getInstance()),
@@ -190,7 +190,7 @@ public:
         else
         {
           lightNamesCount[light->getLightName()] = 1;
-          lightNamesProcessTime[light->getLightName()] = 0.0;
+          lightNamesProcessTime[light->getLightName()] = 0.0f;
         }
 
         // Get the type of the shadow.
@@ -305,12 +305,12 @@ public:
       lightNamesProcessTime[firstLight->getLightName()] += (endTime - startTime) * 1000;
     }
 
-    auto height = 21.5;
+    auto height = 21.5f;
     for (const auto &lightCounts : lightNamesCount)
     {
       const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
-      textManager.addText(lightCounts.first + " Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(lightCounts.first + " Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
 
     // Return the map of the categorized lights.
@@ -327,7 +327,7 @@ public:
     // Switch the viewport to the size of the window viewport.
     windowManager.switchToWindowViewport();
     // Set the clear screen color to pure white.
-    windowManager.setClearColor(glm::vec4(0.0, 0.0, 0.0, 1.0));
+    windowManager.setClearColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
     // Clear the color buffer and depth buffer of the screen.
     windowManager.clearScreen(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -364,7 +364,7 @@ public:
       else
       {
         modelNamesCount[model->getModelName()] = 1;
-        modelNamesProcessTime[model->getModelName()] = 0.0;
+        modelNamesProcessTime[model->getModelName()] = 0.0f;
       }
 
       const auto startTime = glfwGetTime();
@@ -530,14 +530,14 @@ public:
       totalPolygons += model->getObjectDetails()->getBufferSize() / 3;
     }
 
-    auto height = 23.0;
+    auto height = 23.0f;
     for (const auto &modelCounts : modelNamesCount)
     {
       const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
-      textManager.addText(modelCounts.first + " Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms | Polygon Count: " + std::to_string(modelNamesPolygonCount[modelCounts.first]), glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(modelCounts.first + " Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms | Polygon Count: " + std::to_string(modelNamesPolygonCount[modelCounts.first]), glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
-    textManager.addText("Total Polygons: " + std::to_string(totalPolygons), glm::vec2(1, 12.5), 0.5);
+    textManager.addText("Total Polygons: " + std::to_string(totalPolygons), glm::vec2(1, 12.5f), 0.5f);
   }
 
   /**
@@ -550,7 +550,7 @@ public:
     auto updateStartTime = currentTime, updateEndTime = currentTime;
 
     // Check if the "L" has been pressed 500ms after the last time the disable feature mask was changed.
-    if (controlManager.isKeyPressed(GLFW_KEY_L) && (currentTime - lastDisableFeatureMaskChange) > 0.5)
+    if (controlManager.isKeyPressed(GLFW_KEY_L) && (currentTime - lastDisableFeatureMaskChange) > 0.5f)
     {
       // "L" was pressed, meaning we need to start disabling render features.
       // Check which features have already been disabled.
@@ -577,13 +577,13 @@ public:
     updateStartTime = glfwGetTime();
     const auto categorizedLights = renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25.5), 0.5);
+    textManager.addText("Light Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25.5f), 0.5f);
 
     // Render the models.
     updateStartTime = glfwGetTime();
     renderModels(categorizedLights);
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25), 0.5);
+    textManager.addText("Model Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 25), 0.5f);
 
     // Update the last start time of the latest rendered frame to the start time of the current frame.
     lastTime = currentTime;
@@ -603,7 +603,7 @@ public:
 // Initialize the render manager singleton instance static variable.
 RenderManager RenderManager::instance;
 // Initialize the ambient lighting factor static variable.
-const double_t RenderManager::ambientFactor = 0.25;
+const float_t RenderManager::ambientFactor = 0.25f;
 // Initialize the mask value for disabling shadows static variable.
 const int32_t RenderManager::DISABLE_SHADOW = 1;
 // Initialize the mask value for disabling lighting static variable.

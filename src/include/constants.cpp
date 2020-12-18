@@ -7,6 +7,7 @@
 
 const int32_t WINDOW_WIDTH = 1024;
 const int32_t WINDOW_HEIGHT = 768;
+const float_t ASPECT_RATIO = WINDOW_WIDTH / WINDOW_HEIGHT;
 const int32_t MAX_CONE_LIGHTS = 2;
 const int32_t MAX_POINT_LIGHTS = 5;
 const int32_t MAX_LIGHTS = MAX_CONE_LIGHTS + MAX_POINT_LIGHTS;

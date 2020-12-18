@@ -110,11 +110,51 @@ public:
   }
 
   /**
+   * Checks whether a mouse button has been pressed or not.
+   * 
+   * @param key  The mouse button to check.
+   * 
+   * @return Whether the mouse button has been pressed or not.
+   */
+  bool isMouseButtonPressed(const int32_t &key) const
+  {
+    // Query GLFW to see the status of the mouse button and return true if it is being pressed.
+    return glfwGetMouseButton(windowManager.getWindow(), key) == GLFW_PRESS;
+  }
+
+  /**
    * Poll for input/control events on the window.
    */
   void pollEvents()
   {
     glfwPollEvents();
+  }
+
+  /**
+   * Set the option to disable the cursor when the window is active, preventing the user from moving the cursor out of the window,
+   * and accidentally clicking something else.
+   */
+  void disableCursor()
+  {
+    glfwSetInputMode(windowManager.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  }
+
+  /**
+   * Set the option to enable the cursor when the window is active, allowing the user to move the mouse anywhere on the window, as
+   * well as move it outside the window.
+   */
+  void enableCursor()
+  {
+    glfwSetInputMode(windowManager.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  }
+
+  /**
+   * Set the option to hide the cursor when the window is active and mouse is over it, but still allow the user to move the cursor
+   * out of the window and use it normally outside.
+   */
+  void hideCursor()
+  {
+    glfwSetInputMode(windowManager.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
 
   /**

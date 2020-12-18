@@ -119,7 +119,7 @@ public:
       else
       {
         lightNamesCount[light->getLightName()] = 1;
-        lightNamesProcessTime[light->getLightName()] = 0.0;
+        lightNamesProcessTime[light->getLightName()] = 0.0f;
       }
 
       const auto startTime = glfwGetTime();
@@ -143,12 +143,12 @@ public:
       lightNamesProcessTime[light->getLightName()] += (endTime - startTime) * 1000;
     }
 
-    auto height = 18.5;
+    auto height = 18.5f;
     for (const auto &lightCounts : lightNamesCount)
     {
       const auto avgRenderTime = lightNamesProcessTime[lightCounts.first] / lightCounts.second;
-      textManager.addText(lightCounts.first + " Debug Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(lightCounts.first + " Debug Light Render Instances: " + std::to_string(lightCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
   }
 
@@ -171,7 +171,7 @@ public:
       else
       {
         modelNamesCount[model->getModelName()] = 1;
-        modelNamesProcessTime[model->getModelName()] = 0.0;
+        modelNamesProcessTime[model->getModelName()] = 0.0f;
       }
 
       const auto startTime = glfwGetTime();
@@ -275,12 +275,12 @@ public:
       modelNamesProcessTime[model->getModelName()] += (endTime - startTime) * 1000;
     }
 
-    auto height = 20.0;
+    auto height = 20.0f;
     for (const auto &modelCounts : modelNamesCount)
     {
       const auto avgRenderTime = modelNamesProcessTime[modelCounts.first] / modelCounts.second;
-      textManager.addText(modelCounts.first + " Debug Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5);
-      height -= 0.5;
+      textManager.addText(modelCounts.first + " Debug Model Render Instances: " + std::to_string(modelCounts.second) + " | Render (avg): " + std::to_string(avgRenderTime) + "ms", glm::vec2(1, height), 0.5f);
+      height -= 0.5f;
     }
   }
 
@@ -294,12 +294,12 @@ public:
     updateStartTime = glfwGetTime();
     renderLights();
     updateEndTime = glfwGetTime();
-    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24.5), 0.5);
+    textManager.addText("Light Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24.5f), 0.5f);
 
     updateStartTime = glfwGetTime();
     renderModels();
     updateEndTime = glfwGetTime();
-    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24), 0.5);
+    textManager.addText("Model Debug Render: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 24), 0.5f);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
@@ -311,8 +311,8 @@ public:
 };
 
 DebugRenderManager DebugRenderManager::instance;
-const glm::vec4 DebugRenderManager::debugColor1 = glm::vec4(1.0, 0.0, 0.0, 1.0);
-const glm::vec4 DebugRenderManager::debugColor2 = glm::vec4(0.0, 0.0, 1.0, 1.0);
-const glm::vec4 DebugRenderManager::debugColor3 = glm::vec4(0.0, 1.0, 0.0, 1.0);
+const glm::vec4 DebugRenderManager::debugColor1 = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+const glm::vec4 DebugRenderManager::debugColor2 = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+const glm::vec4 DebugRenderManager::debugColor3 = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 #endif
