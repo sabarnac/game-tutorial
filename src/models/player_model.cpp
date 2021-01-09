@@ -156,6 +156,17 @@ public:
     }
   }
 
+  void deinit() override
+  {
+    // Check if eye light toggle is enabled.
+    if (isEyeLightPresent)
+    {
+      // Destroy the eye light and update the toggle.
+      destroyEyeLight();
+      isEyeLightPresent = true;
+    }
+  }
+
   void update() override
   {
     // Get the timestamp for the start of the update.

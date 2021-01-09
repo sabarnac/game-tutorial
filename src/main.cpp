@@ -7,6 +7,7 @@
 
 #include "scenes/main_menu_scene.cpp"
 #include "scenes/game_scene.cpp"
+#include "scenes/end_scene.cpp"
 
 using namespace glm;
 
@@ -16,9 +17,12 @@ int main(void)
 
 	auto mainMenuScene = MainMenuScene::create("MainMenuScene");
 	auto gameScene = GameScene::create("GameScene");
+	auto endScene = EndScene::create("EndScene");
 
 	sceneManager.registerScene(mainMenuScene);
 	sceneManager.registerScene(gameScene);
+	sceneManager.registerScene(endScene);
+
 	sceneManager.registerActiveScene(mainMenuScene->getSceneId());
 
 	GLuint vertexArrayID;
@@ -28,6 +32,7 @@ int main(void)
 	while (sceneManager.executeActiveScene())
 		;
 
+	sceneManager.deregisterScene("EndScene");
 	sceneManager.deregisterScene("GameScene");
 	sceneManager.deregisterScene("MainMenuScene");
 

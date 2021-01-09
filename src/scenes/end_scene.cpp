@@ -1,5 +1,5 @@
-#ifndef SCENES_MAIN_MENU_SCENE_CPP
-#define SCENES_MAIN_MENU_SCENE_CPP
+#ifndef SCENES_END_SCENE_CPP
+#define SCENES_END_SCENE_CPP
 
 #include <string>
 #include <optional>
@@ -26,13 +26,13 @@
 #include "../models/dummy_shot_model.cpp"
 
 #include "../models/title_model.cpp"
-#include "../models/start_model.cpp"
+#include "../models/restart_model.cpp"
 #include "../models/exit_model.cpp"
 #include "../models/cursor_model.cpp"
 
 #include "scene_base.cpp"
 
-class MainMenuScene : public SceneBase
+class EndScene : public SceneBase
 {
 private:
   ControlManager &controlManager;
@@ -44,7 +44,7 @@ private:
   std::vector<std::string> sceneCameraIds;
   std::vector<std::string> sceneModelIds;
 
-  std::shared_ptr<StartModel> startModel;
+  std::shared_ptr<RestartModel> restartModel;
   std::shared_ptr<ExitModel> exitModel;
 
   void initCameras()
@@ -117,9 +117,9 @@ private:
       const auto startModelId = "Start";
       sceneModelIds.push_back(startModelId);
 
-      startModel = StartModel::create(startModelId);
-      modelManager.registerModel(startModel);
-      startModel->setModelPosition(glm::vec3(0.0f, -0.15f, 0.0f));
+      restartModel = RestartModel::create(startModelId);
+      modelManager.registerModel(restartModel);
+      restartModel->setModelPosition(glm::vec3(0.0f, -0.15f, 0.0f));
     }
     {
       // Create a exit button model.
@@ -145,7 +145,7 @@ private:
   {
     TitleModel::initModel();
     renderLoadingText("Loading (15%)", glm::vec2(1, 1), 1.0f);
-    StartModel::initModel();
+    RestartModel::initModel();
     ExitModel::initModel();
     renderLoadingText("Loading (20%)", glm::vec2(1, 1), 1.0f);
     CursorModel::initModel();
@@ -174,7 +174,7 @@ private:
     }
 
     TitleModel::deinitModel();
-    StartModel::deinitModel();
+    RestartModel::deinitModel();
     ExitModel::deinitModel();
     CursorModel::deinitModel();
     DummyEnemyModel::deinitModel();
@@ -183,8 +183,8 @@ private:
   }
 
 public:
-  MainMenuScene(const std::string &sceneId)
-      : SceneBase(sceneId, "MainMenuScene"),
+  EndScene(const std::string &sceneId)
+      : SceneBase(sceneId, "EndScene"),
         controlManager(ControlManager::getInstance()),
         modelManager(ModelManager::getInstance()),
         cameraManager(CameraManager::getInstance()),
@@ -195,9 +195,9 @@ public:
     sceneCameraIds = std::vector<std::string>({});
   }
 
-  const static std::shared_ptr<MainMenuScene> create(const std::string &sceneId)
+  const static std::shared_ptr<EndScene> create(const std::string &sceneId)
   {
-    return std::make_shared<MainMenuScene>(sceneId);
+    return std::make_shared<EndScene>(sceneId);
   }
 
   const void init()
@@ -302,7 +302,7 @@ public:
       updateEndTime = glfwGetTime();
       textManager.addText("Camera Update: " + std::to_string((updateEndTime - updateStartTime) * 1000) + "ms", glm::vec2(1, 1.5f), 0.5f);
 
-      if (startModel->isClicked())
+      if (restartModel->isClicked())
       {
         return "GameScene";
       }

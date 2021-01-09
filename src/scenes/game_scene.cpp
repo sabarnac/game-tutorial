@@ -113,6 +113,18 @@ private:
       modelManager.deregisterModel(modelId);
     }
 
+    // Iterate over the list of registered models.
+    for (const auto &model : modelManager.getAllModels())
+    {
+      // Check if the current model is a shot model.
+      if (model->getModelName() != "Shot")
+      {
+        continue;
+      }
+
+      modelManager.deregisterModel(model->getModelId());
+    }
+
     EnemyModel::deinitModel();
     PlayerModel::deinitModel();
     ShotModel::deinitModel();
@@ -161,8 +173,31 @@ public:
     renderLoadingText("Cleaning (100%)", glm::vec2(1, 1), 1.0f);
   }
 
+  const uint32_t getEnemyModelsCount()
+  {
+    uint32_t enemyModelsCount = 0;
+
+    // Iterate over the list of registered models.
+    for (const auto &model : modelManager.getAllModels())
+    {
+      if (model->getModelName() != "Enemy")
+      {
+        continue;
+      }
+
+      ++enemyModelsCount;
+    }
+
+    return enemyModelsCount;
+  }
+
   const std::optional<std::string> execute()
   {
+    // consume events we don't want passed on
+    controlManager.isKeyPressed(GLFW_KEY_SPACE);
+    controlManager.isKeyPressed(GLFW_KEY_ESCAPE);
+    windowManager.isWindowCloseRequested();
+
     modelManager.initAllModels();
     cameraManager.initAllCameras();
     lightManager.initAllLights();
@@ -296,14 +331,16 @@ public:
       controlManager.pollEvents();
 
       // Continue loop as long as escape key isn't pressed or the window close is not requested.
-    } while (!controlManager.isKeyPressed(GLFW_KEY_ESCAPE) &&
-             !windowManager.isWindowCloseRequested());
+    } while (
+        getEnemyModelsCount() > 0 &&
+        !controlManager.isKeyPressed(GLFW_KEY_ESCAPE) &&
+        !windowManager.isWindowCloseRequested());
 
     modelManager.deinitAllModels();
     lightManager.deinitAllLights();
     cameraManager.deinitAllCameras();
 
-    return std::nullopt;
+    return "EndScene";
   }
 };
 
